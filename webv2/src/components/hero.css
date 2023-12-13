@@ -1,0 +1,11 @@
+.child {
+
+}
+
+@media (max-width: 700px) {
+    .child {
+        display: flex;
+        flex-direction: column;
+
+    }
+}
