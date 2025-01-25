@@ -1,4 +1,3 @@
-// NavLink.tsx
 import React from "react";
 import {
   motion,
@@ -64,22 +63,20 @@ const NavLink = ({ path, name, isActive, location, logo }: NavLinkProps) => {
       style={{ x, y }}
     >
       <motion.div
-        className={`relative inline-block w-full max-w-5xl  py-2 px-4 text-sm transition-all duration-500 ease-out ${
+        className={`relative inline-block w-full max-w-5xl py-2 px-4 text-sm transition-all duration-500 ease-out ${
           isActive ? "bg-slate-300" : ""
         }`}
       >
-        <Link to={path} className="text-2xl relative">
+        <a
+          href={path} // Use href to ensure the link behaves as a regular anchor tag
+          target="_blank" // Ensure it opens in a new tab
+          className="text-2xl relative"
+        >
           <motion.span style={{ x: textX, y: textY }} className="z-10 relative">
             {logo ? (
-              // If logo is provided, render the logo as an image
               <img src={logo} alt="Logo" className="h-6 w-6 object-contain" />
             ) : (
-              // Otherwise render the pathName as text
-              <div
-                className="py-2 px-4 text-xl pt-2
-            flex justify-around rounded-full
-            border-2 border-black bg-white"
-              >
+              <div className="py-2 px-4 text-xl pt-2 flex justify-around rounded-full border-2 border-black bg-white">
                 {name}
               </div>
             )}
@@ -91,7 +88,7 @@ const NavLink = ({ path, name, isActive, location, logo }: NavLinkProps) => {
               className="absolute w-full h-full rounded-md left-0 bottom-0 bg-blue-300"
             />
           )}
-        </Link>
+        </a>
       </motion.div>
     </motion.li>
   );

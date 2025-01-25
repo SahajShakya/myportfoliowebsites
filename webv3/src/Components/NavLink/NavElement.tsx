@@ -62,9 +62,9 @@ const NavElement = ({ token, path, pathName, logo }: NavProps) => {
       <ul className="flex gap-12">
         {!token ? (
           <NavLink
-            path={`/${path}`}
+            path={`${path}`}
             name={pathName}
-            isActive={location.pathname === `/${path}`}
+            isActive={location.pathname === `${path}`}
             location={location.pathname}
             logo={logo}
           />

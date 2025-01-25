@@ -1,0 +1,20 @@
+@keyframes animate-border {
+    0% {
+        transform: scaleX(0);
+        transform-origin: top right;
+    }
+
+    50% {
+        transform: scaleX(1);
+        transform-origin: top left;
+    }
+
+    100% {
+        transform: scaleX(0);
+        transform-origin: top right;
+    }
+}
+
+.animate-border {
+    animation: animate-border 2s linear infinite;
+}

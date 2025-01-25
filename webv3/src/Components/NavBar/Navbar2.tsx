@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { FiChevronDown } from "react-icons/fi";
+import { FiChevronDown, FiMenu, FiChevronUp, FiX } from "react-icons/fi";
 import { AnimatePresence, motion } from "framer-motion";
 
 // TabProps interface
@@ -13,23 +13,16 @@ interface TabProps {
 
 interface NavbarProps {
   tabs: TabProps[];
+  token: string | null;
 }
 
-const Navbar = ({ tabs }: NavbarProps) => {
-  return (
-    <div className="bg-gray-200 pt-1 pb-5">
-      <SlideTabs tabs={tabs} />
-    </div>
-  );
-};
+const Navbar = ({ tabs, token }: NavbarProps) => {
+  const [isMobile, setIsMobile] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false); // Track if the mobile menu is open
+  const [openDropdown, setOpenDropdown] = useState<number | null>(null); // Track which dropdown is open (for mobile)
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
-// SlideTabs component
-const SlideTabs = ({ tabs }: { tabs: TabProps[] }) => {
-  const [selected, setSelected] = useState<number | null>(null);
-  const [hovered, setHovered] = useState<number | null>(null); // Track hovered tab
-  const [isMobile, setIsMobile] = useState(false); // Track if it's mobile
-
-  // Check the window width on resize to determine if it's a mobile screen
+  // Check the window width on resize to determine if it's mobile
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768); // Assuming 768px as the breakpoint for mobile
     checkMobile(); // Initial check
@@ -40,16 +33,173 @@ const SlideTabs = ({ tabs }: { tabs: TabProps[] }) => {
     };
   }, []);
 
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    if (menuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [menuOpen]);
+
+  const toggleMenu = () => 
+    {
+      if (menuOpen) {
+        setMenuOpen(false);
+      } else {
+        setMenuOpen(true);
+      }
+    };
+
+  const handleDropdownToggle = (index: number) => {
+    if (isMobile) {
+      // Toggle dropdown on mobile
+      setOpenDropdown(openDropdown === index ? null : index);
+    }
+  };
+
+  const updatedTabs = isMobile && token === null
+    ? [
+        ...tabs,
+        { name: "Login", hasDropdown: false, linkTo: "/login" },
+      ]
+    : tabs;
+
+  return (
+    <div className="pt-1 pb-5 relative">
+      {/* Show Hamburger Icon on Mobile */}
+      <div className="flex justify-between items-center w-full">
+        <div className="flex-1"></div>
+        {/* Hamburger or X icon */}
+        {isMobile && (
+          <button
+            onClick={toggleMenu}
+            className="p-2 text-gray-600 lg:hidden"
+            aria-label="Toggle Menu"
+          >
+            {menuOpen ? <FiX size={-1} /> : <FiMenu size={24} />}
+          </button>
+        )}
+      </div>
+
+      {/* Show the tabs if not on mobile */}
+      {!isMobile && <SlideTabs tabs={updatedTabs} isMobile={isMobile} token={token} />}
+
+      {/* Only show the Simple Navbar on Mobile when menu is open */}
+      {isMobile && menuOpen && (
+        <div
+          className="absolute inset-0 =z-50 p-4"
+          ref={menuRef}
+        >
+          <SimpleNavbar
+            tabs={updatedTabs}
+            token={token}
+            openDropdown={openDropdown}
+            handleDropdownToggle={handleDropdownToggle}
+            setMenuOpen={setMenuOpen}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Simple Navbar for Mobile View
+const SimpleNavbar = ({
+  tabs,
+  token,
+  openDropdown,
+  handleDropdownToggle,
+  setMenuOpen,
+}: {
+  tabs: TabProps[];
+  token: string | null;
+  openDropdown: number | null;
+  handleDropdownToggle: (index: number) => void;
+  setMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}) => (
+<ul className="flex flex-col items-center mt-4 bg w-auto w-[100px] rounded-lg shadow-lg bg-white ml-auto">
+    {/* Close Button (X Icon) */}
+    <button
+      onClick={() => setMenuOpen(false)} // Close the menu on click
+      className="absolute top-0 right-0 p-2 text-gray-600"
+      aria-label="Close Menu"
+    >
+      <FiX size={24} />
+    </button>
+
+    {/* Render Tabs */}
+    {tabs.map((tab, index) => (
+        <li key={index} className="text-center text-black text-lg relative">
+        {tab.linkTo ? (
+          <Link to={tab.linkTo} className="block py-2 px-4">
+            {tab.name}
+          </Link>
+        ) : (
+          <span
+            className="block py-2 px-4 cursor-pointer flex"
+            onClick={() => handleDropdownToggle(index)}
+          >
+            {tab.name}
+            {tab.hasDropdown && (
+              <span className="ml-2 text-sm">
+                {openDropdown === index ? <FiChevronUp /> : <FiChevronDown />}
+              </span>
+            )}
+          </span>
+        )}
+
+        {/* Show dropdown if the tab has a dropdown */}
+        {tab.hasDropdown && openDropdown === index && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            transition={{ duration: 0.3 }}
+            className="absolute right-0 mt-2 w-60 bg-white shadow-lg rounded-md z-20"
+          >
+            <ul>
+              {tab.dropdownOptions?.map((option, index) => (
+                <li key={index}>
+                  <Link
+                    to={option.to}
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-300"
+                  >
+                    {option.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+        )}
+      </li>
+    ))}
+  </ul>
+);
+
+// SlideTabs component (unchanged)
+const SlideTabs = ({ tabs, isMobile, token }: { tabs: TabProps[]; isMobile: boolean; token: string | null }) => {
+  const [selected, setSelected] = useState<number | null>(null);
+  const [hovered, setHovered] = useState<number | null>(null); // Track hovered tab
+
   const handleSetSelected = (val: number | null) => {
     setSelected(val);
   };
 
-  const totalTabs = tabs.length; // Get the total number of tabs
-
   return (
     <ul
-      onMouseLeave={() => setHovered(null)} // Reset hover state when mouse leaves
-      className="relative mx-auto flex w-full max-w-5xl justify-around rounded-full border-2 border-black bg-white p-1"
+      className={`relative mx-auto flex w-full max-w-5xl justify-around rounded-full border-2 border-black bg-white p-1 ${isMobile ? "hidden" : ""}`}
     >
       {tabs.map((tab, index) => (
         <Tab
@@ -66,40 +216,11 @@ const SlideTabs = ({ tabs }: { tabs: TabProps[] }) => {
           {tab.name}
         </Tab>
       ))}
-
-      <AnimatePresence>{selected !== null}</AnimatePresence>
-
-      {/* Shifting Nub Animation */}
-      {!isMobile && (
-        <motion.li
-          animate={{
-            left: `calc(${(hovered ?? selected ?? 1) - 1} * ${
-              100 / totalTabs
-            }%)`, // Adjust position based on hovered or selected tab
-            width: `calc(100% / ${totalTabs})`, // Dynamically set the width based on the number of tabs
-            height: "100%", // Set height to 2px
-            opacity: hovered || selected ? 1 : 0,
-            borderRadius: "50px",
-          }}
-          exit={{
-            opacity: 0, // Fade out when leaving
-          }}
-          transition={{
-            duration: 0.3,
-            ease: "easeInOut",
-          }}
-          className="absolute z-0 h-1 bg-black md:h-2"
-          style={{
-            top: "calc(100% - 56px)", // Set the width of the nub to match the tab width (assuming variable number of tabs)
-            boxShadow: "0 4px 10px rgba(0, 0, 0, 0.3)", // Added shadow for better visibility
-          }}
-        />
-      )}
     </ul>
   );
 };
 
-// Tab component
+// Tab component (unchanged)
 const Tab = ({
   children,
   tab,
@@ -122,13 +243,16 @@ const Tab = ({
   dropdownOptions: { label: string; to: string }[]; // Dropdown options
 }) => {
   return (
-    <li
-      onMouseEnter={() => setHovered(tab)} // Set hovered tab
-      onClick={() => handleSetSelected(tab)} // Set selected tab
-      className={`relative z-10 block cursor-pointer px-3 py-1.5 text-xs uppercase md:px-5 md:py-3 md:text-base ${
-        hovered === tab || selected === tab ? "text-red-500" : "text-black"
-      }`}
-    >
+<li
+  onMouseEnter={() => setHovered(tab)} // Set hovered tab
+  onMouseLeave={() => setHovered(null)} // Reset hovered state when mouse leaves
+  onClick={() => handleSetSelected(tab)} // Set selected tab
+  className={`relative z-10 block cursor-pointer px-3 py-1.5 text-xs uppercase md:px-5 md:py-3 md:text-base ${
+    (hovered === tab || selected === tab) 
+      ? "text-red-500 bg-gray-200 rounded-full" // Show gray background when hovered or selected
+      : "text-black" // Default state for non-hovered, non-selected tab
+  }`}
+>
       {linkTo ? (
         <Link to={linkTo} className="block">
           {children}
@@ -154,7 +278,7 @@ const Tab = ({
           </div>
 
           {/* Dropdown Items Line (Background gray) */}
-          <ul className="bg-gray-200">
+          <ul>
             {dropdownOptions.map((option, index) => (
               <li key={index}>
                 <Link

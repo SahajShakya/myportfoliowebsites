@@ -6,7 +6,7 @@ type FlyoutLinkProps = {
   children: React.ReactNode;
   href: string;
   setDropdownVisible: React.Dispatch<React.SetStateAction<boolean>>;
-  handleOpenModal: (type: "update" | "logout") => void; // Accept handleOpenModal
+  handleOpenModal: (type: "update" | "logout" | "updatePassword") => void; // Accept handleOpenModal
 };
 
 const FlyoutLink = ({
