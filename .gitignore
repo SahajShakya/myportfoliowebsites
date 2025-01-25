@@ -1,0 +1,2 @@
+# Ignore the admin.json file in the firebase directory
+webv3/src/firebase/firebaseAdmin.json
