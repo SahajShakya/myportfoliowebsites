@@ -185,9 +185,7 @@ const Login = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-        >
-         
-        </motion.div>
+        ></motion.div>
       </motion.div>
       {user && (
         <RoleBasedRedirect role={user.role || ""} routeName="dashboard" />

@@ -12,11 +12,10 @@ import Unauthorized from "./Pages/Unauthorized";
 import AuthRedirectWrapper from "./AuthRedirectWrapper";
 import Dashboard from "./Pages/Auth/Dashboard/Dashboard";
 import AuthLayout from "./Pages/Layout/AuthLayout";
+import Contact from "./Pages/NonAuth/Contact/Contact";
 
 // Define fixed roles and their corresponding IDs
-const roleData = [
-  { id: 1, name: "admin" },
-];
+const roleData = [{ id: 1, name: "admin" }];
 
 const checkAndCreateRoles = async () => {
   try {
@@ -38,7 +37,6 @@ const checkAndCreateRoles = async () => {
 const App = () => {
   const [isLoading, setIsLoading] = useState(true); // Loading state
   const { user } = useUser();
-
 
   useEffect(() => {
     const createRoles = async () => {
@@ -71,6 +69,7 @@ const App = () => {
                 )
               }
             />
+            <Route path="/contact" element={<Contact />}></Route>
           </Route>
 
           {/* Auth Routes */}
@@ -82,7 +81,6 @@ const App = () => {
               </AuthRedirectWrapper>
             }
           />
-
 
           {/* Private Routes */}
           <Route path="/" element={<AuthLayout />}>
