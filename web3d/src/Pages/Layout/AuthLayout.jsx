@@ -4,7 +4,7 @@ import Nav from "../../Components/NavBar/Nav";
 import { FaBars, FaTimes, FaUser, FaCogs, FaLock } from "react-icons/fa"; // Import icons for the tabs
 
 const AuthLayout = () => {
-  const [activeTab, setActiveTab] = useState<string>("");
+  const [activeTab, setActiveTab] = useState("");
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Function to handle the tab change
@@ -23,7 +23,9 @@ const AuthLayout = () => {
       <div className="flex h-screen">
         {/* Sidebar */}
         <div
-          className={`transition-all duration-300 ${isCollapsed ? "w-20" : "w-64"} bg-gray-200 text-black p-4`}
+          className={`transition-all duration-300 ${
+            isCollapsed ? "w-20" : "w-64"
+          } bg-gray-200 text-black p-4`}
         >
           <div className="flex justify-between items-center mb-6">
             {/* Sidebar toggle button */}
@@ -38,7 +40,9 @@ const AuthLayout = () => {
 
           <ul className="space-y-6">
             <li
-              className={`cursor-pointer ${activeTab === "profile" ? "bg-blue-600" : "hover:bg-gray-300"} p-3 rounded-lg`}
+              className={`cursor-pointer ${
+                activeTab === "profile" ? "bg-blue-600" : "hover:bg-gray-300"
+              } p-3 rounded-lg`}
               onClick={() => handleTabClick("profile")}
             >
               <Link
@@ -49,7 +53,9 @@ const AuthLayout = () => {
               </Link>
             </li>
             <li
-              className={`cursor-pointer ${activeTab === "settings" ? "bg-blue-600" : "hover:bg-gray-300"} p-3 rounded-lg`}
+              className={`cursor-pointer ${
+                activeTab === "settings" ? "bg-blue-600" : "hover:bg-gray-300"
+              } p-3 rounded-lg`}
               onClick={() => handleTabClick("settings")}
             >
               <Link
@@ -60,7 +66,9 @@ const AuthLayout = () => {
               </Link>
             </li>
             <li
-              className={`cursor-pointer ${activeTab === "security" ? "bg-blue-600" : "hover:bg-gray-300"} p-3 rounded-lg`}
+              className={`cursor-pointer ${
+                activeTab === "security" ? "bg-blue-600" : "hover:bg-gray-300"
+              } p-3 rounded-lg`}
               onClick={() => handleTabClick("security")}
             >
               <Link

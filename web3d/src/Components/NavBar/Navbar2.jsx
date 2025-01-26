@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { FiChevronDown, FiMenu, FiChevronUp, FiX } from "react-icons/fi";
 import { AnimatePresence, motion } from "framer-motion";
 
-
 const Navbar = ({ tabs, token }) => {
   const [isMobile, setIsMobile] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false); // Track if the mobile menu is open
@@ -39,14 +38,13 @@ const Navbar = ({ tabs, token }) => {
     };
   }, [menuOpen]);
 
-  const toggleMenu = () => 
-    {
-      if (menuOpen) {
-        setMenuOpen(false);
-      } else {
-        setMenuOpen(true);
-      }
-    };
+  const toggleMenu = () => {
+    if (menuOpen) {
+      setMenuOpen(false);
+    } else {
+      setMenuOpen(true);
+    }
+  };
 
   const handleDropdownToggle = (index) => {
     if (isMobile) {
@@ -55,12 +53,10 @@ const Navbar = ({ tabs, token }) => {
     }
   };
 
-  const updatedTabs = isMobile && token === null
-    ? [
-        ...tabs,
-        { name: "Login", hasDropdown: false, linkTo: "/login" },
-      ]
-    : tabs;
+  const updatedTabs =
+    isMobile && token === null
+      ? [...tabs, { name: "Login", hasDropdown: false, linkTo: "/login" }]
+      : tabs;
 
   return (
     <div className="pt-1 pb-5 relative">
@@ -80,14 +76,13 @@ const Navbar = ({ tabs, token }) => {
       </div>
 
       {/* Show the tabs if not on mobile */}
-      {!isMobile && <SlideTabs tabs={updatedTabs} isMobile={isMobile} token={token} />}
+      {!isMobile && (
+        <SlideTabs tabs={updatedTabs} isMobile={isMobile} token={token} />
+      )}
 
       {/* Only show the Simple Navbar on Mobile when menu is open */}
       {isMobile && menuOpen && (
-        <div
-          className="absolute inset-0 =z-50 p-4"
-          ref={menuRef}
-        >
+        <div className="absolute inset-0 =z-50 p-4" ref={menuRef}>
           <SimpleNavbar
             tabs={updatedTabs}
             token={token}
@@ -121,7 +116,7 @@ const SimpleNavbar = ({
 
     {/* Render Tabs */}
     {tabs.map((tab, index) => (
-        <li key={index} className="text-center text-black text-lg relative">
+      <li key={index} className="text-center text-black text-lg relative">
         {tab.linkTo ? (
           <Link to={tab.linkTo} className="block py-2 px-4">
             {tab.name}
@@ -181,7 +176,9 @@ const SlideTabs = ({ tabs, isMobile, token }) => {
 
   return (
     <ul
-      className={`relative mx-auto flex w-full max-w-5xl justify-around rounded-full border-2 border-black bg-white p-1 ${isMobile ? "hidden" : ""}`}
+      className={`relative mx-auto flex w-full max-w-5xl justify-around rounded-full border-2 border-black bg-white p-1 ${
+        isMobile ? "hidden" : ""
+      }`}
     >
       {tabs.map((tab, index) => (
         <Tab
@@ -215,16 +212,16 @@ const Tab = ({
   dropdownOptions, // Accept dropdown options as props
 }) => {
   return (
-<li
-  onMouseEnter={() => setHovered(tab)} // Set hovered tab
-  onMouseLeave={() => setHovered(null)} // Reset hovered state when mouse leaves
-  onClick={() => handleSetSelected(tab)} // Set selected tab
-  className={`relative z-10 block cursor-pointer px-3 py-1.5 text-xs uppercase md:px-5 md:py-3 md:text-base ${
-    (hovered === tab || selected === tab) 
-      ? "text-red-500 bg-gray-200 rounded-full" // Show gray background when hovered or selected
-      : "text-black" // Default state for non-hovered, non-selected tab
-  }`}
->
+    <li
+      onMouseEnter={() => setHovered(tab)} // Set hovered tab
+      onMouseLeave={() => setHovered(null)} // Reset hovered state when mouse leaves
+      onClick={() => handleSetSelected(tab)} // Set selected tab
+      className={`relative z-10 block cursor-pointer px-3 py-1.5 text-xs uppercase md:px-5 md:py-3 md:text-base ${
+        hovered === tab || selected === tab
+          ? "text-red-500 bg-gray-200 rounded-full" // Show gray background when hovered or selected
+          : "text-black" // Default state for non-hovered, non-selected tab
+      }`}
+    >
       {linkTo ? (
         <Link to={linkTo} className="block">
           {children}
