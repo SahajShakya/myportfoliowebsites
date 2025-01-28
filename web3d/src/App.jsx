@@ -13,6 +13,8 @@ import AuthRedirectWrapper from "./AuthRedirectWrapper";
 import Dashboard from "./Pages/Auth/Dashboard/Dashboard";
 import AuthLayout from "./Pages/Layout/AuthLayout";
 import Contact from "./Pages/NonAuth/Contact/Contact";
+import AddAcademics from "./Pages/NonAuth/Academics/AddAcademics";
+import ViewAcademics from "./Pages/NonAuth/Academics/ViewAcademics";
 
 // Define fixed roles and their corresponding IDs
 const roleData = [{ id: 1, name: "admin" }];
@@ -92,6 +94,21 @@ const App = () => {
                   roleProps="admin"
                   element={<Dashboard role={"admin"} />}
                 />
+              }
+            />
+
+            {/* Academics Layout */}
+            <Route
+              path="/auth/academics/view"
+              element={
+                <PrivateRoute roleProps="admin" element={<ViewAcademics />} />
+              }
+            />
+
+            <Route
+              path="/auth/academics/create"
+              element={
+                <PrivateRoute roleProps="admin" element={<AddAcademics />} />
               }
             />
           </Route>

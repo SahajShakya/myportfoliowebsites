@@ -98,7 +98,7 @@ const AuthLayout = () => {
               >
                 <div className="flex items-center justify-between">
                   <Link
-                    to={`/auth/${name}`}
+                    to={`/auth/${name}/view`}
                     className={`block ${isCollapsed ? "text-center" : ""}`}
                   >
                     {isCollapsed ? (
