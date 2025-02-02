@@ -17,11 +17,10 @@ import {
   updateDoc,
   deleteDoc,
 } from "firebase/firestore";
+import { supabase } from "../../supabase/supabase";
 
 // Function to get the user's role name from Firestore
-export const getUserRoleFromFirestore = async (
-  uid
-) => {
+export const getUserRoleFromFirestore = async (uid) => {
   try {
     const userDocRef = doc(db, "users", uid);
     const userDocSnap = await getDoc(userDocRef);
@@ -51,13 +50,7 @@ export const getUserRoleFromFirestore = async (
   }
 };
 
-export const ActiveUser = async (
-  userId,
-  name,
-  email,
-  role,
-  token
-) => {
+export const ActiveUser = async (userId, name, email, role, token) => {
   await setDoc(doc(db, "activeUsers", userId), {
     id: userId,
     name,
@@ -70,9 +63,7 @@ export const ActiveUser = async (
 };
 
 // Function to fetch all documents from a Firestore collection
-async function fetchAllFromCollection(
-  collectionName
-) {
+async function fetchAllFromCollection(collectionName) {
   try {
     // Get a reference to the collection
     const colRef = collection(db, collectionName);
@@ -81,7 +72,7 @@ async function fetchAllFromCollection(
     const querySnapshot = await getDocs(colRef);
 
     // Array to hold the data from all documents
-    const data= [];
+    const data = [];
 
     // Iterate through each document and push data into the array
     querySnapshot.forEach((doc) => {
@@ -101,12 +92,7 @@ export const useAuth = () => {
   // const [userRole, setUserRole] = useState<string | null>(null); // Track the user's role
   const [error, setError] = useState(null);
 
-  const register = async (
-    email,
-    password,
-    name,
-    role = "patient"
-  ) => {
+  const register = async (email, password, name, role = "patient") => {
     try {
       // Create a new user with email and password
       const userCredential = await createUserWithEmailAndPassword(
@@ -164,6 +150,15 @@ export const useAuth = () => {
         email,
         password
       );
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      console.log(data, "Login with Supabase");
+      if (error) {
+        throw new Error(error.message);
+      }
       setUser(userCredential.user);
       const userId = userCredential.user.uid;
       const userRef = doc(db, "users", userId);
@@ -259,6 +254,8 @@ export const useAuth = () => {
 
       // Optional: Sign out the user after logout actions
       await auth.signOut();
+      await supabase.auth.signOut();
+      setUser(null);
       console.log(`User ${userId} logged out successfully.`);
     } catch (error) {
       console.error("Error during logout:", error);

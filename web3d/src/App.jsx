@@ -15,6 +15,7 @@ import AuthLayout from "./Pages/Layout/AuthLayout";
 import Contact from "./Pages/NonAuth/Contact/Contact";
 import AddAcademics from "./Pages/NonAuth/Academics/AddAcademics";
 import ViewAcademics from "./Pages/NonAuth/Academics/ViewAcademics";
+import Calendar from "./Pages/Calendar/Calendar";
 
 // Define fixed roles and their corresponding IDs
 const roleData = [{ id: 1, name: "admin" }];
@@ -72,6 +73,7 @@ const App = () => {
               }
             />
             <Route path="/contact" element={<Contact />}></Route>
+            <Route path="/calendar" element={<Calendar />}></Route>
           </Route>
 
           {/* Auth Routes */}
