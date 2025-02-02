@@ -87,15 +87,6 @@ const Upload = ({
           );
           // Filter out any failed URL-to-File conversions (i.e., null)
           setFiles(urlFiles.filter(({ file }) => file !== null));
-        } else {
-          // If no object with 'icon' field, treat as array of URLs and convert
-          const urlFiles = await Promise.all(
-            value.map(async (url) => {
-              const { url: convertedUrl, file } = await urlToFile(url);
-              return { url: convertedUrl, file }; // Return both URL and File object
-            })
-          );
-          setFiles(urlFiles.filter(({ file }) => file !== null));
         }
       }
     };

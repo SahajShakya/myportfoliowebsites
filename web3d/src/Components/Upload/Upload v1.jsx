@@ -30,22 +30,16 @@ const Upload = ({
 
   // Handle file drop
   const onDrop = (acceptedFiles) => {
-    const newFiles = [
-      ...files,
-      ...acceptedFiles.map((file) => ({
-        file,
-        url: URL.createObjectURL(file),
-      })),
-    ];
+    const newFiles = [...files, ...acceptedFiles];
     setFiles(newFiles);
     setFieldValue(name, newFiles); // Update Formik's field value with the new files
   };
 
-  const getFileUrl = (fileObj) => {
-    if (fileObj.file) {
-      return fileObj.url; // Return the URL created from the File object
+  const getFileUrl = (file) => {
+    if (file instanceof File) {
+      return URL.createObjectURL(file); // For File objects, generate an object URL
     }
-    return fileObj.url; // For URLs, return the URL itself
+    return file; // For URLs, return the URL itself
   };
 
   // Remove a file from the list
@@ -87,15 +81,6 @@ const Upload = ({
           );
           // Filter out any failed URL-to-File conversions (i.e., null)
           setFiles(urlFiles.filter(({ file }) => file !== null));
-        } else {
-          // If no object with 'icon' field, treat as array of URLs and convert
-          const urlFiles = await Promise.all(
-            value.map(async (url) => {
-              const { url: convertedUrl, file } = await urlToFile(url);
-              return { url: convertedUrl, file }; // Return both URL and File object
-            })
-          );
-          setFiles(urlFiles.filter(({ file }) => file !== null));
         }
       }
     };
@@ -128,7 +113,9 @@ const Upload = ({
             <div key={index} className="relative">
               {/* Display either File object or URL */}
               <img
-                src={getFileUrl(fileObj)} // Use file URL or object URL based on the type
+                src={
+                  fileObj.file ? URL.createObjectURL(fileObj.file) : fileObj.url
+                } // Use file or URL based on the type
                 alt={fileObj.file ? fileObj.file.name : `Icon ${index}`}
                 className="w-24 h-24 object-cover rounded-lg"
               />

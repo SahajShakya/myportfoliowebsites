@@ -108,6 +108,13 @@ const App = () => {
             />
 
             <Route
+              path="/auth/academics/edit"
+              element={
+                <PrivateRoute roleProps="admin" element={<AddAcademics />} />
+              }
+            />
+
+            <Route
               path="/auth/academics/create"
               element={
                 <PrivateRoute roleProps="admin" element={<AddAcademics />} />

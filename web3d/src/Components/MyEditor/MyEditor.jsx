@@ -7,7 +7,6 @@ const MyEditor = ({ value, onChange, name, error }) => {
   const [isMounted, setIsMounted] = useState(false);
   const quillRef = useRef(null);
 
-  // Delay initialization of ReactQuill until after the first render
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -21,7 +20,7 @@ const MyEditor = ({ value, onChange, name, error }) => {
       <label className="block text-lg font-medium text-gray-700">Content</label>
       <ReactQuill
         ref={quillRef}
-        value={value}
+        value={value || ""}
         onChange={onChange}
         modules={{
           toolbar: [
@@ -55,11 +54,13 @@ const MyEditor = ({ value, onChange, name, error }) => {
         className="react-quill-editor"
       />
       {/* Error Message */}
-      <ErrorMessage
-        name={name}
-        component="div"
-        className="text-red-500 text-xs mt-2"
-      />
+      {error && (
+        <ErrorMessage
+          name={name}
+          component="div"
+          className="text-red-500 text-xs mt-2"
+        />
+      )}
     </div>
   );
 };

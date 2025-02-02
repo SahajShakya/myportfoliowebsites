@@ -3,12 +3,15 @@ import { db } from "../../../firebase/firebase";
 import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { useSnackbar } from "notistack";
-import { deleteFileFromSupabase } from "../../../utils/supabaseFile"; // Import a helper function for file deletion from Supabase
+import AddAcademics from "./AddAcademics";
+import Modal from "../../../Components/UI/Modal/Modal";
 
 const ViewAcademics = () => {
   const [academics, setAcademics] = useState([]);
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
+  const [modal, setModal] = useState(false);
+  const [editData, setEditData] = useState(null);
 
   useEffect(() => {
     const fetchAcademics = async () => {
@@ -35,30 +38,13 @@ const ViewAcademics = () => {
     // Find the academic data based on the id
     const academic = academics.find((item) => item.id === id);
 
-    if (!academic) {
-      console.error("Academic data not found for ID:", id);
-      return;
-    }
-
-    // Redirect to the AddAcademics page and pass the academic data along with isEdit flag
-    navigate("/auth/academics/create", {
-      state: { academicData: academic, isEdit: true },
-    });
+    console.log(academic);
+    setEditData(academic);
+    setModal(true);
   };
 
-  const handleDelete = async (id, icons) => {
+  const handleDelete = async (id) => {
     try {
-      // Delete the icons from Supabase first
-      if (icons && icons.length > 0) {
-        await Promise.all(
-          icons.map(async (iconUrl) => {
-            // Delete the file from Supabase
-            await deleteFileFromSupabase(iconUrl); // Assuming `deleteFileFromSupabase` is a utility function
-          })
-        );
-      }
-
-      // Now delete the document from Firestore
       await deleteDoc(doc(db, "academics", id));
       setAcademics(academics.filter((academic) => academic.id !== id));
       enqueueSnackbar("Academic data deleted successfully!", {
@@ -69,6 +55,10 @@ const ViewAcademics = () => {
         variant: "error",
       });
     }
+  };
+
+  const handleCloseModal = () => {
+    setModal(false); // Close modal
   };
 
   return (
@@ -97,7 +87,7 @@ const ViewAcademics = () => {
                   Edit
                 </button>
                 <button
-                  onClick={() => handleDelete(academic.id, academic.icons)}
+                  onClick={() => handleDelete(academic.id)}
                   className="bg-red-500 text-white px-4 py-2 rounded-md ml-2"
                 >
                   Delete
@@ -107,6 +97,17 @@ const ViewAcademics = () => {
           ))}
         </tbody>
       </table>
+      {modal && (
+        <Modal
+          onClose={handleCloseModal}
+          title={editData ? "Edit Academic" : "Add Academic"}
+        >
+          <div className="w-full">
+            {/* This div will allow for scrolling if the content overflows */}
+            <AddAcademics editData={editData} />
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };
