@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import { uploadFilesToSupabase } from "../../../utils/supabaseFIle";
 import { db } from "../../../firebase/firebase";
 import { useSnackbar } from "notistack";
-import { collection, addDoc, setDoc, doc } from "firebase/firestore";
+import { collection, addDoc, updateDoc, doc } from "firebase/firestore";
 import { supabase } from "../../../supabase/supabase";
 
 const validationSchema = Yup.object({
@@ -34,38 +34,37 @@ const validationSchema = Yup.object({
 //   urlofCompany: "",
 // };
 
-const AddAcademics = (editData) => {
-  const [editorValue, setEditorValue] = useState(
-    editData?.editData?.contents || ""
-  );
+const AddAcademics = ({ editData, handleEditSuccess }) => {
+  const [editorValue, setEditorValue] = useState(editData?.contents || "");
   const [uploadUrls, setUploadUrls] = useState([]);
 
   const [fileremovedURL, setFileRemovedURL] = useState("");
 
   const { enqueueSnackbar } = useSnackbar();
 
+  console.log("Edit data on academics", editData);
+
   // Set initial values for the form
   const initialValues = {
-    title: editData?.editData?.title || "",
-    university_name: editData?.editData?.university_name || "",
-    college_name: editData?.editData?.college_name || "",
-    icons:
-      editData?.editData?.icons?.map((icon) => ({ icon: icon.publicUrl })) ||
-      [],
-    startDate: editData?.editData?.startDate || "",
-    endDate: editData?.editData?.endDate || "",
-    contents: editData?.editData?.contents || "",
+    title: editData?.title || "",
+    university_name: editData?.university_name || "",
+    college_name: editData?.college_name || "",
+    icons: editData?.icons?.map((icon) => ({ icon: icon.publicUrl })) || [],
+    startDate: editData?.startDate || "",
+    endDate: editData?.endDate || "",
+    contents: editData?.contents || "",
     focusedField: "",
-    urlofCompany: editData?.editData?.urlofCompany || "",
+    urlofCompany: editData?.urlofCompany || "",
   };
+
   const handleSubmit = async (
     values,
     { setSubmitting, resetForm, setFieldValue }
   ) => {
-    console.log("Form Submitted: ", values.icons);
     try {
       // Check if files are present
       if (values.icons.length > 0) {
+        // console.log(values.icons, "Values Icon");
         // Upload the files to Supabase and get the URLs
         const uploadedUrls = await uploadFilesToSupabase(values.icons);
 
@@ -83,12 +82,10 @@ const AddAcademics = (editData) => {
             createdAt: new Date(), // Optionally add a timestamp
             urlofCompany: values.urlofCompany,
           };
-          if (editData?.editData) {
+          if (editData) {
             // Update the existing document
-            await setDoc(
-              doc(db, "academics", editData.editData.id),
-              academicData
-            );
+            await updateDoc(doc(db, "academics", editData.id), academicData);
+            handleEditSuccess();
             enqueueSnackbar("Academic data updated successfully!", {
               variant: "success",
             });
@@ -101,7 +98,7 @@ const AddAcademics = (editData) => {
           });
           setSubmitting(true); // Optional: show loading state or disable submit button during upload
           // Clear all the form fields after success
-
+          resetForm();
           setFieldValue("title", "");
           setFieldValue("university_name", "");
           setFieldValue("college_name", "");
@@ -112,16 +109,21 @@ const AddAcademics = (editData) => {
           setFieldValue("urlofCompany", "");
           resetForm();
 
+          initialValues.setFieldValue("title", "");
+          initialValues.setFieldValue("university_name", "");
+          initialValues.setFieldValue("college_name", "");
+          initialValues.setFieldValue("icons", "");
+          initialValues.setFieldValue("startDate", "");
+          initialValues.setFieldValue("endDate", "");
+          initialValues.setFieldValue("contents", "");
+          initialValues.setFieldValue("urlofCompany", "");
+          setEditorValue();
+
           // Optionally reset the uploaded URLs state
           setUploadUrls([]);
         }
       }
 
-      // You can now send the data to your backend or API
-      // Example:
-      // await submitToBackend(values);
-
-      // Optionally, reset form or show success message
       setSubmitting(false);
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -133,13 +135,24 @@ const AddAcademics = (editData) => {
     }
   };
 
+  const handleFileRemove = (removedFile) => {
+    console.log("URL ontained inside handleFileRemove:", removedFile);
+    // setFileRemovedURL(removedFile);
+    deleteFileByUrl(removedFile);
+    // enqueueSnackbar("Image delete successfully!", {
+    //   variant: "success",
+    // });
+    // Perform any additional logic here, like updating a state or making an API call
+  };
+
   async function deleteFileByUrl(fileUrl) {
+    console.log(fileUrl, "File URL on delete fuleVyUrl on delete");
     // Extract the file path from the URL
     const filePath = fileUrl.split("/storage/v1/object/public/storage/")[1];
 
-    console.log(filePath);
+    // console.log(filePath);
 
-    // Call Supabase API to delete the file
+    // // Call Supabase API to delete the file
     const { data, error } = await supabase.storage
       .from("storage") // Your bucket name
       .remove([filePath]);
@@ -153,19 +166,11 @@ const AddAcademics = (editData) => {
     }
   }
 
-  const handleFileRemove = (removedFile) => {
-    console.log("File removed:", removedFile);
-    setFileRemovedURL(removedFile);
-    deleteFileByUrl(removedFile);
-    enqueueSnackbar("Image delete successfully!", {
-      variant: "success",
-    });
-    // Perform any additional logic here, like updating a state or making an API call
-  };
-
   return (
     <div className="container mx-auto p-4">
-      <h2 className="text-2xl font-semibold mb-6">Add Academics</h2>
+      <h2 className="text-2xl font-semibold mb-6">
+        {editData ? "Edit Academic" : "Add Academic"}
+      </h2>
       <Formik
         initialValues={initialValues}
         validationSchema={validationSchema}

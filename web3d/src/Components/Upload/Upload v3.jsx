@@ -12,25 +12,28 @@ const Upload = ({
 }) => {
   const [files, setFiles] = useState(value || []);
 
+  // Handle file drop (local image upload)
   const onDrop = (acceptedFiles) => {
     const newFiles = [
       ...files,
       ...acceptedFiles.map((file) => ({
         file,
-        icon: URL.createObjectURL(file), // Store the object URL in the 'icon' field
-        type: "file", // Indicating it's a blob file
+        url: URL.createObjectURL(file), // Create URL for the uploaded file
+        type: "file", // Indicate it's a file
       })),
     ];
     setFiles(newFiles);
-    setFieldValue(name, newFiles); // Update Formik field
+    setFieldValue(name, newFiles); // Update Formik's field value with the new files
   };
 
+  // Handle the URLs or file objects display (when loading data from the backend)
   useEffect(() => {
     if (value && value.length > 0) {
       setFiles(
         value.map((item) => {
-          if (item.icon) {
-            return { icon: item.icon, type: "url" }; // Mark it as a URL
+          if (item.url) {
+            // If it's a URL, ensure it's marked as a URL type
+            return { url: item.url, type: "url" };
           }
           return item;
         })
@@ -39,29 +42,43 @@ const Upload = ({
   }, [value]);
 
   const getFileUrl = (fileObj) => {
-    if (fileObj.type === "file") {
-      return fileObj.icon; // Blob URL (stored as icon)
-    } else if (fileObj.icon) {
-      return fileObj.icon; // URL from Supabase stored in icon
-    }
-    return null;
+    // Return the correct URL for the file (either from file object or URL)
+    return fileObj.icon || URL.createObjectURL(fileObj.icon);
   };
 
   const { getRootProps, getInputProps } = useDropzone({
-    accept: "image/*",
+    accept: "image/*", // Only accept image files
     onDrop,
   });
 
+  // Remove a file or URL from the list
   const removeFile = (index) => {
-    const removedFile = files[index];
+    const removedFile = files[index]; // Get the removed file object
+
+    let removedFileUrl = null;
+
+    // Ensure the removed file exists and check if it's a URL from the backend
+    if (removedFile && removedFile.icon) {
+      removedFileUrl = removedFile.icon; // Assign URL from the backend
+    } else if (removedFile && removedFile.file) {
+      // It's a Blob file, no URL needed
+      removedFileUrl = null;
+    }
+
+    // Remove the file from the state (files array)
     const updatedFiles = files.filter((_, i) => i !== index);
     setFiles(updatedFiles);
-    setFieldValue(name, updatedFiles);
+    setFieldValue(name, updatedFiles); // Update Formik field value with the new files
 
-    // Trigger the file removal handler passed down from the parent
+    // Call the parent callback to inform about the removal with the correct URL (or null)
     if (onFileRemove) {
-      onFileRemove(removedFile.icon); // Pass the icon (which is the file URL)
+      onFileRemove(removedFileUrl); // Pass URL (or null) to the parent
     }
+
+    // Check if we have a valid URL before calling deleteFileByUrl
+    // if (removedFileUrl) {
+    //   handleFileRemove(removedFileUrl); // Only attempt to delete if URL is valid
+    // }
   };
 
   return (
@@ -84,14 +101,16 @@ const Upload = ({
           files.map((fileObj, index) => (
             <div key={index} className="relative">
               {fileObj.type === "url" ? (
+                // Display URL as image
                 <img
-                  src={fileObj.icon} // Use 'icon' for URL
+                  src={fileObj.url}
                   alt={`Icon ${index}`}
                   className="w-24 h-24 object-cover rounded-lg"
                 />
               ) : (
+                // Display uploaded file
                 <img
-                  src={getFileUrl(fileObj)}
+                  src={getFileUrl(fileObj)} // Use the file URL or the object URL
                   alt={fileObj.file ? fileObj.file.name : `Icon ${index}`}
                   className="w-24 h-24 object-cover rounded-lg"
                 />

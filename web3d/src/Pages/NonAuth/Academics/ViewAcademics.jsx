@@ -12,6 +12,7 @@ const ViewAcademics = () => {
   const { enqueueSnackbar } = useSnackbar();
   const [modal, setModal] = useState(false);
   const [editData, setEditData] = useState(null);
+  const [isEdit, setIsEdit] = useState(false);
 
   useEffect(() => {
     const fetchAcademics = async () => {
@@ -26,21 +27,29 @@ const ViewAcademics = () => {
           (a, b) => a.createdAt.toDate() - b.createdAt.toDate()
         );
         setAcademics(academicList);
+        setIsEdit(false);
       } catch (error) {
         console.error("Error fetching academics: ", error);
       }
     };
 
     fetchAcademics();
-  }, []);
+  }, [isEdit]);
 
   const handleEdit = (id) => {
     // Find the academic data based on the id
     const academic = academics.find((item) => item.id === id);
 
-    console.log(academic);
+    console.log("Edit data on handle Edit", academic);
     setEditData(academic);
     setModal(true);
+  };
+
+  const handleEditSuccess = () => {
+    console.log("Edit success");
+
+    setModal(false);
+    setIsEdit(true);
   };
 
   const handleDelete = async (id) => {
@@ -104,7 +113,10 @@ const ViewAcademics = () => {
         >
           <div className="w-full">
             {/* This div will allow for scrolling if the content overflows */}
-            <AddAcademics editData={editData} />
+            <AddAcademics
+              editData={editData}
+              handleEditSuccess={handleEditSuccess}
+            />
           </div>
         </Modal>
       )}
