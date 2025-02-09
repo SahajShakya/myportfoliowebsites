@@ -7,11 +7,15 @@ import { useSnackbar } from "notistack";
 import InputField from "../../../Components/Input/InputField"; // Your custom input field component
 import LoadingScreen from "../../../Components/UI/Loading/LoadingScreen";
 import { motion } from "framer-motion";
+import WebContact from "../../../Components/Model/WebContact";
 
 const Contact = () => {
   const [loading, setLoading] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
-  const [currentAnimation, setCurrentAnimation] = useState("idle");
+
+  console.log(import.meta.env.VITE_APP_EMAILJS_SERVICE_ID);
+  console.log(import.meta.env.VITE_APP_EMAILJS_TEMPLATE_ID);
+  console.log(import.meta.env.VITE_APP_EMAILJS_PUBLIC_KEY);
 
   const formik = useFormik({
     initialValues: {
@@ -28,7 +32,6 @@ const Contact = () => {
     }),
     onSubmit: (values, { resetForm }) => {
       setLoading(true);
-      setCurrentAnimation("hit");
 
       emailjs
         .send(
@@ -36,9 +39,9 @@ const Contact = () => {
           import.meta.env.VITE_APP_EMAILJS_TEMPLATE_ID,
           {
             from_name: values.name,
-            to_name: "JavaScript Mastery",
+            to_name: "Sahaj Shakya",
             from_email: values.email,
-            to_email: "sujata@jsmastery.pro",
+            to_email: "saz.shakya@gmail.com",
             message: values.message,
           },
           import.meta.env.VITE_APP_EMAILJS_PUBLIC_KEY
@@ -49,16 +52,10 @@ const Contact = () => {
             enqueueSnackbar("Thank you for your message 😃", {
               variant: "success",
             });
-
-            setTimeout(() => {
-              setCurrentAnimation("idle");
-              resetForm();
-            }, 3000);
           },
           (error) => {
             setLoading(false);
             console.error(error);
-            setCurrentAnimation("idle");
 
             enqueueSnackbar("I didn't receive your message 😢", {
               variant: "error",
@@ -157,7 +154,7 @@ const Contact = () => {
         </form>
       </motion.div>
 
-      <div className="lg:w-1/2 w-full lg:h-auto md:h-[550px] h-[350px]">
+      <div className="lg:w-1/3 w-full lg:h-auto md:h-[450px] h-[300px]">
         <Canvas
           camera={{
             position: [0, 0, 5],
@@ -177,7 +174,7 @@ const Contact = () => {
           />
 
           <Suspense fallback={<LoadingScreen />}>
-            {/* Add 3D animation here */}
+            <WebContact />
           </Suspense>
         </Canvas>
       </div>

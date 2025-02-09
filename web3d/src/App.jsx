@@ -13,8 +13,8 @@ import AuthRedirectWrapper from "./AuthRedirectWrapper";
 import Dashboard from "./Pages/Auth/Dashboard/Dashboard";
 import AuthLayout from "./Pages/Layout/AuthLayout";
 import Contact from "./Pages/NonAuth/Contact/Contact";
-import AddAcademics from "./Pages/NonAuth/Academics/AddAcademics";
-import ViewAcademics from "./Pages/NonAuth/Academics/ViewAcademics";
+import AddAcademics from "./Pages/Auth/Academics/AddAcademics";
+import ViewAcademics from "./Pages/Auth/Academics/ViewAcademics";
 import Calendar from "./Pages/Calendar/Calendar";
 
 // Define fixed roles and their corresponding IDs
