@@ -164,6 +164,13 @@ const HomeInfo = ({ currentStage }) => {
         linkUrl="/contact"
       />
     ),
+    5: (
+      <InfoCard
+        heading="My Achievements"
+        linkText="Click here to see my Achievements"
+        linkUrl="/achievements"
+      />
+    ),
   };
 
   return (

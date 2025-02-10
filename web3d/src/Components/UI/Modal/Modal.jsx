@@ -2,7 +2,7 @@ const Modal = ({ title, onClose, children, fullWidth = false }) => {
   return (
     <div className="flex items-center justify-center bg-gray-500 bg-opacity-50 z-50 absolute top-21 left-0 w-full h-full ">
       <div
-        className={`bg-white p-6 rounded-md shadow-lg ${
+        className={`bg-white p-6 rounded-md z-100 shadow-lg ${
           fullWidth ? "w-full" : "w-96"
         } max-w-4xl mx-4`}
       >

@@ -7,15 +7,12 @@ import { useSnackbar } from "notistack";
 import InputField from "../../../Components/Input/InputField"; // Your custom input field component
 import LoadingScreen from "../../../Components/UI/Loading/LoadingScreen";
 import { motion } from "framer-motion";
-import WebContact from "../../../Components/Model/WebContact";
+import { Fox } from "../../../Components/Model/Fox"; // Your custom 3D model component
 
 const Contact = () => {
   const [loading, setLoading] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
-
-  console.log(import.meta.env.VITE_APP_EMAILJS_SERVICE_ID);
-  console.log(import.meta.env.VITE_APP_EMAILJS_TEMPLATE_ID);
-  console.log(import.meta.env.VITE_APP_EMAILJS_PUBLIC_KEY);
+  const [currentAnimation, setCurrentAnimation] = useState("idle");
 
   const formik = useFormik({
     initialValues: {
@@ -52,11 +49,11 @@ const Contact = () => {
             enqueueSnackbar("Thank you for your message 😃", {
               variant: "success",
             });
+            resetForm();
           },
           (error) => {
             setLoading(false);
             console.error(error);
-
             enqueueSnackbar("I didn't receive your message 😢", {
               variant: "error",
             });
@@ -82,28 +79,24 @@ const Contact = () => {
           <InputField
             name="name"
             type="text"
-            label="Name"
+            label="Your Name"
             value={formik.values.name}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
             error={formik.errors.name}
             touched={formik.touched.name ?? false}
-            focusedField={formik.focusedField}
-            setFocusedField={formik.setFieldTouched}
           />
 
           {/* Email input */}
           <InputField
             name="email"
             type="email"
-            label="Email"
+            label="Your Email"
             value={formik.values.email}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
             error={formik.errors.email}
             touched={formik.touched.email ?? false}
-            focusedField={formik.focusedField}
-            setFocusedField={formik.setFieldTouched}
           />
 
           {/* Message input */}
@@ -154,6 +147,7 @@ const Contact = () => {
         </form>
       </motion.div>
 
+      {/* 3D Model Canvas */}
       <div className="lg:w-1/3 w-full lg:h-auto md:h-[450px] h-[300px]">
         <Canvas
           camera={{
@@ -174,7 +168,12 @@ const Contact = () => {
           />
 
           <Suspense fallback={<LoadingScreen />}>
-            <WebContact />
+            <Fox
+              currentAnimation={currentAnimation}
+              position={[0.5, 0.35, 0]}
+              rotation={[12.629, -0.6, 0]}
+              scale={[0.5, 0.5, 0.5]}
+            />
           </Suspense>
         </Canvas>
       </div>

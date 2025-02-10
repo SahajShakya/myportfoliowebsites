@@ -183,6 +183,8 @@ const Office2 = ({
       const normalizedRotation =
         ((rotation % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
 
+      // console.log(normalizedRotation);
+
       // Set the current stage based on the island's orientation
       switch (true) {
         case normalizedRotation >= 5.93 || normalizedRotation <= 0.35:
@@ -190,13 +192,18 @@ const Office2 = ({
           break;
 
         // Stage 2: This range is straightforward (1.6 to 2.5)
-        case normalizedRotation >= 1.6 && normalizedRotation <= 2.5:
+        case normalizedRotation >= 1.6 && normalizedRotation <= 3:
           setCurrentStage(2);
           break;
 
         // Stage 1: This range is straightforward (4.25 to 4.75)
         case normalizedRotation >= 4.25 && normalizedRotation <= 4.75:
           setCurrentStage(1);
+          break;
+
+        // Stage 1: This range is straightforward (4.25 to 4.75)
+        case normalizedRotation >= 3.2 && normalizedRotation <= 2.2:
+          setCurrentStage(6);
           break;
 
         // Stage 4: This range wraps from 5.0 to 1.0 (ensure this doesn't run after 2)
