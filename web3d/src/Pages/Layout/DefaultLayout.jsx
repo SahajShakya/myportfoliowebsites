@@ -4,7 +4,7 @@ import Nav from "../../Components/NavBar/Nav";
 
 const DefaultLayout = () => {
   return (
-    <div>
+    <div className="bg-gray-200">
       <Nav />
       <Outlet />
     </div>

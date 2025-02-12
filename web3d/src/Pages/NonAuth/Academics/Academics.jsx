@@ -14,7 +14,6 @@ import { textVariant } from "../../../utils/motion";
 // ExperienceCard Component
 
 const ExperienceCard = ({ education }) => {
-  console.log(education);
   const startYear = new Date(education.startDate).getFullYear(); // Extract the year
   const endYear = new Date(education.endDate).getFullYear();
   return (
@@ -23,6 +22,9 @@ const ExperienceCard = ({ education }) => {
       contentStyle={{
         background: "#1d1836",
         color: "#fff",
+        borderBottom: "8px",
+        borderStyle: "solid",
+        borderBottomColor: "#6c5ce7",
       }}
       contentArrowStyle={{ borderRight: "7px solid #1d1836" }}
       date={
@@ -30,11 +32,11 @@ const ExperienceCard = ({ education }) => {
       }
       //   iconStyle={{ background: education.iconBg }}
       icon={
-        <div className="flex justify-center items-center w-full h-full">
+        <div className="flex justify-center items-center w-full h-full rounded-full overflow-hidden">
           <img
             src={education.icons[0].publicUrl}
             alt={education.university_name}
-            className="w-[60%] h-[60%] object-contain"
+            className="w-[15%] aspect-[3/2] object-contain mix-blend-color-burn rounded-lg"
           />
         </div>
       }
@@ -115,7 +117,7 @@ const Academics = () => {
 
         // Sort by startDate field (assuming startDate exists in your Firestore document)
         academicList.sort(
-          (a, b) => new Date(b.startDate) - new Date(a.startDate)
+          (a, b) => new Date(a.startDate) - new Date(b.startDate)
         );
 
         setAcademics(academicList);
@@ -140,7 +142,7 @@ const Academics = () => {
       </motion.div>
 
       <div className="mt-20 flex flex-col">
-        <VerticalTimeline>
+        <VerticalTimeline lineColor="#6c5ce7" animate={true} layout="2-columns">
           {academics.map((education) => (
             <ExperienceCard key={education.id} education={education} />
           ))}

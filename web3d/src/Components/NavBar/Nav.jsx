@@ -55,7 +55,9 @@ const Nav = () => {
             className="w-10 h-8 md:w-2- md:h-10 rounded-full object-cover mt-6"
           />
           <div className="ml-4 text-white align-content-center align-item-center">
-            <div className="font-semibold text-lg md:text-xl">Sahaj Shakya</div>
+            <div className="font-semibold text-lg md:text-xl text-black">
+              Sahaj Shakya
+            </div>
             <div className="flex items-center text-sm md:text-base">
               <FaEnvelope className="mr-2 text-blue-500" />
               <h3 className="text-blue-700">saz.shakya@gmail.com</h3>

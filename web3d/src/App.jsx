@@ -17,6 +17,12 @@ import AddAcademics from "./Pages/Auth/Academics/AddAcademics";
 import ViewAcademics from "./Pages/Auth/Academics/ViewAcademics";
 import Calendar from "./Pages/Calendar/Calendar";
 import Academics from "./Pages/NonAuth/Academics/Academics";
+import AddJourney from "./Pages/Auth/Journey/AddJourney";
+import ViewJourney from "./Pages/Auth/Journey/ViewJourney";
+import Journey from "./Pages/NonAuth/Journey/Journey";
+import AddProjects from "./Pages/Auth/Projects/AddProjects";
+import ViewProjects from "./Pages/Auth/Projects/ViewProjects";
+import Projects from "./Pages/NonAuth/Projects/Projects";
 
 // Define fixed roles and their corresponding IDs
 const roleData = [{ id: 1, name: "admin" }];
@@ -75,6 +81,8 @@ const App = () => {
             />
             <Route path="/contact" element={<Contact />}></Route>
             <Route path="/academics" element={<Academics />}></Route>
+            <Route path="/journey" element={<Journey />}></Route>
+            <Route path="/projects" element={<Projects />}></Route>
             <Route path="/calendar" element={<Calendar />}></Route>
           </Route>
 
@@ -108,18 +116,43 @@ const App = () => {
                 <PrivateRoute roleProps="admin" element={<ViewAcademics />} />
               }
             />
-
-            <Route
+            {/* <Route
               path="/auth/academics/edit"
               element={
                 <PrivateRoute roleProps="admin" element={<AddAcademics />} />
               }
-            />
-
+            /> */}
             <Route
               path="/auth/academics/create"
               element={
                 <PrivateRoute roleProps="admin" element={<AddAcademics />} />
+              }
+            />
+            {/* Journey Layout */}
+            <Route
+              path="/auth/journey/view"
+              element={
+                <PrivateRoute roleProps="admin" element={<ViewJourney />} />
+              }
+            />
+            <Route
+              path="/auth/journey/create"
+              element={
+                <PrivateRoute roleProps="admin" element={<AddJourney />} />
+              }
+            />
+
+            {/* Projects Layout */}
+            <Route
+              path="/auth/projects/create"
+              element={
+                <PrivateRoute roleProps="admin" element={<AddProjects />} />
+              }
+            />
+            <Route
+              path="/auth/projects/view"
+              element={
+                <PrivateRoute roleProps="admin" element={<ViewProjects />} />
               }
             />
           </Route>

@@ -9,12 +9,12 @@ import {
 } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { useSnackbar } from "notistack";
-import AddAcademics from "./AddAcademics";
+import AddJourney from "./AddJourney"; // Updated component import
 import Modal from "../../../Components/UI/Modal/Modal";
 import { deleteFilesFromSupabase } from "../../../utils/supabaseFIle";
 
-const ViewAcademics = () => {
-  const [academics, setAcademics] = useState([]);
+const ViewJourney = () => {
+  const [journeys, setJourneys] = useState([]);
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
   const [modal, setModal] = useState(false);
@@ -22,38 +22,36 @@ const ViewAcademics = () => {
   const [isEdit, setIsEdit] = useState(false);
 
   useEffect(() => {
-    const fetchAcademics = async () => {
+    const fetchJourneys = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, "academics"));
-        const academicList = querySnapshot.docs.map((doc) => ({
+        const querySnapshot = await getDocs(collection(db, "journey"));
+        const journeyList = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
 
         // Sort by createdAt field, with a check for missing or invalid createdAt
-        academicList.sort((a, b) => {
-          // Fallback to current date if createdAt is missing or invalid
+        journeyList.sort((a, b) => {
           const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date();
           const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date();
           return dateA - dateB; // Sort in descending order
         });
 
-        setAcademics(academicList);
+        setJourneys(journeyList);
         setIsEdit(false);
       } catch (error) {
-        console.error("Error fetching academics: ", error);
+        console.error("Error fetching journeys: ", error);
       }
     };
 
-    fetchAcademics();
+    fetchJourneys();
   }, [isEdit]);
 
   const handleEdit = (id) => {
-    // Find the academic data based on the id
-    const academic = academics.find((item) => item.id === id);
-
-    console.log("Edit data on handle Edit", academic);
-    setEditData(academic);
+    // Find the journey data based on the id
+    const journey = journeys.find((item) => item.id === id);
+    console.log("Edit data on handle Edit", journey);
+    setEditData(journey);
     setModal(true);
   };
 
@@ -66,7 +64,7 @@ const ViewAcademics = () => {
 
   const handleDelete = async (id) => {
     try {
-      const docRef = doc(db, "academics", id); // Get reference to the document
+      const docRef = doc(db, "journey", id); // Get reference to the document
       console.log("Document reference:", docRef);
 
       // Try to fetch the document
@@ -74,26 +72,26 @@ const ViewAcademics = () => {
 
       if (!docSnapshot.exists()) {
         console.error("Document not found.");
-        enqueueSnackbar("Academic data not found.", { variant: "error" });
+        enqueueSnackbar("Journey data not found.", { variant: "error" });
         return;
       }
 
-      const academicData = docSnapshot.data();
-      console.log("Academic data:", academicData); // Check if data is being fetched
+      const journeyData = docSnapshot.data();
+      console.log("Journey data:", journeyData);
 
-      const fileUrls = academicData.icons; // Assuming 'icon' stores the file URL
+      const fileUrls = journeyData.icons; // Assuming 'icons' stores the file URL
       console.log("File URL:", fileUrls);
-      // console.log("Doc Snapshot", fileUrl);
-      const deleteFile = await deleteFilesFromSupabase(fileUrls, "academics");
+
+      const deleteFile = await deleteFilesFromSupabase(fileUrls, "journey");
       console.log("Delete", deleteFile);
 
-      await deleteDoc(doc(db, "academics", id));
-      setAcademics(academics.filter((academic) => academic.id !== id));
-      enqueueSnackbar("Academic data deleted successfully!", {
+      await deleteDoc(doc(db, "journey", id));
+      setJourneys(journeys.filter((journey) => journey.id !== id));
+      enqueueSnackbar("Journey data deleted successfully!", {
         variant: "success",
       });
     } catch (error) {
-      enqueueSnackbar("Failed to delete academic data. Please try again.", {
+      enqueueSnackbar("Failed to delete journey data. Please try again.", {
         variant: "error",
       });
     }
@@ -105,31 +103,31 @@ const ViewAcademics = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-semibold mb-6">Academics</h1>
+      <h1 className="text-2xl font-semibold mb-6">Journeys</h1>
       <table className="w-full table-auto">
         <thead>
           <tr>
             <th className="px-4 py-2 text-left">Title</th>
-            <th className="px-4 py-2 text-left">University</th>
-            <th className="px-4 py-2 text-left">College</th>
+            <th className="px-4 py-2 text-left">Office</th>
+            <th className="px-4 py-2 text-left">Designation</th>
             <th className="px-4 py-2 text-center">Action</th>
           </tr>
         </thead>
         <tbody>
-          {academics.map((academic) => (
-            <tr key={academic.id}>
-              <td className="px-4 py-2">{academic.title}</td>
-              <td className="px-4 py-2">{academic.university_name}</td>
-              <td className="px-4 py-2">{academic.college_name}</td>
+          {journeys.map((journey) => (
+            <tr key={journey.id}>
+              <td className="px-4 py-2">{journey.title}</td>
+              <td className="px-4 py-2">{journey.office_name}</td>
+              <td className="px-4 py-2">{journey.designation}</td>
               <td className="px-4 py-2 text-center">
                 <button
-                  onClick={() => handleEdit(academic.id)}
+                  onClick={() => handleEdit(journey.id)}
                   className="bg-blue-500 text-white px-4 py-2 rounded-md mr-2"
                 >
                   Edit
                 </button>
                 <button
-                  onClick={() => handleDelete(academic.id)}
+                  onClick={() => handleDelete(journey.id)}
                   className="bg-red-500 text-white px-4 py-2 rounded-md"
                 >
                   Delete
@@ -142,11 +140,11 @@ const ViewAcademics = () => {
       {modal && (
         <Modal
           onClose={handleCloseModal}
-          title={editData ? "Edit Academic" : "Add Academic"}
+          title={editData ? "Edit Journey" : "Add Journey"}
         >
           <div className="w-full">
             {/* This div will allow for scrolling if the content overflows */}
-            <AddAcademics
+            <AddJourney
               editData={editData}
               handleEditSuccess={handleEditSuccess}
             />
@@ -157,4 +155,4 @@ const ViewAcademics = () => {
   );
 };
 
-export default ViewAcademics;
+export default ViewJourney;

@@ -9,31 +9,29 @@ import {
   FaLock,
   FaChevronDown,
   FaChevronUp,
-} from "react-icons/fa"; // Add chevron icons for dropdown
+  FaProjectDiagram,
+} from "react-icons/fa"; // Add FaProjectDiagram
 
 const AuthLayout = () => {
   const [activeTab, setActiveTab] = useState("");
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [dropdowns, setDropdowns] = useState({
     academics: false,
-    works: false,
+    journey: false,
     achievements: false,
+    projects: false, // Add projects dropdown state
   });
 
-  // Function to handle the tab change
   const handleTabClick = (tab) => {
     setActiveTab(tab);
   };
 
-  // Function to toggle sidebar collapse
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
   };
 
-  // Function to toggle dropdown visibility for submenus
   const toggleDropdown = (tab) => {
     setDropdowns((prevState) => ({
-      // Close all dropdowns, then toggle the clicked one
       ...Object.keys(prevState).reduce((acc, key) => {
         acc[key] = key === tab ? !prevState[key] : false;
         return acc;
@@ -41,14 +39,13 @@ const AuthLayout = () => {
     }));
   };
 
-  // Routes for each section
   const routes = [
     { name: "academics", label: "Academics" },
-    { name: "works", label: "Works" },
+    { name: "journey", label: "Journey" },
+    { name: "projects", label: "Projects" },
     { name: "achievements", label: "Achievements" },
   ];
 
-  // Create the dropdown items for each section (Create/View)
   const generateDropdownItems = (section) => (
     <ul className="ml-4 mt-2 space-y-2">
       <li>
@@ -68,19 +65,17 @@ const AuthLayout = () => {
     <>
       <Nav />
       <div className="flex h-screen">
-        {/* Sidebar */}
         <div
           className={`transition-all duration-300 ${
             isCollapsed
-              ? "w-20 bg-black text-white" // Black background when collapsed
-              : "w-64 bg-white text-black" // White background when expanded
+              ? "w-20 bg-black text-white"
+              : "w-64 bg-white text-black"
           } p-4`}
         >
           <div className="flex justify-between items-center mb-6">
-            {/* Sidebar toggle button */}
             <button onClick={toggleSidebar} className="text-black">
               {isCollapsed ? (
-                <FaBars className="text-2xl text-white" /> // White icon when collapsed
+                <FaBars className="text-2xl text-white" />
               ) : (
                 <FaTimes className="text-2xl text-black" />
               )}
@@ -104,11 +99,13 @@ const AuthLayout = () => {
                     {isCollapsed ? (
                       name === "academics" ? (
                         <FaUser className="text-xl text-white" />
-                      ) : name === "works" ? (
+                      ) : name === "journey" ? (
                         <FaCogs className="text-xl text-white" />
-                      ) : (
+                      ) : name === "achievements" ? (
                         <FaLock className="text-xl text-white" />
-                      )
+                      ) : name === "projects" ? (
+                        <FaProjectDiagram className="text-xl text-white" />
+                      ) : null
                     ) : (
                       label
                     )}
@@ -116,7 +113,7 @@ const AuthLayout = () => {
                   {!isCollapsed && (
                     <button
                       onClick={(e) => {
-                        e.stopPropagation(); // Prevent click from triggering tab change
+                        e.stopPropagation();
                         toggleDropdown(name);
                       }}
                       className="text-blue-600"
@@ -125,14 +122,12 @@ const AuthLayout = () => {
                     </button>
                   )}
                 </div>
-                {/* Dropdown for the section */}
                 {!isCollapsed && dropdowns[name] && generateDropdownItems(name)}
               </li>
             ))}
           </ul>
         </div>
 
-        {/* Main Content */}
         <div className="flex-1 bg-gray-100 p-6">
           <Outlet />
         </div>
