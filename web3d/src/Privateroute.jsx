@@ -4,8 +4,7 @@ import { Navigate } from "react-router-dom";
 import { useActiveUser } from "./Components/Query/getActiveUsers";
 import { getAuth } from "firebase/auth";
 
-
-const PrivateRoute= ({ element, roleProps }) => {
+const PrivateRoute = ({ element, roleProps }) => {
   // const { user } = useUser(); // Access user info from context
   const auth = getAuth();
   const uid = auth.currentUser?.uid; // Get the user ID from Firebase Auth

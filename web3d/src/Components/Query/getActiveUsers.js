@@ -19,12 +19,12 @@ export const useActiveUser = (uid) => {
   const queryClient = useQueryClient();
 
   // Check if data is already in the cache
-  const cachedData = queryClient.getQueryData(["activeUser", uid]);
+  // const cachedData = queryClient.getQueryData(["activeUser", uid]);
 
-  // If cached data exists, return it immediately
-  if (cachedData) {
-    return { data: cachedData, isLoading: false, isError: false };
-  }
+  // // If cached data exists, return it immediately
+  // if (cachedData) {
+  //   return { data: cachedData, isLoading: false, isError: false };
+  // }
 
   // If no cached data, perform the query
   // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -34,13 +34,13 @@ export const useActiveUser = (uid) => {
     {
       enabled: !!uid, // Only fetch data if UID is provided
       retry: false, // Disable retries for this query (optional)
-      onError: (error) => {
-        console.error("Error fetching active user:", error.message);
-      },
-      onSuccess: (data) => {
-        // Optionally, you can cache the data manually if needed
-        queryClient.setQueryData(["activeUser", uid], data);
-      },
+      // onError: (error) => {
+      //   console.error("Error fetching active user:", error.message);
+      // },
+      // onSuccess: (data) => {
+      //   // Optionally, you can cache the data manually if needed
+      //   queryClient.setQueryData(["activeUser", uid], data);
+      // },
       // Optional: You can control cache timing, etc., by adding more options like staleTime, cacheTime, etc.
     }
   );

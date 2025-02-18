@@ -1,8 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
 
-
-
 const InputField = ({
   name,
   type,
@@ -15,10 +13,20 @@ const InputField = ({
   focusedField,
   setFocusedField,
 }) => {
-  const isFocused = focusedField === name || value !== ""; // Check if the input is focused or has value
+  const isFocused = focusedField === name || (value && value.length > 0);
 
   return (
     <div className="relative mb-6">
+      <motion.label
+        htmlFor={name}
+        className={`absolute left-3 transition-all duration-300 ${
+          isFocused
+            ? "top-0 text-sm text-blue-500"
+            : "top-1/4 transform -translate-y-1/4 text-gray-500"
+        }`}
+      >
+        {label}
+      </motion.label>
       <motion.input
         type={type}
         id={name}
@@ -30,18 +38,7 @@ const InputField = ({
         onChange={onChange}
         onBlur={onBlur}
         onFocus={() => setFocusedField(name)}
-        required
       />
-      <motion.label
-        htmlFor={name}
-        className={`absolute left-3 transition-all duration-300 ${
-          isFocused
-            ? "top-0 text-sm text-blue-500" // When focused or has value, move the label above
-            : "top-1/4 transform -translate-y-1/4 text-gray-500" // Default when not focused
-        }`}
-      >
-        {label}
-      </motion.label>
       {touched && error && <p className="text-red-500 text-xs mt-2">{error}</p>}
     </div>
   );

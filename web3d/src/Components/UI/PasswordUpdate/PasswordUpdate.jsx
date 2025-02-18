@@ -10,11 +10,9 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import InputField from "../../Input/InputField"; // Your custom InputField component
 
-const UpdatePassword = ({
-  handleCloseModal,
-}) => {
-  const [loading, setLoading] = useState<boolean>(false);
-  const [focusedField, setFocusedField] = useState<string | null>(null); // To manage focused state for InputField
+const UpdatePassword = ({ handleCloseModal }) => {
+  const [loading, setLoading] = useState(false);
+  const [focusedField, setFocusedField] = useState(null); // To manage focused state for InputField
 
   const auth = getAuth();
   const user = auth.currentUser;
