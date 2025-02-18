@@ -28,8 +28,6 @@ const AddJourney = ({ editData, handleEditSuccess }) => {
 
   const { enqueueSnackbar } = useSnackbar();
 
-  console.log("Edit data on journey", editData);
-
   // Set initial values for the form
   const initialValues = {
     title: editData?.title || "",

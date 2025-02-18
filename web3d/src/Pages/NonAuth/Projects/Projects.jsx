@@ -11,14 +11,20 @@ const Projects = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  console.log(projects);
-
-  // Fetch projects from Firestore
   useEffect(() => {
     const fetchProjects = async () => {
       const querySnapshot = await getDocs(collection(db, "projects"));
-      const projectsList = querySnapshot.docs.map((doc) => doc.data());
-      setProjects(projectsList);
+      const projectsList = querySnapshot.docs.map((doc) => ({
+        id: doc.id, // Get the document ID
+        ...doc.data(), // Get the rest of the data
+      }));
+
+      // Sort projects by startDate
+      const sortedProjects = projectsList.sort(
+        (a, b) => new Date(a.startDate) - new Date(b.startDate)
+      );
+
+      setProjects(sortedProjects);
       setLoading(false);
     };
 
@@ -26,42 +32,38 @@ const Projects = () => {
   }, []);
 
   if (loading) {
-    return <p>Loading...</p>; // You can customize this loading state
+    return <p>Loading...</p>;
   }
-
+  console.log(projects);
   return (
-    <>
-      <div className="ml-10">
-        <motion.div variants={textVariant()}>
-          <p className={`${styles.sectionSubText}`}>My work</p>
-          <h2 className={`${styles.sectionHeadText}`}>Projects.</h2>
-        </motion.div>
+    <div className="ml-10">
+      <motion.div variants={textVariant()}>
+        <p className={styles.sectionSubText}>My work</p>
+        <h2 className={styles.sectionHeadText}>Projects.</h2>
+      </motion.div>
 
-        <div className="w-full flex">
-          <motion.p
-            variants={fadeIn("", "", 0.1, 1)}
-            className="mt-3 text-secondary text-[17px] max-w-3xl leading-[30px]"
-          >
-            Following projects showcase my skills and experience through
-            real-world examples of my work. Each project is briefly described
-            with links to code repositories and live demos in it. It reflects my
-            ability to solve complex problems, work with different technologies,
-            and manage projects effectively.
-          </motion.p>
-        </div>
+      <motion.p
+        variants={fadeIn("", "", 0.1, 1)}
+        className="mt-3 text-secondary text-[17px] max-w-3xl leading-[30px]"
+      >
+        Following projects showcase my skills and experience through real-world
+        examples of my work. Each project is briefly described with links to
+        code repositories and live demos in it. It reflects my ability to solve
+        complex problems, work with different technologies, and manage projects
+        effectively.
+      </motion.p>
 
-        <div className="mt-20 flex flex-wrap gap-7">
-          {projects.map((project, index) => (
-            // Make sure to use a unique key value
-            <ProjectCard
-              key={project.description}
-              index={project.id}
-              {...project}
-            />
-          ))}
-        </div>
+      <div className="mt-20 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-7">
+        {projects.map((project) => (
+          <ProjectCard
+            key={project.id}
+            index={project?.id}
+            {...project}
+            route={"projects"}
+          />
+        ))}
       </div>
-    </>
+    </div>
   );
 };
 

@@ -26,7 +26,7 @@ const roles = [
 // InfoCard Component
 const InfoCard = ({ heading, linkText, linkUrl }) => {
   return (
-    <div className="flex justify-center ">
+    <div className="flex justify-center mt-20">
       <div
         className="
           sm:text-sm text-center py-2 px-2
@@ -40,6 +40,7 @@ const InfoCard = ({ heading, linkText, linkUrl }) => {
         {/* Learn More Button inside the card */}
         <a
           href={linkUrl}
+          target="_blank"
           className="
             inline-block bg-gradient-to-r from-white to-blue-500 text-blue-700 font-semibold py-2 px-6 rounded-lg
             shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-2xl
@@ -113,7 +114,7 @@ const HomeInfo = ({ currentStage }) => {
   const renderContent = {
     1: (
       <div
-        className="flex justify-center w-[200px]"
+        className="flex justify-center w-full sm:w-[300px] md:w-[200px] mt-20 sm:h-[200px]"
         onClick={() => openModal()}
       >
         <h1

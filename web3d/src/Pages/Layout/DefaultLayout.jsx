@@ -6,7 +6,10 @@ const DefaultLayout = () => {
   return (
     <div className="bg-gray-200">
       <Nav />
-      <Outlet />
+      <div className="mt-10">
+        {/* Adds gap between navbar and outlet */}
+        <Outlet />
+      </div>
     </div>
   );
 };

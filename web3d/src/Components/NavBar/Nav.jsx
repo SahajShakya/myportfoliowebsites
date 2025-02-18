@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion, useMotionValue, useTransform } from "framer-motion";
 import {
   FaEnvelope,
@@ -11,9 +11,52 @@ import {
 import Navbar from "./Navbar2";
 import NavElement from "../NavLink/NavElement";
 import mypic from "../../assets/mypic.png"; // Ensure you import your image correctly
+import iconGoogle from "../../assets/logo/iconGoogle.png";
+import { getFirestore, collection, getDocs } from "firebase/firestore";
+import { db } from "../../firebase/firebase";
 
 // Main Nav Component
 const Nav = () => {
+  const [projects, setProjects] = useState([]);
+  const [Acheivements, setAcheivement] = useState([]);
+  useEffect(() => {
+    const fetchProjects = async () => {
+      const querySnapshot = await getDocs(collection(db, "projects"));
+      const projectsList = querySnapshot.docs.map((doc) => ({
+        id: doc.id, // Get the document ID
+        ...doc.data(), // Get the rest of the data
+      }));
+
+      // Sort projects by startDate
+      const sortedProjects = projectsList.sort(
+        (a, b) => new Date(a.startDate) - new Date(b.startDate)
+      );
+
+      setProjects(sortedProjects);
+    };
+
+    fetchProjects();
+  }, []);
+
+  useEffect(() => {
+    const fetchAcheivement = async () => {
+      const querySnapshot = await getDocs(collection(db, "achievements"));
+      const projectsList = querySnapshot.docs.map((doc) => ({
+        id: doc.id, // Get the document ID
+        ...doc.data(), // Get the rest of the data
+      }));
+
+      // Sort projects by startDate
+      const sortedProjects = projectsList.sort(
+        (a, b) => new Date(a.startDate) - new Date(b.startDate)
+      );
+
+      setAcheivement(sortedProjects);
+    };
+
+    fetchAcheivement();
+  }, []);
+
   const token = localStorage.getItem("authToken");
   const tabs = [
     { name: "Home", hasDropdown: false, linkTo: "/" },
@@ -21,32 +64,57 @@ const Nav = () => {
       name: "Projects",
       hasDropdown: true,
       dropdownOptions: [
-        { label: "Option 1", to: "/option-1" },
-        { label: "Option 2", to: "/option-2" },
-        { label: "Option 4", to: "/option-3" },
+        {
+          label: projects.length > 0 ? projects[2].name : "Loading...",
+          to: projects.length > 0 ? `/projects/${projects[2].id}` : "/",
+        },
+        {
+          label: projects.length > 0 ? projects[1].name : "Loading...",
+          to: projects.length > 0 ? `/projects/${projects[1].id}` : "/",
+        },
+        { label: "Show All", to: "/projects" },
       ],
     },
     {
       name: "Achievements",
       hasDropdown: true,
       dropdownOptions: [
-        { label: "Option 1", to: "/option-1" },
-        { label: "Option 2", to: "/option-2" },
-        { label: "Option 3", to: "/option-3" },
+        {
+          label: Acheivements.length > 0 ? Acheivements[0].name : "Loading...",
+          to:
+            Acheivements.length > 0
+              ? `/achievements/${Acheivements[0].id}`
+              : "/",
+        },
+        {
+          label: Acheivements.length > 0 ? Acheivements[1].name : "Loading...",
+          to:
+            Acheivements.length > 0
+              ? `/achievements/${Acheivements[1].id}`
+              : "/",
+        },
+        { label: "Show All", to: "/achievements" },
       ],
     },
-    { name: "About Us", hasDropdown: false, linkTo: "/blog" },
+    {
+      name: "Publications",
+      hasDropdown: false,
+      linkTo: "https://scholar.google.com/citations?user=TyG1JqoAAAAJ&hl=en",
+    },
+    { name: "About Me", hasDropdown: false, linkTo: "/me" },
     { name: "Contact", hasDropdown: false, linkTo: "/contact" },
   ];
 
+  console.log(Acheivements);
+
   return (
     <motion.div
-      className="flex items-center justify-between h-[20px] px-4 md:px-8"
+      className="flex items-center justify-between h-[20px] px-4 md:px-8 mt-20"
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
-      <div className="flex justify-center mb-4 flex-col items-center">
+      <div className="flex justify-center mb-10 flex-col items-center">
         {/* Profile Image */}
         <div className="flex items-center justify-content-center mt-0">
           <img
@@ -70,7 +138,7 @@ const Nav = () => {
         </div>
 
         {/* Social Media Links */}
-        <div className="flex-row gap-6 md:gap-2 hidden md:flex">
+        <div className="flex-row gap-1 md:gap-1 hidden md:flex">
           <StickyNavLink
             path="https://github.com/sahajshakya"
             logo={<FaGithub size={28} />}
@@ -85,6 +153,14 @@ const Nav = () => {
             path="https://www.researchgate.net/profile/Sahaj-Shakya"
             logo={<span className="text-lg font-bold">RG</span>}
             name="ResearchGate"
+          />
+          <StickyNavLink
+            path="https://scholar.google.com/citations?user=TyG1JqoAAAAJ&hl=en"
+            // logo={<span className="text-lg font-bold">GS</span>}
+            logo={
+              <img src={iconGoogle} alt="Google Scholar" className="w-6 h-6" />
+            }
+            name="Google Scholar"
           />
           <StickyNavLink
             path="https://www.youtube.com/@KA1SKZ"
@@ -105,7 +181,7 @@ const Nav = () => {
       </div>
 
       {/* Additional Nav Element */}
-      <div className="flex gap-12 hidden md:flex">
+      <div className="flex gap-5 hidden md:flex">
         <NavElement
           token={token}
           path="https://engineeringstudymaterials.com/"
@@ -130,6 +206,10 @@ const StickyNavLink = ({ path, logo, name }) => {
         const item = event.currentTarget;
         setTransform(item, event, x, y);
       }}
+      // onHoverStart={(event) => {
+      //   const item = event.currentTarget;
+      //   setTransform(item, event, x, y);
+      // }}
       onPointerLeave={() => {
         x.set(0);
         y.set(0);

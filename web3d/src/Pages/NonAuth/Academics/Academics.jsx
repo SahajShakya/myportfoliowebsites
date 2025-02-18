@@ -36,7 +36,7 @@ const ExperienceCard = ({ education }) => {
           <img
             src={education.icons[0].publicUrl}
             alt={education.university_name}
-            className="w-[15%] aspect-[3/2] object-contain mix-blend-color-burn rounded-lg"
+            className="w-[100%]  object-contain  rounded-lg"
           />
         </div>
       }

@@ -72,8 +72,6 @@ const ViewProjects = () => {
       const projectDetailsQuery = collection(db, "projectDetails");
       const projectDetailsSnapshot = await getDocs(projectDetailsQuery);
 
-      console.log("Project ID", id);
-
       const projectDetailsToDelete = projectDetailsSnapshot.docs.filter(
         (doc) => {
           const data = doc.data();

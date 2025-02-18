@@ -70,7 +70,7 @@ const Navbar = ({ tabs, token }) => {
             className="p-2 text-gray-600 lg:hidden"
             aria-label="Toggle Menu"
           >
-            {menuOpen ? <FiX size={-1} /> : <FiMenu size={24} />}
+            {menuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
           </button>
         )}
       </div>
@@ -82,7 +82,7 @@ const Navbar = ({ tabs, token }) => {
 
       {/* Only show the Simple Navbar on Mobile when menu is open */}
       {isMobile && menuOpen && (
-        <div className="absolute inset-0 =z-50 p-4" ref={menuRef}>
+        <div className="absolute inset-0 z-50 p-4" ref={menuRef}>
           <SimpleNavbar
             tabs={updatedTabs}
             token={token}
@@ -199,7 +199,7 @@ const SlideTabs = ({ tabs, isMobile, token }) => {
   );
 };
 
-// Tab component (unchanged)
+// Tab component with hover behavior
 const Tab = ({
   children,
   tab,
@@ -211,10 +211,18 @@ const Tab = ({
   linkTo,
   dropdownOptions, // Accept dropdown options as props
 }) => {
+  const handleMouseEnter = () => {
+    setHovered(tab); // Show the dropdown when tab is hovered
+  };
+
+  const handleMouseLeave = () => {
+    setHovered(null); // Hide the dropdown when mouse leaves the tab
+  };
+
   return (
     <li
-      onMouseEnter={() => setHovered(tab)} // Set hovered tab
-      onMouseLeave={() => setHovered(null)} // Reset hovered state when mouse leaves
+      onMouseEnter={handleMouseEnter} // Set hover state when tab is hovered
+      onMouseLeave={handleMouseLeave} // Reset hover state when mouse leaves tab
       onClick={() => handleSetSelected(tab)} // Set selected tab
       className={`relative z-10 block cursor-pointer px-3 py-1.5 text-xs uppercase md:px-5 md:py-3 md:text-base ${
         hovered === tab || selected === tab

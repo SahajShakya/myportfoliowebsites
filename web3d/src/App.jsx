@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "./Pages/NonAuth/Login/Login";
 import LoadingScreen from "./Components/UI/Loading/LoadingScreen";
@@ -23,6 +23,14 @@ import Journey from "./Pages/NonAuth/Journey/Journey";
 import AddProjects from "./Pages/Auth/Projects/AddProjects";
 import ViewProjects from "./Pages/Auth/Projects/ViewProjects";
 import Projects from "./Pages/NonAuth/Projects/Projects";
+import AddAchievements from "./Pages/Auth/Achievements/AddAchievements";
+import ViewAchievements from "./Pages/Auth/Achievements/ViewAchievements";
+import Achievements from "./Pages/NonAuth/Acheivements/Acheivements";
+import ProjectDetails from "./Pages/NonAuth/Projects/ProjectDetails";
+import AchievementDetails from "./Pages/NonAuth/Acheivements/AchievementDetails";
+import AboutMe from "./Pages/NonAuth/AboutMe/AboutMe";
+import AddTestinomial from "./Pages/Auth/Testinomial/AddTestinomial";
+import NotFound from "./Pages/NonAuth/NotFound/NotFound";
 
 // Define fixed roles and their corresponding IDs
 const roleData = [{ id: 1, name: "admin" }];
@@ -83,12 +91,22 @@ const App = () => {
             <Route path="/academics" element={<Academics />}></Route>
             <Route path="/journey" element={<Journey />}></Route>
             <Route path="/projects" element={<Projects />}></Route>
+            <Route path="/me" element={<AboutMe />}></Route>
+            <Route path="/projects/:id" element={<ProjectDetails />}></Route>
+            <Route path="/achievements" element={<Achievements />}></Route>
+            <Route path="*" element={<NotFound />}></Route>
+
+            <Route
+              path="/achievements/:id"
+              element={<AchievementDetails />}
+            ></Route>
+
             <Route path="/calendar" element={<Calendar />}></Route>
           </Route>
 
           {/* Auth Routes */}
           <Route
-            path="/login"
+            path="/vitrajanu"
             element={
               <AuthRedirectWrapper>
                 <Login />
@@ -153,6 +171,29 @@ const App = () => {
               path="/auth/projects/view"
               element={
                 <PrivateRoute roleProps="admin" element={<ViewProjects />} />
+              }
+            />
+            {/* AcheivemntLayout */}
+            <Route
+              path="/auth/achievements/create"
+              element={
+                <PrivateRoute roleProps="admin" element={<AddAchievements />} />
+              }
+            />
+            <Route
+              path="/auth/achievements/view"
+              element={
+                <PrivateRoute
+                  roleProps="admin"
+                  element={<ViewAchievements />}
+                />
+              }
+            />
+
+            <Route
+              path="/auth/testinomial/create"
+              element={
+                <PrivateRoute roleProps="admin" element={<AddTestinomial />} />
               }
             />
           </Route>

@@ -80,7 +80,7 @@ const Home = () => {
   return (
     <section className="w-full h-screen flex relative">
       {/* Canvas component for 3D rendering */}
-      <div className="absolute top-28 left-0 right-0 z-10 flex items-center justify-center">
+      <div className="absolute top-28 left-0 right-0 z-10 flex items-center justify-center h-[150px]">
         {currentStage && <HomeInfo currentStage={currentStage} />}
       </div>
       <Canvas
