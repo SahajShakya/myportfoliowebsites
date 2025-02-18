@@ -39,7 +39,7 @@ const NavElement = ({ token, path, pathName, logo }) => {
     //   role: "",
     // });
     // localStorage.removeItem("user");
-    console.log("Logout called inside NavElement");
+    // console.log("Logout called inside NavElement");
     handleLogout();
     navigate("/login");
     handleCloseModal();
