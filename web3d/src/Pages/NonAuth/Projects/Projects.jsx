@@ -34,7 +34,7 @@ const Projects = () => {
   if (loading) {
     return <p>Loading...</p>;
   }
-  console.log(projects);
+  // console.log(projects);
   return (
     <div className="ml-10">
       <motion.div variants={textVariant()}>

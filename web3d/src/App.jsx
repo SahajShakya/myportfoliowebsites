@@ -75,6 +75,7 @@ const App = () => {
           {/* Public Routes */}
           <Route path="/" element={<DefaultLayout />}>
             {/* <Route path="/" element={<Home />} /> */}
+            <Route path="/me" element={<AboutMe />}></Route>
             <Route
               path="/"
               element={
@@ -91,10 +92,10 @@ const App = () => {
             <Route path="/academics" element={<Academics />}></Route>
             <Route path="/journey" element={<Journey />}></Route>
             <Route path="/projects" element={<Projects />}></Route>
-            <Route path="/me" element={<AboutMe />}></Route>
             <Route path="/projects/:id" element={<ProjectDetails />}></Route>
             <Route path="/achievements" element={<Achievements />}></Route>
-            <Route path="*" element={<NotFound />}></Route>
+            {/* <Route path="*" element={<NotFound />}></Route> */}
+            
 
             <Route
               path="/achievements/:id"
@@ -106,7 +107,7 @@ const App = () => {
 
           {/* Auth Routes */}
           <Route
-            path="/vitrajanu"
+            path="/login"
             element={
               <AuthRedirectWrapper>
                 <Login />
