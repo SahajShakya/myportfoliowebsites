@@ -105,7 +105,7 @@ const Nav = () => {
     { name: "Contact", hasDropdown: false, linkTo: "/contact" },
   ];
 
-  console.log(Acheivements);
+  // console.log(Acheivements);
 
   return (
     <motion.div

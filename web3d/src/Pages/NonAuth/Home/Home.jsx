@@ -1,10 +1,12 @@
 import { Canvas } from "@react-three/fiber";
 import { Suspense, useState } from "react";
 import LoadingScreen from "../../../Components/UI/Loading/LoadingScreen";
-import Office from "../../../Components/Model/Office";
-import Office2 from "../../../Components/Model/Office2";
+// import Office from "../../../Components/Model/Office";
+// import Office2 from "../../../Components/Model/Office2";
+import Office3 from "../../../Components/Model/Office3";
 import Sky from "../../../Components/Model/Sky";
-import Drone from "../../../Components/Model/Drone";
+// import Drone from "../../../Components/Model/Drone";
+import Drone from "../../../Components/Model/DroneL";
 import Robot from "../../../Components/Model/Robot";
 import HomeInfo from "./HomeInfo";
 
@@ -111,7 +113,7 @@ const Home = () => {
             rotation={[0, 0, 0]}
           />
           <Sky isRotating={isRotating} />
-          <Office2
+          <Office3
             position={officePosition}
             scale={officeScale}
             rotation={[0.1, 4.7077, 0]}
