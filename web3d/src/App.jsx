@@ -94,6 +94,14 @@ const App = () => {
             <Route path="/projects" element={<Projects />}></Route>
             <Route path="/projects/:id" element={<ProjectDetails />}></Route>
             <Route path="/achievements" element={<Achievements />}></Route>
+            <Route
+            path="/vitra"
+            element={
+              <AuthRedirectWrapper>
+                <Login />
+              </AuthRedirectWrapper>
+            }
+          />
             <Route path="*" element={<NotFound />}></Route>
             
 
@@ -106,14 +114,7 @@ const App = () => {
           </Route>
 
           {/* Auth Routes */}
-          <Route
-            path="/vitra"
-            element={
-              <AuthRedirectWrapper>
-                <Login />
-              </AuthRedirectWrapper>
-            }
-          />
+         
 
           {/* Private Routes */}
           <Route path="/" element={<AuthLayout />}>

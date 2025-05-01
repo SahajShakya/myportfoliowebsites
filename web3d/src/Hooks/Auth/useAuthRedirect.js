@@ -10,7 +10,7 @@ const useAuthRedirect = () => {
   useEffect(() => {
     const user = auth.currentUser;  // Get the current user from Firebase Auth
     if (!user) {
-      navigate('/login');  // Redirect to login if no user is found
+      navigate('/vitra');  // Redirect to login if no user is found
       return;
     }
 

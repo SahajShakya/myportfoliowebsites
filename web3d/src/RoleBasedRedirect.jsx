@@ -14,7 +14,7 @@ const RoleBasedRedirect = ({
     const storedRole = storedUser ? JSON.parse(storedUser).role : null;
 
     if (!storedRole) {
-      navigate("/login");
+      navigate("/vitra");
     } else {
       // Navigate based on the role
       if (storedRole === "admin") {

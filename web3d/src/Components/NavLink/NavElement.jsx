@@ -41,7 +41,7 @@ const NavElement = ({ token, path, pathName, logo }) => {
     // localStorage.removeItem("user");
     // console.log("Logout called inside NavElement");
     handleLogout();
-    navigate("/login");
+    navigate("/vitra");
     handleCloseModal();
   };
 

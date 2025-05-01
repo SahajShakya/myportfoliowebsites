@@ -31,12 +31,12 @@ const PrivateRoute = ({ element, roleProps }) => {
     localStorage.removeItem("authToken");
     localStorage.removeItem("tokenExpiry");
     localStorage.removeItem("user");
-    return <Navigate to="/login" />;
+    return <Navigate to="/vitra" />;
   }
 
   // Check if the user is logged in and has the correct role
   if (!token) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/vitra" />;
   }
 
   if (dataToken !== token) {

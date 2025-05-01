@@ -55,7 +55,7 @@ const Navbar = ({ tabs, token }) => {
 
   const updatedTabs =
     isMobile && token === null
-      ? [...tabs, { name: "Login", hasDropdown: false, linkTo: "/login" }]
+      ? [...tabs, { name: "Login", hasDropdown: false, linkTo: "/vitra" }]
       : tabs;
 
   return (

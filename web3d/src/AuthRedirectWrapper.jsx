@@ -19,7 +19,7 @@ const AuthRedirectWrapper = ({ children }) => {
       } else if (role === "patient" || role === "employee") {
         console.log("Yarayar"); // Patient or Employee roles
       } else {
-        navigate("/login");
+        navigate("/vitra");
       }
     }
   }, [navigate]);

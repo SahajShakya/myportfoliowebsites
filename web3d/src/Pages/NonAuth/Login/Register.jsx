@@ -47,7 +47,7 @@ const Register = () => {
         enqueueSnackbar("Registration successful!", { variant: "success" }); // Show success toast
         enqueueSnackbar("Email Verification Sent!", { variant: "success" }); // Show success toast
         formik.resetForm();
-        navigate("/login");
+        navigate("/vitra");
       } catch (error) {
         enqueueSnackbar(`Error: ${error}`, { variant: "error" }); // Show error toast
         formik.setFieldValue("password", "");
@@ -149,7 +149,7 @@ const Register = () => {
         >
           <p className="text-sm text-gray-600">
             Already have an account?{" "}
-            <a href="/login" className="text-blue-500 hover:underline">
+            <a href="/vitra" className="text-blue-500 hover:underline">
               Login here
             </a>
           </p>
