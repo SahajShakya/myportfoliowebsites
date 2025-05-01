@@ -63,9 +63,10 @@ const Contact = () => {
   });
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-100">
+    <div className="flex flex-col lg:flex-row justify-center items-center min-h-screen bg-gray-100 p-4 gap-8">
+      {/* Contact Form Section */}
       <motion.div
-        className="bg-white p-6 rounded-lg shadow-lg w-96 max-w-lg flex flex-col justify-center items-center"
+        className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg flex flex-col justify-center items-center"
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -73,7 +74,7 @@ const Contact = () => {
         <h2 className="text-xl font-bold mb-4 text-center cursor-pointer">
           Get in Touch
         </h2>
-
+  
         <form onSubmit={formik.handleSubmit} className="w-full">
           {/* Name input */}
           <InputField
@@ -86,7 +87,7 @@ const Contact = () => {
             error={formik.errors.name}
             touched={formik.touched.name ?? false}
           />
-
+  
           {/* Email input */}
           <InputField
             name="email"
@@ -98,7 +99,7 @@ const Contact = () => {
             error={formik.errors.email}
             touched={formik.touched.email ?? false}
           />
-
+  
           {/* Message input */}
           <div className="relative mb-6">
             <motion.textarea
@@ -130,7 +131,7 @@ const Contact = () => {
               </p>
             )}
           </div>
-
+  
           {/* Submit button */}
           <motion.button
             className={`w-full text-white p-3 rounded-lg transition-all duration-300 ${
@@ -146,9 +147,9 @@ const Contact = () => {
           </motion.button>
         </form>
       </motion.div>
-
-      {/* 3D Model Canvas */}
-      <div className="lg:w-1/3 w-full lg:h-auto md:h-[450px] h-[300px]">
+  
+      {/* 3D Model Canvas Section */}
+      <div className="w-full max-w-lg h-[300px] md:h-[450px] lg:h-auto">
         <Canvas
           camera={{
             position: [0, 0, 5],
@@ -166,7 +167,7 @@ const Contact = () => {
             penumbra={1}
             intensity={2}
           />
-
+  
           <Suspense fallback={<LoadingScreen />}>
             <Fox
               currentAnimation={currentAnimation}
@@ -179,6 +180,6 @@ const Contact = () => {
       </div>
     </div>
   );
-};
+}  
 
 export default Contact;

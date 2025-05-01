@@ -94,7 +94,7 @@ const App = () => {
             <Route path="/projects" element={<Projects />}></Route>
             <Route path="/projects/:id" element={<ProjectDetails />}></Route>
             <Route path="/achievements" element={<Achievements />}></Route>
-            {/* <Route path="*" element={<NotFound />}></Route> */}
+            <Route path="*" element={<NotFound />}></Route>
             
 
             <Route
@@ -107,7 +107,7 @@ const App = () => {
 
           {/* Auth Routes */}
           <Route
-            path="/login"
+            path="/vitra"
             element={
               <AuthRedirectWrapper>
                 <Login />

@@ -1,33 +1,75 @@
 // NotFound.jsx
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+
+// const EarnMoneyButton = () => {
+//   const [position, setPosition] = useState({ x: 0, y: 0 });
+
+//   const moveButtonRandomly = () => {
+//     const maxX = window.innerWidth - 200; // Button width
+//     const maxY = window.innerHeight * 0.8 - 60; // Button height (80% height of the viewport minus button height)
+//     setPosition({
+//       x: Math.random() * maxX,
+//       y: Math.random() * maxY,
+//     });
+//   };
+
+//   const handleClick = () => {
+//     alert("Just kidding!");
+//   };
+
+//   return (
+//     <motion.div
+//       style={{ position: "absolute", top: position.y, left: position.x }}
+//       onMouseEnter={moveButtonRandomly}
+//       onClick={handleClick}
+//       className="px-6 py-3 bg-green-500 text-white rounded-lg cursor-pointer"
+//       whileHover={{ scale: 1.1 }}
+//       whileTap={{ scale: 0.9 }}
+//     >
+//       Earn Money
+//     </motion.div>
+//   );
+// };
 const EarnMoneyButton = () => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    // Detect mobile by checking for touch support
+    const isTouchDevice =
+      "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    setIsMobile(isTouchDevice);
+  }, []);
 
   const moveButtonRandomly = () => {
-    const maxX = window.innerWidth - 200; // Button width
-    const maxY = window.innerHeight * 0.8 - 60; // Button height (80% height of the viewport minus button height)
-    setPosition({
-      x: Math.random() * maxX,
-      y: Math.random() * maxY,
-    });
+    const maxX = window.innerWidth - 200; // Adjust for button width
+    const maxY = window.innerHeight * 0.8 - 60; // Adjust for button height
+    const newX = Math.random() * maxX;
+    const newY = Math.random() * maxY;
+    setPosition({ x: newX, y: newY });
   };
 
   const handleClick = () => {
-    alert("Just kidding!");
+    if (isMobile) {
+      // Immediately move the button and reset any chance of double tap
+      moveButtonRandomly();
+    } else {
+      alert("Just kidding!");
+    }
   };
 
   return (
     <motion.div
       style={{ position: "absolute", top: position.y, left: position.x }}
-      onMouseEnter={moveButtonRandomly}
+      onMouseEnter={!isMobile ? moveButtonRandomly : undefined}
       onClick={handleClick}
-      className="px-6 py-3 bg-green-500 text-white rounded-lg cursor-pointer"
+      className="px-6 py-3 bg-green-500 text-white rounded-lg cursor-pointer text-center w-[180px]"
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.9 }}
     >
-      Earn Money
+      {isMobile ? "Double tap to earn money" : "Earn Money"}
     </motion.div>
   );
 };

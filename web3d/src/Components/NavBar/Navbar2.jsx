@@ -170,7 +170,8 @@ const SlideTabs = ({ tabs, isMobile, token }) => {
   const [selected, setSelected] = useState(null);
   const [hovered, setHovered] = useState(null); // Track hovered tab
 
-  const handleSetSelected = (vall) => {
+  const handleSetSelected = (val) => {
+    setHovered(null);
     setSelected(val);
   };
 
@@ -200,6 +201,7 @@ const SlideTabs = ({ tabs, isMobile, token }) => {
 };
 
 // Tab component with hover behavior
+// Tab component with hover behavior
 const Tab = ({
   children,
   tab,
@@ -212,22 +214,22 @@ const Tab = ({
   dropdownOptions, // Accept dropdown options as props
 }) => {
   const handleMouseEnter = () => {
-    setHovered(tab); // Show the dropdown when tab is hovered
+    setHovered(tab); // Set the hovered state to the current tab
   };
 
   const handleMouseLeave = () => {
-    setHovered(null); // Hide the dropdown when mouse leaves the tab
+    setHovered(null); // Reset the hovered state when the mouse leaves the tab
   };
 
   return (
     <li
-      onMouseEnter={handleMouseEnter} // Set hover state when tab is hovered
-      onMouseLeave={handleMouseLeave} // Reset hover state when mouse leaves tab
-      onClick={() => handleSetSelected(tab)} // Set selected tab
+      onMouseEnter={handleMouseEnter} // Show the dropdown when tab is hovered
+      onMouseLeave={handleMouseLeave} // Reset the hover state when mouse leaves tab
+      onClick={() => handleSetSelected(tab)} // Set selected tab on click
       className={`relative z-10 block cursor-pointer px-3 py-1.5 text-xs uppercase md:px-5 md:py-3 md:text-base ${
         hovered === tab || selected === tab
-          ? "text-red-500 bg-gray-200 rounded-full" // Show gray background when hovered or selected
-          : "text-black" // Default state for non-hovered, non-selected tab
+          ? "text-red-500 bg-gray-200 rounded-full" // Style for hovered or selected tabs
+          : "text-black" // Default state for non-hovered, non-selected tabs
       }`}
     >
       {linkTo ? (
@@ -239,7 +241,7 @@ const Tab = ({
       )}
 
       {/* Show dropdown if the tab has a dropdown and is hovered */}
-      {hasDropdown && (
+      {hasDropdown && hovered === tab && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{
@@ -269,7 +271,7 @@ const Tab = ({
           </ul>
         </motion.div>
       )}
-      {/* Chevron icon */}
+      {/* Chevron icon for dropdown */}
       {hasDropdown && (
         <FiChevronDown
           className="ml-2 inline-block text-sm text-gray-600"
@@ -279,5 +281,6 @@ const Tab = ({
     </li>
   );
 };
+
 
 export default Navbar;

@@ -37,7 +37,7 @@ const InputField = ({
         value={value}
         onChange={onChange}
         onBlur={onBlur}
-        onFocus={() => setFocusedField(name)}
+        onFocus={() => setFocusedField?.(name)}
       />
       {touched && error && <p className="text-red-500 text-xs mt-2">{error}</p>}
     </div>
