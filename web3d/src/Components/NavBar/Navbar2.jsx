@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { FiChevronDown, FiMenu, FiChevronUp, FiX } from "react-icons/fi";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -8,6 +8,7 @@ const Navbar = ({ tabs, token }) => {
   const [menuOpen, setMenuOpen] = useState(false); // Track if the mobile menu is open
   const [openDropdown, setOpenDropdown] = useState(null); // Track which dropdown is open (for mobile)
   const menuRef = useRef(null);
+  const location = useLocation(); // Get current location for active state
 
   // Check the window width on resize to determine if it's mobile
   useEffect(() => {
@@ -25,6 +26,7 @@ const Navbar = ({ tabs, token }) => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
         setMenuOpen(false);
+        setOpenDropdown(null); // Close dropdowns too
       }
     };
     if (menuOpen) {
@@ -38,9 +40,16 @@ const Navbar = ({ tabs, token }) => {
     };
   }, [menuOpen]);
 
+  // Close menu when route changes
+  useEffect(() => {
+    setMenuOpen(false);
+    setOpenDropdown(null);
+  }, [location.pathname]);
+
   const toggleMenu = () => {
     if (menuOpen) {
       setMenuOpen(false);
+      setOpenDropdown(null); // Close dropdowns when closing menu
     } else {
       setMenuOpen(true);
     }
@@ -53,6 +62,12 @@ const Navbar = ({ tabs, token }) => {
     }
   };
 
+  const handleLinkClick = () => {
+    // Close menu and dropdowns when clicking a link
+    setMenuOpen(false);
+    setOpenDropdown(null);
+  };
+
   const updatedTabs =
     isMobile && token === null
       ? [...tabs, { name: "Login", hasDropdown: false, linkTo: "/login" }]
@@ -61,7 +76,7 @@ const Navbar = ({ tabs, token }) => {
   return (
     <div className="relative">
       {/* Show Hamburger Icon on Mobile */}
-      <div className="flex justify-between items-center w-full">
+      <div className="flex items-center justify-between w-full">
         <div className="flex-1"></div>
         {/* Hamburger or X icon */}
         {isMobile && (
@@ -77,7 +92,12 @@ const Navbar = ({ tabs, token }) => {
 
       {/* Show the tabs if not on mobile */}
       {!isMobile && (
-        <SlideTabs tabs={updatedTabs} isMobile={isMobile} token={token} />
+        <SlideTabs 
+          tabs={updatedTabs} 
+          isMobile={isMobile} 
+          token={token} 
+          currentPath={location.pathname}
+        />
       )}
 
       {/* Only show the Simple Navbar on Mobile when menu is open */}
@@ -89,6 +109,8 @@ const Navbar = ({ tabs, token }) => {
             openDropdown={openDropdown}
             handleDropdownToggle={handleDropdownToggle}
             setMenuOpen={setMenuOpen}
+            handleLinkClick={handleLinkClick}
+            currentPath={location.pathname}
           />
         </div>
       )}
@@ -103,8 +125,10 @@ const SimpleNavbar = ({
   openDropdown,
   handleDropdownToggle,
   setMenuOpen,
+  handleLinkClick,
+  currentPath,
 }) => (
-  <ul className="flex flex-col items-start mt-4 bg w-auto w-[250px] rounded-lg shadow-lg bg-white absolute right-0 top-0 z-50">
+  <ul className="flex flex-col items-start mt-4 bg w-[250px] rounded-lg shadow-lg bg-white absolute right-0 top-0 z-50">
     {/* Close Button (X Icon) */}
     <button
       onClick={() => setMenuOpen(false)} // Close the menu on click
@@ -116,14 +140,22 @@ const SimpleNavbar = ({
 
     {/* Render Tabs */}
     {tabs.map((tab, index) => (
-      <li key={index} className="text-center text-black text-lg relative">
+      <li key={index} className="relative text-lg text-center text-black">
         {tab.linkTo ? (
-          <Link to={tab.linkTo} className="block py-2 px-4">
+          <Link 
+            to={tab.linkTo} 
+            onClick={handleLinkClick}
+            className={`block py-2 px-4 hover:bg-gray-100 transition-colors ${
+              currentPath === tab.linkTo ? 'bg-blue-50 text-blue-600 font-medium' : ''
+            }`}
+          >
             {tab.name}
           </Link>
         ) : (
           <span
-            className="block py-2 px-4 cursor-pointer flex"
+            className={`py-2 px-4 cursor-pointer flex hover:bg-gray-100 transition-colors ${
+              tab.dropdownOptions?.some(opt => opt.to === currentPath) ? 'bg-blue-50 text-blue-600' : ''
+            }`}
             onClick={() => handleDropdownToggle(index)}
           >
             {tab.name}
@@ -144,14 +176,17 @@ const SimpleNavbar = ({
               y: 0,
             }}
             transition={{ duration: 0.3 }}
-            className="absolute right-0 mt-2 w-60 bg-white shadow-lg rounded-md z-20"
+            className="absolute right-0 z-20 mt-2 bg-white rounded-md shadow-lg w-60"
           >
             <ul>
               {tab.dropdownOptions?.map((option, index) => (
                 <li key={index}>
                   <Link
                     to={option.to}
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-300"
+                    onClick={handleLinkClick}
+                    className={`block px-4 py-2 text-sm hover:bg-gray-100 transition-colors ${
+                      currentPath === option.to ? 'bg-blue-100 text-blue-600 font-medium' : 'text-gray-700'
+                    }`}
                   >
                     {option.label}
                   </Link>
@@ -166,12 +201,12 @@ const SimpleNavbar = ({
 );
 
 // SlideTabs component (unchanged)
-const SlideTabs = ({ tabs, isMobile, token }) => {
+const SlideTabs = ({ tabs, isMobile, token, currentPath }) => {
   const [selected, setSelected] = useState(null);
   const [hovered, setHovered] = useState(null); // Track hovered tab
 
-  const handleSetSelected = (vall) => {
-    setSelected(val);
+  const handleSetSelected = (value) => {
+    setSelected(value);
   };
 
   return (
@@ -247,10 +282,10 @@ const Tab = ({
             y: hovered === tab ? 0 : -10,
           }}
           transition={{ duration: 0.3 }}
-          className="absolute left-0 mt-2 w-60 bg-white shadow-lg rounded-md z-20"
+          className="absolute left-0 z-20 mt-2 bg-white rounded-md shadow-lg w-60"
         >
           {/* Tab Name Line (Background black) */}
-          <div className="bg-black text-white px-4 py-2 text-lg font-semibold">
+          <div className="px-4 py-2 text-lg font-semibold text-white bg-black">
             {children}
           </div>
 
@@ -272,7 +307,7 @@ const Tab = ({
       {/* Chevron icon */}
       {hasDropdown && (
         <FiChevronDown
-          className="ml-2 inline-block text-sm text-gray-600"
+          className="inline-block ml-2 text-sm text-gray-600"
           size={14}
         />
       )}

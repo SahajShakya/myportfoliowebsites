@@ -18,7 +18,7 @@ const ExperienceCard = ({ education }) => {
   const endYear = new Date(education.endDate).getFullYear();
   return (
     <VerticalTimelineElement
-      className="vertical-timeline-element--work"
+      className="ver tical-timeline-element--work"
       contentStyle={{
         background: "#1d1836",
         color: "#fff",
