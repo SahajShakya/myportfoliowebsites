@@ -102,41 +102,81 @@ const ViewJourney = () => {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-semibold mb-6">Journeys</h1>
-      <table className="w-full table-auto">
-        <thead>
-          <tr>
-            <th className="px-4 py-2 text-left">Title</th>
-            <th className="px-4 py-2 text-left">Office</th>
-            <th className="px-4 py-2 text-left">Designation</th>
-            <th className="px-4 py-2 text-center">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {journeys.map((journey) => (
-            <tr key={journey.id}>
-              <td className="px-4 py-2">{journey.title}</td>
-              <td className="px-4 py-2">{journey.office_name}</td>
-              <td className="px-4 py-2">{journey.designation}</td>
-              <td className="px-4 py-2 text-center">
-                <button
-                  onClick={() => handleEdit(journey.id)}
-                  className="bg-blue-500 text-white px-4 py-2 rounded-md mr-2"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(journey.id)}
-                  className="bg-red-500 text-white px-4 py-2 rounded-md"
-                >
-                  Delete
-                </button>
-              </td>
+    <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
+      <h1 className="text-2xl sm:text-3xl font-semibold mb-6">Journeys</h1>
+      
+      {/* Desktop Table View */}
+      <div className="hidden md:block overflow-x-auto">
+        <table className="w-full table-auto border-collapse">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="px-4 py-3 text-left font-semibold">Title</th>
+              <th className="px-4 py-3 text-left font-semibold">Office</th>
+              <th className="px-4 py-3 text-left font-semibold">Designation</th>
+              <th className="px-4 py-3 text-center font-semibold">Action</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {journeys.map((journey) => (
+              <tr key={journey.id} className="border-b hover:bg-gray-50">
+                <td className="px-4 py-3">{journey.title}</td>
+                <td className="px-4 py-3">{journey.office_name}</td>
+                <td className="px-4 py-3">{journey.designation}</td>
+                <td className="px-4 py-3 text-center">
+                  <button
+                    onClick={() => handleEdit(journey.id)}
+                    className="bg-blue-500 text-white px-3 py-1.5 rounded-md mr-2 hover:bg-blue-600 transition-colors text-sm"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(journey.id)}
+                    className="bg-red-500 text-white px-3 py-1.5 rounded-md hover:bg-red-600 transition-colors text-sm"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-4">
+        {journeys.map((journey) => (
+          <div key={journey.id} className="bg-white border rounded-lg p-4 shadow-sm">
+            <div className="space-y-2 mb-4">
+              <div>
+                <span className="text-sm font-semibold text-gray-600">Title:</span>
+                <p className="text-base">{journey.title}</p>
+              </div>
+              <div>
+                <span className="text-sm font-semibold text-gray-600">Office:</span>
+                <p className="text-base">{journey.office_name}</p>
+              </div>
+              <div>
+                <span className="text-sm font-semibold text-gray-600">Designation:</span>
+                <p className="text-base">{journey.designation}</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleEdit(journey.id)}
+                className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors text-sm"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => handleDelete(journey.id)}
+                className="flex-1 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors text-sm"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
       {modal && (
         <Modal
           onClose={handleCloseModal}

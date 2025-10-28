@@ -109,36 +109,36 @@ const Nav = () => {
 
   return (
     <motion.div
-      className="flex items-center justify-between h-[20px] px-4 md:px-8 mt-20"
+      className="flex items-center justify-between min-h-[80px] px-4 sm:px-6 md:px-8 lg:px-10 pt-3 sm:pt-4 md:pt-5 lg:pt-6 pb-2"
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
-      <div className="flex justify-center mb-10 flex-col items-center">
+      <div className="flex justify-center flex-col items-center">
         {/* Profile Image */}
-        <div className="flex items-center justify-content-center mt-0">
+        <div className="flex items-center justify-content-center">
           <img
             src={mypic} // Ensure mypic is correctly imported
             alt="Sahaj Shakya"
-            className="w-10 h-8 md:w-2- md:h-10 rounded-full object-cover mt-6"
+            className="w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-full object-cover"
           />
-          <div className="ml-4 text-white align-content-center align-item-center">
-            <div className="font-semibold text-lg md:text-xl text-black">
+          <div className="ml-3 sm:ml-4 text-white align-content-center align-item-center">
+            <div className="font-semibold text-base sm:text-lg md:text-xl text-black">
               Sahaj Shakya
             </div>
-            <div className="flex items-center text-sm md:text-base">
-              <FaEnvelope className="mr-2 text-blue-500" />
+            <div className="flex items-center text-xs sm:text-sm md:text-base">
+              <FaEnvelope className="mr-1 sm:mr-2 text-blue-500" />
               <h3 className="text-blue-700">saz.shakya@gmail.com</h3>
             </div>
-            <div className="flex items-center text-sm md:text-base">
-              <FaPhoneAlt className="mr-2 text-green-400" />
+            <div className="flex items-center text-xs sm:text-sm md:text-base">
+              <FaPhoneAlt className="mr-1 sm:mr-2 text-green-400" />
               <h3 className="text-green-700">977-9841194900</h3>
             </div>
           </div>
         </div>
 
         {/* Social Media Links */}
-        <div className="flex-row gap-1 md:gap-1 hidden md:flex">
+        <div className="flex-row gap-1 md:gap-1 lg:gap-2 hidden md:flex">
           <StickyNavLink
             path="https://github.com/sahajshakya"
             logo={<FaGithub size={28} />}
@@ -176,12 +176,12 @@ const Nav = () => {
       </div>
 
       {/* Navbar Component */}
-      <div className="flex-1 mx-8 z-50">
+      <div className="flex-1 mx-4 sm:mx-6 md:mx-8 z-50">
         <Navbar tabs={tabs} token={token} />
       </div>
 
       {/* Additional Nav Element */}
-      <div className="flex gap-5 hidden md:flex">
+      <div className="hidden md:flex gap-3 sm:gap-4 lg:gap-5">
         <NavElement
           token={token}
           path="https://engineeringstudymaterials.com/"

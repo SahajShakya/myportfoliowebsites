@@ -59,7 +59,7 @@ const Navbar = ({ tabs, token }) => {
       : tabs;
 
   return (
-    <div className="pt-1 pb-5 relative">
+    <div className="relative">
       {/* Show Hamburger Icon on Mobile */}
       <div className="flex justify-between items-center w-full">
         <div className="flex-1"></div>
@@ -176,7 +176,7 @@ const SlideTabs = ({ tabs, isMobile, token }) => {
 
   return (
     <ul
-      className={`relative mx-auto flex w-full max-w-5xl justify-around rounded-full border-2 border-black bg-white p-1 ${
+      className={`relative mx-auto flex w-full max-w-5xl justify-around rounded-full border-2 border-black bg-white p-1 sm:p-1.5 md:p-2 ${
         isMobile ? "hidden" : ""
       }`}
     >
@@ -224,7 +224,7 @@ const Tab = ({
       onMouseEnter={handleMouseEnter} // Set hover state when tab is hovered
       onMouseLeave={handleMouseLeave} // Reset hover state when mouse leaves tab
       onClick={() => handleSetSelected(tab)} // Set selected tab
-      className={`relative z-10 block cursor-pointer px-3 py-1.5 text-xs uppercase md:px-5 md:py-3 md:text-base ${
+      className={`relative z-10 block cursor-pointer px-2 py-1.5 text-xs uppercase sm:px-3 sm:text-sm md:px-4 md:py-2 lg:px-5 lg:py-3 lg:text-base ${
         hovered === tab || selected === tab
           ? "text-red-500 bg-gray-200 rounded-full" // Show gray background when hovered or selected
           : "text-black" // Default state for non-hovered, non-selected tab

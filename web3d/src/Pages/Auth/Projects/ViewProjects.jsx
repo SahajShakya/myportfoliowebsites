@@ -133,39 +133,75 @@ const ViewProjects = () => {
   const handleCloseModal = () => setModal(false);
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-semibold mb-6">Projects</h1>
-      <table className="w-full table-auto">
-        <thead>
-          <tr>
-            <th className="px-4 py-2 text-left">Project Name</th>
-            <th className="px-4 py-2 text-left">Description</th>
-            <th className="px-4 py-2 text-center">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {projects.map((project) => (
-            <tr key={project.id}>
-              <td className="px-4 py-2">{project.name}</td>
-              <td className="px-4 py-2">{project.description}</td>
-              <td className="px-4 py-2 text-center">
-                <button
-                  onClick={() => handleEdit(project.id)}
-                  className="bg-blue-500 text-white px-4 py-2 rounded-md mr-2"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(project.id)}
-                  className="bg-red-500 text-white px-4 py-2 rounded-md"
-                >
-                  Delete
-                </button>
-              </td>
+    <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
+      <h1 className="text-2xl sm:text-3xl font-semibold mb-6">Projects</h1>
+      
+      {/* Desktop Table View */}
+      <div className="hidden md:block overflow-x-auto">
+        <table className="w-full table-auto border-collapse">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="px-4 py-3 text-left font-semibold">Project Name</th>
+              <th className="px-4 py-3 text-left font-semibold">Description</th>
+              <th className="px-4 py-3 text-center font-semibold">Action</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {projects.map((project) => (
+              <tr key={project.id} className="border-b hover:bg-gray-50">
+                <td className="px-4 py-3">{project.name}</td>
+                <td className="px-4 py-3">{project.description}</td>
+                <td className="px-4 py-3 text-center">
+                  <button
+                    onClick={() => handleEdit(project.id)}
+                    className="bg-blue-500 text-white px-3 py-1.5 rounded-md mr-2 hover:bg-blue-600 transition-colors text-sm"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(project.id)}
+                    className="bg-red-500 text-white px-3 py-1.5 rounded-md hover:bg-red-600 transition-colors text-sm"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-4">
+        {projects.map((project) => (
+          <div key={project.id} className="bg-white border rounded-lg p-4 shadow-sm">
+            <div className="space-y-2 mb-4">
+              <div>
+                <span className="text-sm font-semibold text-gray-600">Project Name:</span>
+                <p className="text-base">{project.name}</p>
+              </div>
+              <div>
+                <span className="text-sm font-semibold text-gray-600">Description:</span>
+                <p className="text-base">{project.description}</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleEdit(project.id)}
+                className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors text-sm"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => handleDelete(project.id)}
+                className="flex-1 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors text-sm"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
 
       {modal && (
         <Modal onClose={handleCloseModal} title="Edit Project">

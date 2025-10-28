@@ -6,7 +6,7 @@ const DefaultLayout = () => {
   return (
     <div className="bg-gray-200">
       <Nav />
-      <div className="mt-10">
+      <div>
         {/* Adds gap between navbar and outlet */}
         <Outlet />
       </div>

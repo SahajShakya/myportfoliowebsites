@@ -12,7 +12,6 @@ import { styles } from "../../../styles";
 
 const Journey = () => {
   const [journey, setJourney] = useState([]);
-  const [isEdit, setIsEdit] = useState(false);
 
   useEffect(() => {
     const fetchJourney = async () => {
@@ -29,7 +28,6 @@ const Journey = () => {
         );
 
         setJourney(journeyList);
-        setIsEdit(false);
       } catch (error) {
         console.error("Error fetching journey: ", error);
       }
@@ -39,24 +37,23 @@ const Journey = () => {
   }, []);
 
   return (
-    <section className="max-container">
+    <section className="max-container px-4 sm:px-6 lg:px-8 py-6">
       <motion.div variants={textVariant()}>
         <p className={`${styles.sectionSubText} text-center`}>My Journey</p>
         <h2 className={`${styles.sectionHeadText} text-center`}>
           Work Experience
         </h2>
-        <p className={`${styles.sectionHeadText} text-center`}>
-          Here's a glimpse into my career journey, working with incredible teams
+        <p className="text-center text-base sm:text-lg text-gray-600 mt-4 max-w-3xl mx-auto">
+          Here&apos;s a glimpse into my career journey, working with incredible teams
           and growing my skills.
         </p>
       </motion.div>
 
-      <div className="py-16">
-        <div className="mt-12 flex">
+      <div className="py-8 sm:py-12 lg:py-16">
+        <div className="mt-8 sm:mt-12 flex">
           <VerticalTimeline
             lineColor="#6c5ce7"
             animate={true}
-            layout="2-columns"
           >
             {journey.map((journeyItem) => {
               // Handle conditional logic for invalid endDate
@@ -71,9 +68,9 @@ const Journey = () => {
 
               return (
                 <VerticalTimelineElement
-                  key={journeyItem.office_name}
+                  key={journeyItem.id || journeyItem.office_name}
                   date={
-                    <span style={{ color: "black" }}>
+                    <span className="text-base sm:text-lg font-semibold" style={{ color: "black" }}>
                       {`${new Date(journeyItem.startDate).toLocaleDateString(
                         "en-GB",
                         { month: "long", year: "numeric" }
@@ -81,48 +78,56 @@ const Journey = () => {
                     </span>
                   }
                   icon={
-                    <div className="flex justify-center items-center w-full h-full rounded-full overflow-hidden">
+                    <div className="flex justify-center items-center w-full h-full rounded-full overflow-hidden bg-white">
                       <img
                         src={journeyItem.icons[0].publicUrl}
                         alt={journeyItem.office_name}
-                        className="w-[100%]  object-contain rounded-lg"
+                        className="w-[80%] h-[80%] object-contain rounded-full"
                       />
                     </div>
                   }
+                  iconStyle={{ 
+                    background: "#fff",
+                    boxShadow: "0 0 0 4px #6c5ce7"
+                  }}
                   contentStyle={{
                     borderBottom: "8px",
                     borderStyle: "solid",
-                    borderBottomColor: "#6c5ce7", // Customize the color if needed
-                    boxShadow: "none",
+                    borderBottomColor: "#6c5ce7",
+                    boxShadow: "0 3px 0 #6c5ce7",
                     background: "#1d1836",
                     color: "#fff",
+                    padding: "1.5rem",
+                    minHeight: "320px", // Consistent minimum height
                   }}
+                  contentArrowStyle={{ borderRight: "7px solid #1d1836" }}
                 >
-                  <div>
-                    <h3 className="text-white text-xl font-poppins font-semibold">
+                  <div className="mb-4">
+                    <h3 className="text-white text-xl sm:text-2xl font-bold mb-2 line-clamp-2">
                       {journeyItem.title}
                     </h3>
                     <p
-                      className="text-white-500 font-medium text-base"
+                      className="text-gray-300 font-semibold text-sm sm:text-base mb-1"
                       style={{ margin: 0 }}
                     >
                       {journeyItem.office_name}
                     </p>
-                    <p className="text-white-500/50 text-sm">
+                    <p className="text-gray-400 text-xs sm:text-sm">
                       {journeyItem.designation}
                     </p>
                   </div>
 
                   <div
-                    className="my-5 text-white text-[16px] font-bold mt-3"
+                    className="my-4 text-white-100 text-xs sm:text-sm leading-relaxed tracking-wider line-clamp-4 overflow-hidden"
                     dangerouslySetInnerHTML={{ __html: journeyItem.contents }}
                   />
 
-                  <div className="mt-2">
+                  <div className="mt-4 pt-3 border-t border-gray-600">
                     <a
                       href={journeyItem.urlofCompany}
                       target="_blank"
-                      className="text-white text-[16px] font-bold mt-3"
+                      rel="noopener noreferrer"
+                      className="text-blue-400 hover:text-blue-300 text-sm sm:text-base font-bold transition-colors duration-300 underline"
                     >
                       Visit: {journeyItem.office_name}
                     </a>
@@ -134,7 +139,7 @@ const Journey = () => {
         </div>
       </div>
 
-      <hr className="border-slate-200" />
+      <hr className="border-slate-200 my-8" />
     </section>
   );
 };

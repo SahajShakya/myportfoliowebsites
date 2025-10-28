@@ -1,26 +1,26 @@
 const Modal = ({ title, onClose, children, fullWidth = false }) => {
   return (
-    <div className="flex items-center justify-center bg-gray-500 bg-opacity-50 z-50 absolute top-21 left-0 w-full h-full ">
+    <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 p-4">
       <div
-        className={`bg-white p-6 rounded-md z-100 shadow-lg ${
-          fullWidth ? "w-full" : "w-96"
-        } max-w-4xl mx-4`}
+        className={`bg-white rounded-lg shadow-xl ${
+          fullWidth ? "w-full" : "w-full sm:w-[90%] md:w-[80%] lg:w-[70%] xl:w-[60%]"
+        } max-w-6xl max-h-[90vh] flex flex-col`}
       >
         {/* Modal header with title and close button */}
-        <div className="flex justify-between items-center border-b pb-2">
-          <div className="text-xl font-semibold">{title}</div>
+        <div className="flex justify-between items-center border-b px-4 sm:px-6 py-4 flex-shrink-0">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-800">{title}</h2>
           <button
             onClick={onClose}
-            className="text-xl font-semibold text-gray-700 hover:text-gray-900"
+            className="text-3xl font-semibold text-gray-500 hover:text-gray-800 transition-colors leading-none"
+            aria-label="Close modal"
           >
             &times;
           </button>
         </div>
 
         {/* Scrollable content area */}
-        <div className="mt-4 max-h-[calc(100vh-160px)] overflow-y">
-          {/* Wrap the children (AddAcademics) here in a scrollable container */}
-          <div className="space-y-6">{children}</div>
+        <div className="overflow-y-auto flex-1 px-4 sm:px-6 py-4">
+          {children}
         </div>
       </div>
     </div>

@@ -12,16 +12,16 @@ import React from "react";
 
 const ProjectCard = ({ index, name, image }) => {
   return (
-    <motion.div variants={fadeIn("up", "spring", index * 0.5, 0.75)}>
+    <motion.div variants={fadeIn("up", "spring", index * 0.5, 0.75)} className="w-full">
       <Tilt
         options={{
           max: 45,
           scale: 1,
           speed: 450,
         }}
-        className="bg-tertiary p-5 rounded-2xl sm:w-[360px] w-full h-[400px]" // Fixed height and width for card
+        className="bg-tertiary p-5 rounded-2xl w-full h-[450px] flex flex-col" // Consistent height across all cards
       >
-        <div className="relative w-full h-[240px]">
+        <div className="relative w-full h-[220px] flex-shrink-0">
           {/* Fixed size image container */}
           <img
             src={image} // Assuming icons is an array with the first icon having a publicUrl
@@ -29,9 +29,9 @@ const ProjectCard = ({ index, name, image }) => {
             className="w-full h-full object-cover rounded-2xl" // Ensure image fits the container
           />
         </div>
-        <div className="mt-5">
+        <div className="mt-4 flex-grow flex items-center justify-center">
           <h3
-            className="text-black font-bold text-[24px] text-center"
+            className="text-black font-bold text-[20px] text-center line-clamp-6"
             dangerouslySetInnerHTML={{ __html: name }} // Render raw HTML inside <h3>
           />
         </div>
@@ -75,7 +75,7 @@ const ProjectDetails = () => {
   }
 
   return (
-    <div className="ml-10">
+    <div className="px-4 sm:px-6 md:px-8 lg:px-10 py-6">
       <motion.div variants={textVariant()}>
         <p className={styles.sectionSubText}>My work</p>
         <h2 className={styles.sectionHeadText}>Projects.</h2>
@@ -88,7 +88,7 @@ const ProjectDetails = () => {
         Some Images
       </motion.p>
 
-      <div className="mt-20 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-7">
+      <div className="mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {projectDetails.map((project) => (
           <ProjectCard
             key={project.id} // Use the project's ID as key

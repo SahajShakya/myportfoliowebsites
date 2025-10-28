@@ -25,42 +25,53 @@ const ExperienceCard = ({ education }) => {
         borderBottom: "8px",
         borderStyle: "solid",
         borderBottomColor: "#6c5ce7",
+        boxShadow: "0 3px 0 #6c5ce7",
+        padding: "1.5rem",
+        minHeight: "320px", // Consistent minimum height
       }}
       contentArrowStyle={{ borderRight: "7px solid #1d1836" }}
       date={
-        <span style={{ color: "#1d1836" }}>{`${startYear} - ${endYear}`}</span>
+        <span 
+          className="text-base font-semibold sm:text-lg" 
+          style={{ color: "#1d1836" }}
+        >
+          {`${startYear} - ${endYear}`}
+        </span>
       }
-      //   iconStyle={{ background: education.iconBg }}
       icon={
-        <div className="flex justify-center items-center w-full h-full rounded-full overflow-hidden">
+        <div className="flex items-center justify-center w-full h-full overflow-hidden bg-white rounded-full">
           <img
             src={education.icons[0].publicUrl}
             alt={education.university_name}
-            className="w-[100%]  object-contain  rounded-lg"
+            className="w-[80%] h-[80%] object-contain rounded-full"
           />
         </div>
       }
+      iconStyle={{ 
+        background: "#fff",
+        boxShadow: "0 0 0 4px #6c5ce7"
+      }}
     >
-      <div>
-        <h3 className="text-white text-[24px] font-bold">{education.title}</h3>
-        <p
-          className="text-secondary text-[16px] font-semibold"
-          style={{ margin: 0 }}
-        >
+      <div className="mb-4">
+        <h3 className="mb-2 text-xl font-bold text-white sm:text-2xl line-clamp-2">
+          {education.title}
+        </h3>
+        <p className="m-0 text-sm font-semibold text-secondary sm:text-base">
           {education.university_name}
         </p>
       </div>
 
       <div
-        className="mt-5 text-white-100 text-[14px] pl-1 tracking-wider"
+        className="mt-4 overflow-hidden text-xs leading-relaxed tracking-wider text-white-100 sm:text-sm line-clamp-4"
         dangerouslySetInnerHTML={{ __html: education.contents }}
       />
 
-      <div className="mt-2">
+      <div className="pt-3 mt-4 border-t border-gray-600">
         <a
-          href={education.url}
+          href={education.urlofCompany || education.url}
           target="_blank"
-          className="text-white text-[16px] font-bold mt-3"
+          rel="noopener noreferrer"
+          className="text-sm font-bold text-blue-400 underline transition-colors duration-300 hover:text-blue-300 sm:text-base"
         >
           {education.college_name}
         </a>
@@ -78,13 +89,13 @@ const ExperienceCard = ({ education }) => {
 //     >
 //       <div className="flex-col items-center justify-between">
 //         <h3 className="text-xl font-bold">{education.title}</h3>
-//         <p className="text-secondary text-sm font-semibold">
+//         <p className="text-sm font-semibold text-secondary">
 //           {education.university_name}
 //         </p>
 //       </div>
 
 //       <div
-//         className="mt-5 text-white text-sm pl-1 tracking-wider"
+//         className="pl-1 mt-5 text-sm tracking-wider text-white"
 //         dangerouslySetInnerHTML={{ __html: education.contents }}
 //       ></div>
 
@@ -93,7 +104,7 @@ const ExperienceCard = ({ education }) => {
 //           href={education.urlofCompany}
 //           target="_blank"
 //           rel="noopener noreferrer"
-//           className="text-white text-sm font-bold mt-3"
+//           className="mt-3 text-sm font-bold text-white"
 //         >
 //           {education.college_name}
 //         </a>
@@ -104,7 +115,6 @@ const ExperienceCard = ({ education }) => {
 
 const Academics = () => {
   const [academics, setAcademics] = useState([]);
-  const [isEdit, setIsEdit] = useState(false);
 
   useEffect(() => {
     const fetchAcademics = async () => {
@@ -121,7 +131,6 @@ const Academics = () => {
         );
 
         setAcademics(academicList);
-        setIsEdit(false);
       } catch (error) {
         console.error("Error fetching academics: ", error);
       }
@@ -131,7 +140,7 @@ const Academics = () => {
   }, []);
 
   return (
-    <>
+    <div className="px-4 py-6 sm:px-6 lg:px-8">
       <motion.div variants={textVariant()}>
         <p className={`${styles.sectionSubText} text-center`}>
           My Education Background
@@ -141,14 +150,14 @@ const Academics = () => {
         </h2>
       </motion.div>
 
-      <div className="mt-20 flex flex-col">
-        <VerticalTimeline lineColor="#6c5ce7" animate={true} layout="2-columns">
+      <div className="flex flex-col mt-12 sm:mt-16 lg:mt-20">
+        <VerticalTimeline lineColor="#6c5ce7" animate={true}>
           {academics.map((education) => (
             <ExperienceCard key={education.id} education={education} />
           ))}
         </VerticalTimeline>
       </div>
-    </>
+    </div>
   );
 };
 

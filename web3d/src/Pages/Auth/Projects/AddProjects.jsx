@@ -124,8 +124,8 @@ const AddProjects = ({ editData }) => {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h2 className="text-2xl font-semibold mb-6">
+    <div className="w-full">
+      <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">
         {editData ? "Edit Project" : "Add Project"}
       </h2>
       <Formik initialValues={initialValues} onSubmit={handleSubmit}>
@@ -137,7 +137,7 @@ const AddProjects = ({ editData }) => {
           handleBlur,
           handleChange,
         }) => (
-          <Form className="space-y-6">
+          <Form className="space-y-4 sm:space-y-6">
             <InputField
               name="name"
               type="text"

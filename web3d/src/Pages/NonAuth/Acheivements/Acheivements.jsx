@@ -41,7 +41,7 @@ const Achievements = () => {
   }
 
   return (
-    <div className="ml-10">
+    <div className="px-4 sm:px-6 md:px-8 lg:px-10 py-6">
       <motion.div variants={textVariant()}>
         <p className={styles.sectionSubText}>My Achievements</p>
         <h2 className={styles.sectionHeadText}>Achievements.</h2>
@@ -55,7 +55,7 @@ const Achievements = () => {
         Each achievement is briefly described with links to relevant resources.
       </motion.p>
 
-      <div className="mt-20 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-7">
+      <div className="mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {achievements.map((achievement, index) => (
           <ProjectCard
             key={achievement.id}

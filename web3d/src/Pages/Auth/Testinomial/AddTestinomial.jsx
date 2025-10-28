@@ -45,9 +45,9 @@ const AddTestimonialForm = () => {
   });
 
   return (
-    <div className="p-6 max-w-lg mx-auto bg-white rounded-md shadow-md">
+    <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8 max-w-2xl">
       <motion.h2
-        className="text-2xl font-bold text-center mb-6"
+        className="text-xl sm:text-2xl font-bold text-center mb-4 sm:mb-6"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
@@ -55,7 +55,7 @@ const AddTestimonialForm = () => {
         Add Testimonial
       </motion.h2>
 
-      <form onSubmit={formik.handleSubmit}>
+      <form onSubmit={formik.handleSubmit} className="space-y-4 sm:space-y-6">
         <InputField
           name="testimonial"
           type="text"

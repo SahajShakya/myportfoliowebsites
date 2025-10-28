@@ -94,9 +94,6 @@ const App = () => {
             <Route path="/projects" element={<Projects />}></Route>
             <Route path="/projects/:id" element={<ProjectDetails />}></Route>
             <Route path="/achievements" element={<Achievements />}></Route>
-            {/* <Route path="*" element={<NotFound />}></Route> */}
-            
-
             <Route
               path="/achievements/:id"
               element={<AchievementDetails />}
@@ -201,6 +198,9 @@ const App = () => {
 
           {/* Unauthorized Route */}
           <Route path="/unauthorized" element={<Unauthorized />} />
+          
+          {/* 404 Not Found Route - Must be last */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
     </UserProvider>
