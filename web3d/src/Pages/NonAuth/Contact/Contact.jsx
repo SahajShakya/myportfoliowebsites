@@ -4,8 +4,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import emailjs from "@emailjs/browser";
 import { useSnackbar } from "notistack";
-import InputField from "../../../Components/Input/InputField"; // Your custom input field component
-import LoadingScreen from "../../../Components/UI/Loading/LoadingScreen";
+import InputField from "../../../Components/Input/InputField";
 import { motion } from "framer-motion";
 import { Fox } from "../../../Components/Model/Fox"; // Your custom 3D model component
 
@@ -170,7 +169,7 @@ const Contact = () => {
                 intensity={2}
               />
 
-              <Suspense fallback={<LoadingScreen />}>
+              <Suspense fallback={null}>
                 <Fox
                   currentAnimation={currentAnimation}
                   position={[0.5, 0.35, 0]}
