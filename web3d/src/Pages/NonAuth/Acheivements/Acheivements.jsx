@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
-import { getFirestore, collection, getDocs } from "firebase/firestore";
 import { motion } from "framer-motion";
 import { textVariant, fadeIn } from "../../../utils/motion";
 import { styles } from "../../../styles";
 import SectionWrapper from "../../../hoc/SectionWrapper";
-import { db } from "../../../firebase/firebase";
-import ProjectCard from "../../../Components/UI/ProjectCard/ProjectCard"; // Make sure this component exists
+import ProjectCard from "../../../Components/UI/ProjectCard/ProjectCard";
+import api from "../../../api/client";
 
 const Achievements = () => {
   const [achievements, setAchievements] = useState([]);
@@ -13,23 +12,13 @@ const Achievements = () => {
 
   useEffect(() => {
     const fetchAchievements = async () => {
-      const querySnapshot = await getDocs(collection(db, "achievements"));
-      // const achievementsList = querySnapshot.docs.map((doc) => {
-      //   doc.id, // Get the document ID
-      //     doc.data();
-      // });
-
-      const achievementsList = querySnapshot.docs.map((doc) => ({
-        id: doc.id, // Get the document ID
-        ...doc.data(), // Get the rest of the data
-      }));
-
-      // Sort achievements by date (adjust the field name if necessary)
-      const sortedAchievements = achievementsList.sort(
-        (a, b) => new Date(b.date) - new Date(a.date) // Assuming 'date' field exists
-      );
-
-      setAchievements(sortedAchievements);
+      try {
+        const data = await api.get("/achievements");
+        const achievementsList = data.data || [];
+        setAchievements(achievementsList);
+      } catch (error) {
+        console.error("Error fetching achievements:", error);
+      }
       setLoading(false);
     };
 
@@ -56,7 +45,7 @@ const Achievements = () => {
       </motion.p>
 
       <div className="mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {achievements.map((achievement, index) => (
+        {achievements.map((achievement) => (
           <ProjectCard
             key={achievement.id}
             index={achievement.id}

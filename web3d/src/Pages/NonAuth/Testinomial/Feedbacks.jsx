@@ -1,41 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Tilt } from "react-tilt";
 import { motion } from "framer-motion";
-
 import { styles } from "../../../styles";
 import { SectionWrapper } from "../../../hoc";
-
 import { fadeIn, textVariant } from "../../../utils/motion";
-import { db } from "../../../firebase/firebase";
+import api from "../../../api/client";
 
-import { collection, getDoc, deleteDoc, getDocs } from "firebase/firestore";
-
-// const testimonials = [
-//   {
-//     testimonial:
-//       "A seasoned System Administrator, DevOps professional, and skilled Developer",
-//     name: "Basant Shrestha",
-//     designation: "CTO",
-//     company: "Itconcerns",
-//     image:
-//       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT1SwmRGfZrw5B_L3n_ciLwUOrV9evLc3kyHVN4LlW09Q&s",
-//   },
-//   {
-//     testimonial: "An exceptional team player and inspiring team lead, ",
-//     name: "Er. Rabindra Khati",
-//     designation: "HOD",
-//     company: "Kantipur Engineering College",
-//     image: "https://kec.edu.np/wp-content/uploads/2016/07/Rabindra-Khati.jpg",
-//   },
-//   {
-//     testimonial: "Hard worker, Multi talented, Sincere, Highly Dedicated",
-//     name: "Narad Karki",
-//     designation: "VSAT and Radio Head",
-//     company: "4Mercantile",
-//     image:
-//       "https://scontent.fktm3-1.fna.fbcdn.net/v/t1.6435-9/89457844_10157710019544760_5351301072088465408_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=be3454&_nc_ohc=_5ZbyE6CGi4AX-29sIY&_nc_ht=scontent.fktm3-1.fna&oh=00_AfDdeZKiVAZcvCUKVa_o-MKUil_ztDWX5YSLdSA5tUI3zw&oe=65A0AB4E",
-//   },
-// ];
 const FeedbackCard = ({
   index,
   testimonial,
@@ -72,21 +41,17 @@ const FeedbackCard = ({
     </div>
   </motion.div>
 );
-// Feedbacks Component
+
 const Feedbacks = () => {
   const [testinomail, setTestinomial] = useState([]);
 
   useEffect(() => {
     const fetchTestinomial = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, "testimonials"));
-        const achievementsList = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setTestinomial(achievementsList);
+        const data = await api.get("/testimonials");
+        setTestinomial(data.data || []);
       } catch (error) {
-        console.error("Error fetching achievements: ", error);
+        console.error("Error fetching testimonials: ", error);
       }
     };
 
@@ -104,18 +69,17 @@ const Feedbacks = () => {
         </motion.div>
       </div>
 
-      {/* Horizontal Scroll Container */}
       <div
         className={`-mt-20 pb-14 ${styles.paddingX} overflow-x-auto scroll-smooth flex gap-7`}
       >
         <motion.div
           animate={{
-            x: ["0%", "-33.33%", "-66.66%", "0%"], // Define a seamless loop for 3 items
+            x: ["0%", "-33.33%", "-66.66%", "0%"],
           }}
           transition={{
-            duration: 9, // Adjust duration as needed
-            ease: "linear", // Ensure smoothness
-            repeat: Infinity, // Repeat infinitely
+            duration: 9,
+            ease: "linear",
+            repeat: Infinity,
           }}
           className="flex gap-7"
         >

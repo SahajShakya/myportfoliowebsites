@@ -1,14 +1,13 @@
 import React, { useState } from "react";
 import { useFormik } from "formik";
-import { db } from "../../../firebase/firebase"; // Import Firebase setup and Firestore functions
-import { addDoc, collection } from "firebase/firestore";
-import InputField from "../../../Components/Input/InputField"; // Import custom InputField component
+import api from "../../../api/client";
+import InputField from "../../../Components/Input/InputField";
 import { motion } from "framer-motion";
 import { useSnackbar } from "notistack";
 
 const AddTestimonialForm = () => {
   const [focusedField, setFocusedField] = useState("");
-  const { enqueueSnackbar } = useSnackbar(); // Get the enqueueSnackbar function from notistack
+  const { enqueueSnackbar } = useSnackbar();
 
   const formik = useFormik({
     initialValues: {
@@ -20,7 +19,7 @@ const AddTestimonialForm = () => {
     },
     onSubmit: async (values, { resetForm }) => {
       try {
-        await addDoc(collection(db, "testimonials"), {
+        await api.post("/testimonials", {
           testimonial: values.testimonial,
           name: values.name,
           designation: values.designation,
@@ -28,7 +27,6 @@ const AddTestimonialForm = () => {
           image: values.image,
         });
 
-        // Show success notification with enqueueSnackbar
         enqueueSnackbar("Testimonial added successfully!", {
           variant: "success",
         });
@@ -36,7 +34,6 @@ const AddTestimonialForm = () => {
         resetForm();
       } catch (error) {
         console.error("Error adding testimonial: ", error);
-        // Show error notification with enqueueSnackbar
         enqueueSnackbar("There was an error adding the testimonial", {
           variant: "error",
         });

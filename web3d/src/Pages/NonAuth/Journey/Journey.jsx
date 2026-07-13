@@ -1,14 +1,13 @@
-import { getDocs, collection } from "firebase/firestore";
 import {
   VerticalTimeline,
   VerticalTimelineElement,
 } from "react-vertical-timeline-component";
-import { db } from "../../../firebase/firebase";
 import "react-vertical-timeline-component/style.min.css";
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { textVariant } from "../../../utils/motion";
 import { styles } from "../../../styles";
+import api from "../../../api/client";
 
 const Journey = () => {
   const [journey, setJourney] = useState([]);
@@ -16,17 +15,11 @@ const Journey = () => {
   useEffect(() => {
     const fetchJourney = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, "journey"));
-        const journeyList = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-
-        // Sort by startDate field (assuming startDate exists in your Firestore document)
+        const data = await api.get("/journey");
+        const journeyList = data.data || [];
         journeyList.sort(
-          (a, b) => new Date(a.startDate) - new Date(b.startDate)
+          (a, b) => new Date(a.start_date) - new Date(b.start_date)
         );
-
         setJourney(journeyList);
       } catch (error) {
         console.error("Error fetching journey: ", error);
@@ -51,17 +44,13 @@ const Journey = () => {
 
       <div className="py-8 sm:py-12 lg:py-16">
         <div className="mt-8 sm:mt-12 flex">
-          <VerticalTimeline
-            lineColor="#6c5ce7"
-            animate={true}
-          >
+          <VerticalTimeline lineColor="#6c5ce7" animate={true}>
             {journey.map((journeyItem) => {
-              // Handle conditional logic for invalid endDate
               const formattedEndDate = isNaN(
-                new Date(journeyItem.endDate).getTime()
+                new Date(journeyItem.end_date).getTime()
               )
                 ? "Present"
-                : new Date(journeyItem.endDate).toLocaleDateString("en-GB", {
+                : new Date(journeyItem.end_date).toLocaleDateString("en-GB", {
                     month: "long",
                     year: "numeric",
                   });
@@ -70,25 +59,30 @@ const Journey = () => {
                 <VerticalTimelineElement
                   key={journeyItem.id || journeyItem.office_name}
                   date={
-                    <span className="text-base sm:text-lg font-semibold" style={{ color: "black" }}>
-                      {`${new Date(journeyItem.startDate).toLocaleDateString(
-                        "en-GB",
-                        { month: "long", year: "numeric" }
-                      )} - ${formattedEndDate}`}
+                    <span
+                      className="text-base sm:text-lg font-semibold"
+                      style={{ color: "black" }}
+                    >
+                      {`${new Date(
+                        journeyItem.start_date
+                      ).toLocaleDateString("en-GB", {
+                        month: "long",
+                        year: "numeric",
+                      })} - ${formattedEndDate}`}
                     </span>
                   }
                   icon={
                     <div className="flex justify-center items-center w-full h-full rounded-full overflow-hidden bg-white">
                       <img
-                        src={journeyItem.icons[0].publicUrl}
+                        src={journeyItem.icons[0]}
                         alt={journeyItem.office_name}
                         className="w-[80%] h-[80%] object-contain rounded-full"
                       />
                     </div>
                   }
-                  iconStyle={{ 
+                  iconStyle={{
                     background: "#fff",
-                    boxShadow: "0 0 0 4px #6c5ce7"
+                    boxShadow: "0 0 0 4px #6c5ce7",
                   }}
                   contentStyle={{
                     borderBottom: "8px",
@@ -98,7 +92,7 @@ const Journey = () => {
                     background: "#1d1836",
                     color: "#fff",
                     padding: "1.5rem",
-                    minHeight: "320px", // Consistent minimum height
+                    minHeight: "320px",
                   }}
                   contentArrowStyle={{ borderRight: "7px solid #1d1836" }}
                 >
@@ -124,7 +118,7 @@ const Journey = () => {
 
                   <div className="mt-4 pt-3 border-t border-gray-600">
                     <a
-                      href={journeyItem.urlofCompany}
+                      href={journeyItem.url_of_company}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-400 hover:text-blue-300 text-sm sm:text-base font-bold transition-colors duration-300 underline"

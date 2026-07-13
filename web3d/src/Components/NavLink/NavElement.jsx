@@ -27,19 +27,6 @@ const NavElement = ({ token, path, pathName, logo }) => {
   };
 
   const handleLogoutUser = () => {
-    // const auth = getAuth();
-    // signOut(auth);
-    // localStorage.removeItem("authToken");
-    // localStorage.removeItem("tokenExpiry");
-    // localStorage.removeItem("refreshToken");
-    // addData({
-    //   name: "",
-    //   email: "",
-    //   roleId: "",
-    //   role: "",
-    // });
-    // localStorage.removeItem("user");
-    // console.log("Logout called inside NavElement");
     handleLogout();
     navigate("/login");
     handleCloseModal();

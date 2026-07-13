@@ -1,15 +1,14 @@
 import React, { useState } from "react";
-import { Formik, Form } from "formik";
-import InputField from "../../../Components/Input/InputField"; // Custom input field component
-import MyEditor from "../../../Components/MyEditor/MyEditor"; // Custom rich text editor component
-import Upload from "../../../Components/Upload/Upload"; // Custom upload component
+import { Formik, Form, FieldArray } from "formik";
+import InputField from "../../../Components/Input/InputField";
+import MyEditor from "../../../Components/MyEditor/MyEditor";
+import Upload from "../../../Components/Upload/Upload";
 import * as Yup from "yup";
 import { motion } from "framer-motion";
-import { uploadFilesToSupabase } from "../../../utils/supabaseFIle";
-import { db } from "../../../firebase/firebase";
+import { uploadFiles, deleteFilesFromSupabase } from "../../../api/upload";
+import api from "../../../api/client";
 import { useSnackbar } from "notistack";
-import { collection, addDoc, updateDoc, doc } from "firebase/firestore";
-import { supabase } from "../../../supabase/supabase";
+import { FaPlus, FaTrash } from "react-icons/fa";
 
 const validationSchema = Yup.object({
   title: Yup.string().required("Title is required"),
@@ -18,172 +17,136 @@ const validationSchema = Yup.object({
   icons: Yup.array().min(1, "At least one icon is required"),
   startDate: Yup.date().required("Start Date is required"),
   endDate: Yup.date().required("End Date is required"),
-  contents: Yup.string().required("Content is required"), // Add validation for content
+  description: Yup.string().required("Description is required"),
   urlofCompany: Yup.string().required("URL of Company is required"),
 });
 
-// const initialValues = {
-//   title: "",
-//   university_name: "",
-//   college_name: "",
-//   icons: [], // This will be an array to hold file objects
-//   startDate: "",
-//   endDate: "",
-//   contents: "", // Add content field for MyEditor
-//   focusedField: "",
-//   urlofCompany: "",
-// };
-
 const AddAcademics = ({ editData, handleEditSuccess }) => {
-  const [editorValue, setEditorValue] = useState(editData?.contents || "");
-  const [uploadUrls, setUploadUrls] = useState([]);
-
-  const [fileremovedURL, setFileRemovedURL] = useState("");
-
+  const [editorValue, setEditorValue] = useState(editData?.description || "");
   const { enqueueSnackbar } = useSnackbar();
 
-  console.log("Edit data on academics", editData);
+  const buildInitialContentItems = () => {
+    if (editData?.contents && Array.isArray(editData.contents) && editData.contents.length > 0) {
+      return editData.contents.map((item) => ({
+        content_text: item.content_text || "",
+        image_url: item.image_url ? [{ icon: item.image_url }] : [],
+        image_description: item.image_description || "",
+        display_order: item.display_order || 0,
+      }));
+    }
+    return [];
+  };
 
-  // Set initial values for the form
   const initialValues = {
     title: editData?.title || "",
     university_name: editData?.university_name || "",
     college_name: editData?.college_name || "",
-    icons: editData?.icons?.map((icon) => ({ icon: icon.publicUrl })) || [],
-    startDate: editData?.startDate || "",
-    endDate: editData?.endDate || "",
-    contents: editData?.contents || "",
+    icons:
+      editData?.icons?.map((icon) => ({
+        icon: typeof icon === "string" ? icon : icon.icon_url || icon,
+      })) || [],
+    description: editData?.description || "",
+    startDate: editData?.start_date || "",
+    endDate: editData?.end_date || "",
+    contentItems: buildInitialContentItems(),
     focusedField: "",
-    urlofCompany: editData?.urlofCompany || "",
+    urlofCompany: editData?.url_of_company || "",
+    github_link: editData?.github_link || "",
   };
 
-  const handleSubmit = async (
-    values,
-    { setSubmitting, resetForm, setFieldValue }
-  ) => {
+  const handleSubmit = async (values, { setSubmitting }) => {
     try {
-      // Initialize an array to store the uploaded file URLs
-      let uploadedUrls = [];
-
-      // Check if there are new files to upload
+      let uploadedIconUrls = [];
       if (values.icons && values.icons.length > 0) {
-        // Upload new files and get the URLs
-        uploadedUrls = await uploadFilesToSupabase(values.icons, "academics");
+        const hasNewFiles = values.icons.some((item) => item.file);
+        if (hasNewFiles) {
+          uploadedIconUrls = await uploadFiles(values.icons, "academics");
+        } else {
+          uploadedIconUrls = values.icons.map((item) =>
+            typeof item === "string" ? item : item.icon
+          );
+        }
+      }
+      if (uploadedIconUrls.length === 0 && editData) {
+        uploadedIconUrls = editData.icons || [];
       }
 
-      // If no new files were uploaded, retain the existing URLs (from editData)
-      if (uploadedUrls.length === 0 && editData) {
-        uploadedUrls = editData.icons || []; // Keep old URLs if no new images
+      const contentFileItems = [];
+      const newContentFiles = [];
+      for (let i = 0; i < values.contentItems.length; i++) {
+        const item = values.contentItems[i];
+        const hasNewImage = item.image_url && item.image_url.some((f) => f.file);
+        if (hasNewImage) {
+          newContentFiles.push({ index: i, files: item.image_url });
+        } else {
+          const existingUrl = item.image_url?.[0]?.icon || "";
+          contentFileItems.push({ index: i, url: existingUrl });
+        }
       }
 
-      // Prepare the data for saving (includes both the form data and file URLs)
+      const uploadedContentUrls = {};
+      if (newContentFiles.length > 0) {
+        for (const entry of newContentFiles) {
+          const result = await uploadFiles(entry.files, "academics");
+          if (result.length > 0) {
+            uploadedContentUrls[entry.index] = result[0].url || result[0].path || result[0];
+          }
+        }
+      }
+      for (const entry of contentFileItems) {
+        uploadedContentUrls[entry.index] = entry.url;
+      }
+
+      const contentItems = values.contentItems.map((item, idx) => ({
+        content_text: item.content_text,
+        image_url: uploadedContentUrls[idx] || "",
+        image_description: item.image_description || "",
+        display_order: idx,
+      }));
+
       const academicData = {
         title: values.title,
         university_name: values.university_name,
         college_name: values.college_name,
-        icons: uploadedUrls, // Use the updated (or old) URLs
+        icons: uploadedIconUrls,
+        description: editorValue,
         startDate: values.startDate,
         endDate: values.endDate,
-        contents: editorValue, // Assuming editorValue is the content from a rich text editor
+        contentItems: contentItems,
         urlofCompany: values.urlofCompany,
+        github_link: values.github_link,
       };
 
-      // Check if we are editing an existing record or adding a new one
       if (editData) {
-        // Update the existing document in Firestore with the new academicData
-        await updateDoc(doc(db, "academics", editData.id), academicData);
-        enqueueSnackbar("Academic data updated successfully!", {
-          variant: "success",
-        });
-
-        // If the update was successful, clear the file list in the Upload component
-        setFieldValue("icons", []);
+        await api.put(`/academics/${editData.id}`, academicData);
+        enqueueSnackbar("Academic updated successfully!", { variant: "success" });
       } else {
-        // Add a new document to the "academics" collection in Firestore
-        await addDoc(collection(db, "academics"), academicData);
-        enqueueSnackbar("Academic data submitted successfully!", {
-          variant: "success",
-        });
+        await api.post("/academics", academicData);
+        enqueueSnackbar("Academic created successfully!", { variant: "success" });
       }
 
-      // Reset the form fields to initial values
-      setFieldValue("title", "");
-      setFieldValue("university_name", "");
-      setFieldValue("college_name", "");
-      setFieldValue("icons", []);
-      setFieldValue("startDate", "");
-      setFieldValue("endDate", "");
-      setFieldValue("contents", "");
-      setFieldValue("urlofCompany", "");
-
-      // Reset the rich text editor value (assuming setEditorValue clears it)
-      setEditorValue("");
-
-      // Reset form and handle submission state
-      resetForm();
       setSubmitting(false);
       window.location.reload();
     } catch (error) {
-      // Handle errors during submission
-      console.error("Error submitting form:", error);
-      enqueueSnackbar("Failed to submit academic data. Please try again.", {
-        variant: "error",
-      });
+      console.error("Error submitting academic:", error);
+      enqueueSnackbar("Failed to submit academic. Please try again.", { variant: "error" });
       setSubmitting(false);
     }
   };
 
   const handleFileRemove = (removedFile) => {
-    console.log("URL ontained inside handleFileRemove:", removedFile);
-    // setFileRemovedURL(removedFile);
-    deleteFileByUrl(removedFile);
-
-    // Perform any additional logic here, like updating a state or making an API call
+    deleteFilesFromSupabase(removedFile);
   };
-
-  async function deleteFileByUrl(fileUrl) {
-    // Extract the file path from the URL
-    const filePath = fileUrl.split("/storage/v1/object/public/storage/")[1];
-
-    console.log(filePath, "File Path on delete");
-
-    // // Call Supabase API to delete the file
-    const { data, error } = await supabase.storage
-      .from("storage") // Your bucket name
-      .remove([filePath]);
-
-    console.log("data", data);
-    enqueueSnackbar("Image delete successfully!", {
-      variant: "success",
-    });
-
-    if (error) {
-      console.error("Error deleting file:", error);
-    } else {
-      console.log("File deleted successfully from supabase");
-    }
-  }
 
   return (
     <div className="w-full">
-      <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">
-        {editData ? "Edit Academic" : "Add Academic"}
-      </h2>
       <Formik
         initialValues={initialValues}
         validationSchema={validationSchema}
         onSubmit={handleSubmit}
       >
-        {({
-          setFieldValue,
-          values,
-          touched,
-          errors,
-          handleBlur,
-          handleChange,
-        }) => (
+        {({ setFieldValue, values, touched, errors, handleBlur }) => (
           <Form className="space-y-4 sm:space-y-6">
-            {/* Title */}
             <InputField
               name="title"
               type="text"
@@ -197,7 +160,6 @@ const AddAcademics = ({ editData, handleEditSuccess }) => {
               setFocusedField={(name) => setFieldValue("focusedField", name)}
             />
 
-            {/* University Name */}
             <InputField
               name="university_name"
               type="text"
@@ -211,7 +173,6 @@ const AddAcademics = ({ editData, handleEditSuccess }) => {
               setFocusedField={(name) => setFieldValue("focusedField", name)}
             />
 
-            {/* College Name */}
             <InputField
               name="college_name"
               type="text"
@@ -225,7 +186,6 @@ const AddAcademics = ({ editData, handleEditSuccess }) => {
               setFocusedField={(name) => setFieldValue("focusedField", name)}
             />
 
-            {/* File Input (Icons) */}
             <Upload
               name="icons"
               value={values.icons}
@@ -238,7 +198,7 @@ const AddAcademics = ({ editData, handleEditSuccess }) => {
             <InputField
               name="urlofCompany"
               type="text"
-              label="urlofCompany"
+              label="URL of Company"
               value={values.urlofCompany}
               onChange={(e) => setFieldValue("urlofCompany", e.target.value)}
               onBlur={handleBlur}
@@ -248,7 +208,19 @@ const AddAcademics = ({ editData, handleEditSuccess }) => {
               setFocusedField={(name) => setFieldValue("focusedField", name)}
             />
 
-            {/* Start Date */}
+            <InputField
+              name="github_link"
+              type="url"
+              label="GitHub Link"
+              value={values.github_link}
+              onChange={(e) => setFieldValue("github_link", e.target.value)}
+              onBlur={handleBlur}
+              error={errors.github_link}
+              touched={touched.github_link}
+              focusedField={values.focusedField}
+              setFocusedField={(name) => setFieldValue("focusedField", name)}
+            />
+
             <InputField
               name="startDate"
               type="date"
@@ -262,7 +234,6 @@ const AddAcademics = ({ editData, handleEditSuccess }) => {
               setFocusedField={(name) => setFieldValue("focusedField", name)}
             />
 
-            {/* End Date */}
             <InputField
               name="endDate"
               type="date"
@@ -276,21 +247,87 @@ const AddAcademics = ({ editData, handleEditSuccess }) => {
               setFocusedField={(name) => setFieldValue("focusedField", name)}
             />
 
-            {/* MyEditor for Content */}
-            <MyEditor
-              value={editorValue}
-              onChange={(content) => {
-                setEditorValue(content);
-                setFieldValue("contents", content);
-              }}
-              name="contents"
-              error={errors.contents}
-            />
-            {touched.contents && errors.contents && (
-              <p className="text-red-500 text-sm mt-2">{errors.contents}</p>
-            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <MyEditor
+                value={editorValue}
+                onChange={(content) => {
+                  setEditorValue(content);
+                  setFieldValue("description", content);
+                }}
+                name="description"
+                error={errors.description}
+              />
+              {touched.description && errors.description && (
+                <p className="text-red-500 text-sm mt-1">{errors.description}</p>
+              )}
+            </div>
 
-            {/* Submit Button */}
+            <div className="border-t pt-4">
+              <div className="flex items-center justify-between mb-3">
+                <label className="block text-sm font-semibold text-gray-700">Content Sections</label>
+              </div>
+
+              <FieldArray name="contentItems">
+                {({ push, remove }) => (
+                  <div className="space-y-4">
+                    {values.contentItems.map((item, index) => (
+                      <div key={index} className="border rounded-lg p-4 bg-gray-50 relative">
+                        <button
+                          type="button"
+                          onClick={() => remove(index)}
+                          className="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1"
+                        >
+                          <FaTrash size={14} />
+                        </button>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Image</label>
+                            <Upload
+                              name={`contentItems.${index}.image_url`}
+                              value={item.image_url || []}
+                              setFieldValue={setFieldValue}
+                              onFileRemove={handleFileRemove}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Image Description</label>
+                            <input
+                              type="text"
+                              value={item.image_description}
+                              onChange={(e) => setFieldValue(`contentItems.${index}.image_description`, e.target.value)}
+                              placeholder="Short description for the image"
+                              className="w-full border rounded-lg px-3 py-2 text-sm"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Content</label>
+                          <textarea
+                            value={item.content_text}
+                            onChange={(e) => setFieldValue(`contentItems.${index}.content_text`, e.target.value)}
+                            placeholder="Write your content here..."
+                            rows={3}
+                            className="w-full border rounded-lg px-3 py-2 text-sm"
+                          />
+                        </div>
+                      </div>
+                    ))}
+
+                    <button
+                      type="button"
+                      onClick={() => push({ content_text: "", image_url: [], image_description: "", display_order: values.contentItems.length })}
+                      className="flex items-center gap-2 text-blue-500 hover:text-blue-700 text-sm font-medium border border-dashed border-blue-300 rounded-lg px-4 py-2 w-full justify-center hover:bg-blue-50 transition-colors"
+                    >
+                      <FaPlus /> Add Content Section
+                    </button>
+                  </div>
+                )}
+              </FieldArray>
+            </div>
+
             <motion.button
               type="submit"
               className="w-full p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all"

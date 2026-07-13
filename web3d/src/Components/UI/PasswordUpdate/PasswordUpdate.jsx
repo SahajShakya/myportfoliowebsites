@@ -1,33 +1,26 @@
 import React, { useState } from "react";
-import {
-  getAuth,
-  reauthenticateWithCredential,
-  EmailAuthProvider,
-  updatePassword,
-} from "firebase/auth";
 import { enqueueSnackbar } from "notistack";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import InputField from "../../Input/InputField"; // Your custom InputField component
+import InputField from "../../Input/InputField";
+import api from "../../../api/client";
+import { useUser } from "../../../context/UserContext";
 
 const UpdatePassword = ({ handleCloseModal }) => {
   const [loading, setLoading] = useState(false);
-  const [focusedField, setFocusedField] = useState(null); // To manage focused state for InputField
+  const [focusedField, setFocusedField] = useState(null);
+  const { user } = useUser();
 
-  const auth = getAuth();
-  const user = auth.currentUser;
-
-  // Formik hook
   const formik = useFormik({
     initialValues: {
-      password: "", // Current password
-      newPassword: "", // New password
-      confirmPassword: "", // Confirm new password
+      password: "",
+      newPassword: "",
+      confirmPassword: "",
     },
     validationSchema: Yup.object({
       password: Yup.string()
         .required("Current password is required")
-        .min(6, "Password must be at least 6 characters"), // Change this to your password policy
+        .min(6, "Password must be at least 6 characters"),
       newPassword: Yup.string()
         .required("New password is required")
         .min(6, "Password must be at least 6 characters"),
@@ -37,27 +30,20 @@ const UpdatePassword = ({ handleCloseModal }) => {
     }),
 
     onSubmit: async (values) => {
-      if (!user) return;
-
       setLoading(true);
-
       try {
-        // Step 1: Re-authenticate the user with the current password
-        const credential = EmailAuthProvider.credential(
-          user.email || "",
-          values.password
-        );
-        await reauthenticateWithCredential(user, credential);
-
-        // Step 2: Update the password
-        await updatePassword(user, values.newPassword);
-
+        await api.put(`/auth/user/${user.id}`, {
+          password: values.password,
+          newPassword: values.newPassword,
+        });
         enqueueSnackbar("Password updated successfully!", {
           variant: "success",
         });
-        handleCloseModal(); // Close the modal after successful password update
+        handleCloseModal();
       } catch (error) {
-        enqueueSnackbar(String(error), { variant: "error" });
+        enqueueSnackbar(error.message || "Update failed", {
+          variant: "error",
+        });
       } finally {
         setLoading(false);
       }
@@ -67,7 +53,6 @@ const UpdatePassword = ({ handleCloseModal }) => {
   return (
     <div className="p-6">
       <form onSubmit={formik.handleSubmit}>
-        {/* Current Password */}
         <InputField
           name="password"
           type="password"
@@ -81,7 +66,6 @@ const UpdatePassword = ({ handleCloseModal }) => {
           setFocusedField={setFocusedField}
         />
 
-        {/* New Password */}
         <InputField
           name="newPassword"
           type="password"
@@ -95,7 +79,6 @@ const UpdatePassword = ({ handleCloseModal }) => {
           setFocusedField={setFocusedField}
         />
 
-        {/* Confirm New Password */}
         <InputField
           name="confirmPassword"
           type="password"
@@ -109,7 +92,6 @@ const UpdatePassword = ({ handleCloseModal }) => {
           setFocusedField={setFocusedField}
         />
 
-        {/* Submit Button */}
         <button
           type="submit"
           className="w-full bg-blue-500 text-white p-2 rounded-md"

@@ -1,21 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { db } from "../../../firebase/firebase";
-import {
-  collection,
-  getDocs,
-  getDoc,
-  deleteDoc,
-  doc,
-} from "firebase/firestore";
-import { useNavigate } from "react-router-dom";
 import { useSnackbar } from "notistack";
-import AddJourney from "./AddJourney"; // Updated component import
+import AddJourney from "./AddJourney";
 import Modal from "../../../Components/UI/Modal/Modal";
-import { deleteFilesFromSupabase } from "../../../utils/supabaseFIle";
+import api from "../../../api/client";
 
 const ViewJourney = () => {
   const [journeys, setJourneys] = useState([]);
-  const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
   const [modal, setModal] = useState(false);
   const [editData, setEditData] = useState(null);
@@ -24,19 +14,12 @@ const ViewJourney = () => {
   useEffect(() => {
     const fetchJourneys = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, "journey"));
-        const journeyList = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
+        const data = await api.get("/journey");
+        const journeyList = (data.data || []).map((item) => ({
+          ...item,
+          id: String(item.id),
         }));
-
-        // Sort by createdAt field, with a check for missing or invalid createdAt
-        journeyList.sort((a, b) => {
-          const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date();
-          const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date();
-          return dateA - dateB; // Sort in descending order
-        });
-
+        journeyList.sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
         setJourneys(journeyList);
         setIsEdit(false);
       } catch (error) {
@@ -48,69 +31,50 @@ const ViewJourney = () => {
   }, [isEdit]);
 
   const handleEdit = (id) => {
-    // Find the journey data based on the id
-    const journey = journeys.find((item) => item.id === id);
-    console.log("Edit data on handle Edit", journey);
+    const journey = journeys.find((item) => String(item.id) === String(id));
     setEditData(journey);
     setModal(true);
   };
 
   const handleEditSuccess = () => {
-    console.log("Edit success");
-
     setModal(false);
     setIsEdit(true);
   };
 
   const handleDelete = async (id) => {
     try {
-      const docRef = doc(db, "journey", id); // Get reference to the document
-      console.log("Document reference:", docRef);
-
-      // Try to fetch the document
-      const docSnapshot = await getDoc(docRef);
-
-      if (!docSnapshot.exists()) {
-        console.error("Document not found.");
-        enqueueSnackbar("Journey data not found.", { variant: "error" });
-        return;
-      }
-
-      const journeyData = docSnapshot.data();
-      console.log("Journey data:", journeyData);
-
-      const fileUrls = journeyData.icons; // Assuming 'icons' stores the file URL
-      console.log("File URL:", fileUrls);
-
-      const deleteFile = await deleteFilesFromSupabase(fileUrls, "journey");
-      console.log("Delete", deleteFile);
-
-      await deleteDoc(doc(db, "journey", id));
-      setJourneys(journeys.filter((journey) => journey.id !== id));
-      enqueueSnackbar("Journey data deleted successfully!", {
+      await api.delete(`/journey/${id}`);
+      setJourneys(journeys.filter((j) => String(j.id) !== String(id)));
+      enqueueSnackbar("Journey deleted successfully!", {
         variant: "success",
       });
     } catch (error) {
-      enqueueSnackbar("Failed to delete journey data. Please try again.", {
+      enqueueSnackbar("Failed to delete journey. Please try again.", {
         variant: "error",
       });
     }
   };
 
-  const handleCloseModal = () => {
-    setModal(false); // Close modal
-  };
+  const handleCloseModal = () => setModal(false);
 
   return (
     <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
-      <h1 className="text-2xl sm:text-3xl font-semibold mb-6">Journeys</h1>
-      
-      {/* Desktop Table View */}
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl sm:text-3xl font-semibold">Journeys</h1>
+        <button
+          onClick={() => { setEditData(null); setModal(true); }}
+          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+        >
+          + Add Journey
+        </button>
+      </div>
+
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full table-auto border-collapse">
           <thead className="bg-gray-100">
             <tr>
               <th className="px-4 py-3 text-left font-semibold">Title</th>
+              <th className="px-4 py-3 text-center font-semibold">Icon</th>
               <th className="px-4 py-3 text-left font-semibold">Office</th>
               <th className="px-4 py-3 text-left font-semibold">Designation</th>
               <th className="px-4 py-3 text-center font-semibold">Action</th>
@@ -120,6 +84,22 @@ const ViewJourney = () => {
             {journeys.map((journey) => (
               <tr key={journey.id} className="border-b hover:bg-gray-50">
                 <td className="px-4 py-3">{journey.title}</td>
+                <td className="px-4 py-3 text-center">
+                  {journey.icons && journey.icons.length > 0 ? (
+                    <div className="flex justify-center gap-1 flex-wrap">
+                      {journey.icons.map((icon, idx) => (
+                        <img
+                          key={idx}
+                          src={typeof icon === "string" ? icon : icon.icon_url || icon}
+                          alt={`Icon ${idx}`}
+                          className="w-8 h-8 object-cover rounded"
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-gray-400 text-sm">-</span>
+                  )}
+                </td>
                 <td className="px-4 py-3">{journey.office_name}</td>
                 <td className="px-4 py-3">{journey.designation}</td>
                 <td className="px-4 py-3 text-center">
@@ -142,14 +122,27 @@ const ViewJourney = () => {
         </table>
       </div>
 
-      {/* Mobile Card View */}
       <div className="md:hidden space-y-4">
         {journeys.map((journey) => (
           <div key={journey.id} className="bg-white border rounded-lg p-4 shadow-sm">
             <div className="space-y-2 mb-4">
-              <div>
-                <span className="text-sm font-semibold text-gray-600">Title:</span>
-                <p className="text-base">{journey.title}</p>
+              <div className="flex items-center gap-3">
+                {journey.icons && journey.icons.length > 0 && (
+                  <div className="flex gap-1 flex-shrink-0">
+                    {journey.icons.map((icon, idx) => (
+                      <img
+                        key={idx}
+                        src={typeof icon === "string" ? icon : icon.icon_url || icon}
+                        alt={`Icon ${idx}`}
+                        className="w-10 h-10 object-cover rounded"
+                      />
+                    ))}
+                  </div>
+                )}
+                <div>
+                  <span className="text-sm font-semibold text-gray-600">Title:</span>
+                  <p className="text-base">{journey.title}</p>
+                </div>
               </div>
               <div>
                 <span className="text-sm font-semibold text-gray-600">Office:</span>
@@ -178,16 +171,9 @@ const ViewJourney = () => {
         ))}
       </div>
       {modal && (
-        <Modal
-          onClose={handleCloseModal}
-          title={editData ? "Edit Journey" : "Add Journey"}
-        >
+        <Modal onClose={handleCloseModal} title={editData ? "Edit Journey" : "Add Journey"}>
           <div className="w-full">
-            {/* This div will allow for scrolling if the content overflows */}
-            <AddJourney
-              editData={editData}
-              handleEditSuccess={handleEditSuccess}
-            />
+            <AddJourney editData={editData} handleEditSuccess={handleEditSuccess} />
           </div>
         </Modal>
       )}

@@ -1,37 +1,30 @@
 import React, { useState } from "react";
-import { useAuth } from "../../../Hooks/Auth/useAuth";
-import { motion } from "framer-motion"; // For adding animations
-import { useSnackbar } from "notistack"; // Import useSnackbar hook
-import { useFormik } from "formik"; // Formik for managing form state
-import * as Yup from "yup"; // Yup validation library
-import InputField from "../../../Components/Input/InputField"; // Import the reusable InputField component
+import { useAuthContext } from "../../../context/AuthContext";
+import { motion } from "framer-motion";
+import { enqueueSnackbar } from "notistack";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import InputField from "../../../Components/Input/InputField";
 import { useNavigate } from "react-router-dom";
 
 const Register = () => {
-  const { register, error } = useAuth();
-  const { enqueueSnackbar } = useSnackbar(); // Hook to show notifications
+  const { register } = useAuthContext();
   const navigate = useNavigate();
-  const [focusedField, setFocusedField] = useState<string | null>(null); // State for focused field
+  const [focusedField, setFocusedField] = useState(null);
 
-  // Validation schema using Yup
   const validationSchema = Yup.object({
     name: Yup.string().required("Full Name is required"),
     email: Yup.string()
       .email("Invalid email format")
-      .required("Email is required")
-      .matches(
-        /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-        "Invalid email format"
-      ),
+      .required("Email is required"),
     password: Yup.string()
       .min(6, "Password must be at least 6 characters")
       .required("Password is required"),
     confirmPassword: Yup.string()
-      .oneOf([Yup.ref("password"), undefined], "Passwords must match")
+      .oneOf([Yup.ref("password")], "Passwords must match")
       .required("Confirm Password is required"),
   });
 
-  // Formik hook
   const formik = useFormik({
     initialValues: {
       name: "",
@@ -43,13 +36,12 @@ const Register = () => {
     onSubmit: async (values) => {
       const { email, password, name } = values;
       try {
-        await register(email, password, name); // Register the user
-        enqueueSnackbar("Registration successful!", { variant: "success" }); // Show success toast
-        enqueueSnackbar("Email Verification Sent!", { variant: "success" }); // Show success toast
+        await register(email, password, name);
+        enqueueSnackbar("Registration successful!", { variant: "success" });
         formik.resetForm();
         navigate("/login");
       } catch (error) {
-        enqueueSnackbar(`Error: ${error}`, { variant: "error" }); // Show error toast
+        enqueueSnackbar(`Error: ${error.message}`, { variant: "error" });
         formik.setFieldValue("password", "");
         formik.setFieldValue("confirmPassword", "");
       }
@@ -66,10 +58,7 @@ const Register = () => {
       >
         <h2 className="text-xl font-bold mb-4 text-center">Register</h2>
 
-        {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
-
         <form onSubmit={formik.handleSubmit}>
-          {/* Full Name input */}
           <InputField
             name="name"
             type="text"
@@ -83,7 +72,6 @@ const Register = () => {
             setFocusedField={setFocusedField}
           />
 
-          {/* Email input */}
           <InputField
             name="email"
             type="email"
@@ -97,7 +85,6 @@ const Register = () => {
             setFocusedField={setFocusedField}
           />
 
-          {/* Password input */}
           <InputField
             name="password"
             type="password"
@@ -111,7 +98,6 @@ const Register = () => {
             setFocusedField={setFocusedField}
           />
 
-          {/* Confirm Password input */}
           <InputField
             name="confirmPassword"
             type="password"
@@ -125,7 +111,6 @@ const Register = () => {
             setFocusedField={setFocusedField}
           />
 
-          {/* Register button */}
           <motion.button
             className={`w-full p-3 rounded-lg transition-all duration-300 ${
               !formik.isValid || formik.isSubmitting
@@ -140,7 +125,6 @@ const Register = () => {
           </motion.button>
         </form>
 
-        {/* Login link */}
         <motion.div
           className="mt-4 text-center"
           initial={{ opacity: 0 }}

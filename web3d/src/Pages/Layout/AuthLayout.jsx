@@ -10,7 +10,11 @@ import {
   FaChevronDown,
   FaChevronUp,
   FaProjectDiagram,
-} from "react-icons/fa"; // Add FaProjectDiagram
+  FaAward,
+  FaUserCircle,
+  FaKey,
+  FaShareAlt,
+} from "react-icons/fa";
 
 const AuthLayout = () => {
   const [activeTab, setActiveTab] = useState("");
@@ -19,7 +23,8 @@ const AuthLayout = () => {
     academics: false,
     journey: false,
     achievements: false,
-    projects: false, // Add projects dropdown state
+    projects: false,
+    settings: false,
   });
 
   const handleTabClick = (tab) => {
@@ -33,29 +38,30 @@ const AuthLayout = () => {
   const toggleDropdown = (tab) => {
     setDropdowns((prevState) => ({
       ...Object.keys(prevState).reduce((acc, key) => {
-        acc[key] = key === tab ? !prevState[key] : false;
+        acc[key] = key === tab ? !prevState[key] : prevState[key];
         return acc;
       }, {}),
     }));
   };
 
   const routes = [
-    { name: "academics", label: "Academics" },
-    { name: "journey", label: "Journey" },
-    { name: "projects", label: "Projects" },
-    { name: "achievements", label: "Achievements" },
+    { name: "academics", label: "Academics", icon: FaUser },
+    { name: "journey", label: "Journey", icon: FaCogs },
+    { name: "projects", label: "Projects", icon: FaProjectDiagram },
+    { name: "achievements", label: "Achievements", icon: FaAward },
+  ];
+
+  const settingsItems = [
+    { name: "profile", label: "Profile Settings", path: "/auth/profile", icon: FaUserCircle },
+    { name: "password", label: "Change Password", path: "/auth/password", icon: FaKey },
+    { name: "social-links", label: "Social Links", path: "/auth/social-links", icon: FaShareAlt },
   ];
 
   const generateDropdownItems = (section) => (
     <ul className="ml-4 mt-2 space-y-2">
       <li>
-        <Link to={`/auth/${section}/create`} className="block">
-          Create
-        </Link>
-      </li>
-      <li>
-        <Link to={`/auth/${section}/view`} className="block">
-          View
+        <Link to={section === "academics" ? `/auth/${section}/` : `/auth/${section}/create`} className="block">
+          {section === "academics" ? "View All" : "Create"}
         </Link>
       </li>
     </ul>
@@ -70,7 +76,7 @@ const AuthLayout = () => {
             isCollapsed
               ? "w-20 bg-black text-white"
               : "w-64 bg-white text-black"
-          } p-4`}
+          } p-4 overflow-y-auto`}
         >
           <div className="flex justify-between items-center mb-6">
             <button onClick={toggleSidebar} className="text-black">
@@ -82,8 +88,20 @@ const AuthLayout = () => {
             </button>
           </div>
 
-          <ul className="space-y-6">
-            {routes.map(({ name, label }) => (
+          <ul className="space-y-4">
+            <li>
+              <Link
+                to="/admin/dashboard"
+                className={`block p-3 rounded-lg ${
+                  activeTab === "dashboard" ? "bg-gray-600 text-white" : "hover:bg-gray-200"
+                }`}
+                onClick={() => handleTabClick("dashboard")}
+              >
+                {isCollapsed ? <FaUser className="text-xl text-white mx-auto" /> : "Dashboard"}
+              </Link>
+            </li>
+
+            {routes.map(({ name, label, icon: Icon }) => (
               <li
                 key={name}
                 className={`cursor-pointer ${
@@ -93,19 +111,11 @@ const AuthLayout = () => {
               >
                 <div className="flex items-center justify-between">
                   <Link
-                    to={`/auth/${name}/view`}
+                    to={name === "academics" || name === "journey" || name === "projects" || name === "achievements" ? `/auth/${name}/` : `/auth/${name}/view`}
                     className={`block ${isCollapsed ? "text-center" : ""}`}
                   >
                     {isCollapsed ? (
-                      name === "academics" ? (
-                        <FaUser className="text-xl text-white" />
-                      ) : name === "journey" ? (
-                        <FaCogs className="text-xl text-white" />
-                      ) : name === "achievements" ? (
-                        <FaLock className="text-xl text-white" />
-                      ) : name === "projects" ? (
-                        <FaProjectDiagram className="text-xl text-white" />
-                      ) : null
+                      <Icon className="text-xl text-white" />
                     ) : (
                       label
                     )}
@@ -125,10 +135,50 @@ const AuthLayout = () => {
                 {!isCollapsed && dropdowns[name] && generateDropdownItems(name)}
               </li>
             ))}
+
+            {!isCollapsed && <hr className="my-2" />}
+
+            <li
+              className={`cursor-pointer ${
+                activeTab === "settings" ? "bg-gray-600" : "hover:bg-gray-300"
+              } p-3 rounded-lg`}
+              onClick={() => handleTabClick("settings")}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FaLock className="text-sm" />
+                  <span>Settings</span>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleDropdown("settings");
+                  }}
+                  className="text-blue-600"
+                >
+                  {dropdowns["settings"] ? <FaChevronUp /> : <FaChevronDown />}
+                </button>
+              </div>
+              {!isCollapsed && dropdowns["settings"] && (
+                <ul className="ml-4 mt-2 space-y-2">
+                  {settingsItems.map((item) => (
+                    <li key={item.name}>
+                      <Link
+                        to={item.path}
+                        className="flex items-center gap-2 text-sm hover:text-blue-500"
+                      >
+                        <item.icon className="text-xs" />
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
           </ul>
         </div>
 
-        <div className="flex-1 bg-gray-100 p-6">
+        <div className="flex-1 bg-gray-100 p-6 overflow-y-auto">
           <Outlet />
         </div>
       </div>

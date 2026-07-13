@@ -1,18 +1,8 @@
-import React, {
-  createContext,
-  useState,
-  useContext,
-  ReactNode,
-  useEffect,
-} from "react";
-import { useAuth } from "../Hooks/Auth/useAuth"; // Import the custom useAuth hook
-import { getAuth } from "firebase/auth";
+import React, { createContext, useState, useContext, useEffect } from "react";
+import { useAuthContext } from "./AuthContext";
 
-
-// Create the context with a default value (set to null for now)
 const UserContext = createContext(undefined);
 
-// Custom hook to access the user context
 export const useUser = () => {
   const context = useContext(UserContext);
   if (!context) {
@@ -21,10 +11,7 @@ export const useUser = () => {
   return context;
 };
 
-
-
 export const UserProvider = ({ children }) => {
-  // Initialize the user state with empty values
   const [user, setUser] = useState({
     name: "",
     email: "",
@@ -32,31 +19,32 @@ export const UserProvider = ({ children }) => {
     role: "",
   });
 
-  // Call useAuth hook inside the component (this is the correct way)
-  const { logout } = useAuth();
+  const { logout: authLogout, user: authUser } = useAuthContext();
 
-  // Load user data from localStorage on component mount
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
-      setUser(JSON.parse(storedUser)); // Parse and set user data if it exists in localStorage
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch {
+        localStorage.removeItem("user");
+      }
     }
   }, []);
 
-  // Function to fully update user data (replace the existing state)
+  useEffect(() => {
+    if (authUser) {
+      setUser((prev) => ({ ...prev, ...authUser }));
+    }
+  }, [authUser]);
+
   const addData = (userData) => {
     setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData)); // Save user data to localStorage
+    localStorage.setItem("user", JSON.stringify(userData));
   };
 
-  // Define the handleLogout function
-  const handleLogout = () => {
-    const auth = getAuth();
-    console.log(auth.currentUser?.uid);
-
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("tokenExpiry");
-    localStorage.removeItem("refreshToken");
+  const handleLogout = async () => {
+    await authLogout();
     addData({
       name: "",
       email: "",
@@ -64,12 +52,6 @@ export const UserProvider = ({ children }) => {
       role: "",
     });
     localStorage.removeItem("user");
-    console.log("Logout called inside Context");
-
-    if (auth.currentUser) {
-      console.log("Logout called inside Context if block");
-      logout(auth.currentUser.uid); // Call the logout from useAuth here
-    }
   };
 
   return (

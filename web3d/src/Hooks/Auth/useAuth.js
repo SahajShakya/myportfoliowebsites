@@ -1,142 +1,34 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
-import {
-  createUserWithEmailAndPassword,
-  sendEmailVerification,
-  signInWithEmailAndPassword,
-  updateProfile,
-} from "firebase/auth";
-import { auth, db } from "../../firebase/firebase";
-import {
-  doc,
-  setDoc,
-  getDoc,
-  Timestamp,
-  collection,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-} from "firebase/firestore";
-import { supabase } from "../../supabase/supabase";
+import api from "../../api/client";
 
-// Function to get the user's role name from Firestore
-export const getUserRoleFromFirestore = async (uid) => {
+export const getUserRoleFromApi = async (userId) => {
   try {
-    const userDocRef = doc(db, "users", uid);
-    const userDocSnap = await getDoc(userDocRef);
-
-    if (userDocSnap.exists()) {
-      const userData = userDocSnap.data();
-
-      const roleId = userData?.role;
-      if (!roleId) {
-        return { role: null, roleId: null }; // If no roleId, return null for both
-      }
-
-      const roles = await fetchAllFromCollection("roles");
-      const role = roles.find((role) => role.id === roleId);
-
-      if (role) {
-        return { role: role.name || null, roleId: roleId }; // Return both role name and roleId
-      } else {
-        return { role: null, roleId: null }; // Return null if role document doesn't exist
-      }
-    } else {
-      return { role: null, roleId: null }; // Return null if user document doesn't exist
+    const data = await api.get(`/auth/user/${userId}`);
+    if (data.user) {
+      return { role: data.user.role_name, roleId: data.user.role_id };
     }
+    return { role: null, roleId: null };
   } catch (error) {
     console.error("Error fetching user role:", error);
-    return { role: null, roleId: null }; // Return null in case of error
+    return { role: null, roleId: null };
   }
 };
-
-export const ActiveUser = async (userId, name, email, role, token) => {
-  await setDoc(doc(db, "activeUsers", userId), {
-    id: userId,
-    name,
-    email,
-    role,
-    token,
-    ActiveTime: Timestamp.now(),
-    isLoggedIn: true,
-  });
-};
-
-// Function to fetch all documents from a Firestore collection
-async function fetchAllFromCollection(collectionName) {
-  try {
-    // Get a reference to the collection
-    const colRef = collection(db, collectionName);
-
-    // Get all documents in the collection
-    const querySnapshot = await getDocs(colRef);
-
-    // Array to hold the data from all documents
-    const data = [];
-
-    // Iterate through each document and push data into the array
-    querySnapshot.forEach((doc) => {
-      data.push({ id: doc.id, ...doc.data() });
-    });
-
-    // Return the fetched data
-    return data;
-  } catch (error) {
-    console.error("Error fetching documents: ", error);
-    return [];
-  }
-}
 
 export const useAuth = () => {
   const [user, setUser] = useState(null);
-  // const [userRole, setUserRole] = useState<string | null>(null); // Track the user's role
   const [error, setError] = useState(null);
 
-  const register = async (email, password, name, role = "patient") => {
+  const register = async (email, password, name, role = "user") => {
     try {
-      // Create a new user with email and password
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
+      const data = await api.post("/auth/register", {
         email,
-        password
-      );
-
-      await updateProfile(userCredential.user, {
-        displayName: name,
-      });
-
-      // Now the user's profile includes the display name
-      await userCredential.user;
-
-      const userId = userCredential.user.uid;
-
-      // Fetch the role ID dynamically from the roles collection based on the provided role
-      const roleDocRef = doc(db, "roles", role); // Use the passed role (like "patient", "doctor", etc.)
-      const roleDoc = await getDoc(roleDocRef);
-
-      if (!roleDoc.exists()) {
-        throw new Error(
-          `Role '${role}' does not exist in the roles collection.`
-        );
-      }
-
-      const roleData = roleDoc.data();
-      const roleId = roleData?.id;
-
-      // Create the new user document in Firestore with the fetched role ID
-      await setDoc(doc(db, "users", userId), {
-        id: userId,
+        password,
         name,
-        email,
-        role: roleId, // Set the role ID (dynamic) instead of a string
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-        lastLogin: Timestamp.now(),
-        isLoggedIn: false,
+        role,
       });
-
-      // Send email verification
-      await sendEmailVerification(userCredential.user);
+      setUser(data.user);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      return data;
     } catch (err) {
       setError(err.message);
       throw err;
@@ -145,130 +37,42 @@ export const useAuth = () => {
 
   const login = async (email, password) => {
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      console.log(data, "Login with Supabase");
-      if (error) {
-        throw new Error(error.message);
-      }
-      setUser(userCredential.user);
-      const userId = userCredential.user.uid;
-      const userRef = doc(db, "users", userId);
-      const userDoc = await getDoc(userRef);
-
-      if (userDoc.exists()) {
-        await updateDoc(userRef, {
-          isLoggedIn: true,
-        });
-      }
-
-      // Get custom claims (e.g., role or admin status)
-      // const idTokenResult = await user.getIdTokenResult();
-      // const isAdmin = idTokenResult.claims.admin || false;
-      // const role = isAdmin
-      //   ? "admin"
-      //   : await getUserRoleFromFirestore(userCredential.user.uid);
-      // // You can also store other user info if needed
-      // localStorage.setItem(
-      //   "user",
-      //   JSON.stringify({
-      //     uid: user.uid,
-      //     email: user.email,
-      //     role,
-      //   })
-      // );
-      // setUserRole(role);
-      return userCredential;
+      const data = await api.post("/auth/login", { email, password });
+      setUser(data.user);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      return data;
     } catch (err) {
-      // console.error(err);
       setError(err.message);
       throw err;
     }
   };
 
   const getUserData = async (userId) => {
-    const userRef = doc(db, "users", userId);
-    const userDoc = await getDoc(userRef);
-    return userDoc.exists() ? userDoc.data() : null;
+    try {
+      const data = await api.get(`/auth/user/${userId}`);
+      return data.user || null;
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      return null;
+    }
   };
 
-  async function logout(userId) {
+  async function logout() {
     try {
-      console.log("Logout called inside Custom Auth", userId);
-
-      // 1. Set isActive field to false in the "users" collection
-      const userDocRef = doc(db, "users", userId);
-      const userDocSnapshot = await getDoc(userDocRef);
-
-      if (userDocSnapshot.exists()) {
-        await updateDoc(userDocRef, {
-          isLoggedIn: false,
-          lastLogin: Timestamp.now(),
-        });
-        console.log(`User ${userId} is now inactive.`);
-      } else {
-        console.log(`User with id ${userId} not found.`);
-      }
-
-      // 2. Deleting the field in "activeUsers" collection where uid matches userId
-      const activeUsersDocRef = doc(db, "activeUsers", userId); // Assuming userId is the document ID
-      const activeUsersDocSnapshot = await getDoc(activeUsersDocRef);
-
-      if (activeUsersDocSnapshot.exists()) {
-        const data = activeUsersDocSnapshot.data();
-        // const userKeys = Object.keys(data); // Get all field keys
-
-        try {
-          if (data) {
-            await deleteDoc(doc(db, "activeUsers", userId));
-            console.log(
-              `Field with userId ${userId} deleted from activeUsers.`
-            );
-          }
-          await deleteDoc(doc(db, "activeUsers", userId));
-          console.log(`Field with userId ${userId} deleted from activeUsers.`);
-        } catch (error) {
-          throw new Error("Error deleting field from activeUsers: " + error);
-        }
-
-        // // Check if the userId is a key in the activeUsers document
-        // if (userKeys.includes(userId)) {
-        //   // await updateDoc(activeUsersDocRef, {
-        //   //   userId: deleteField(), // Use the deleteField() method to remove the field dynamically
-        //   // });
-        //   console.log(`Field with userId ${userId} deleted from activeUsers.`);
-        // } else {
-        //   console.log(`UserId ${userId} not found as a field in activeUsers.`);
-        // }
-      } else {
-        console.log("No data found in activeUsers document.");
-      }
-
-      // Optional: Sign out the user after logout actions
-      await auth.signOut();
-      await supabase.auth.signOut();
-      setUser(null);
-      console.log(`User ${userId} logged out successfully.`);
+      await api.post("/auth/logout");
     } catch (error) {
       console.error("Error during logout:", error);
     }
+    localStorage.removeItem("user");
+    setUser(null);
   }
 
   return {
-    user, // Return the userRole so it can be accessed
+    user,
     error,
     register,
     login,
     getUserData,
-    ActiveUser,
     logout,
   };
 };

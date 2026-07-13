@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
-import { getFirestore, collection, getDocs } from "firebase/firestore";
 import { motion } from "framer-motion";
 import { textVariant, fadeIn } from "../../../utils/motion";
 import { styles } from "../../../styles";
 import SectionWrapper from "../../../hoc/SectionWrapper";
-import { db } from "../../../firebase/firebase";
 import ProjectCard from "../../../Components/UI/ProjectCard/ProjectCard";
+import api from "../../../api/client";
 
 const Projects = () => {
   const [projects, setProjects] = useState([]);
@@ -13,18 +12,16 @@ const Projects = () => {
 
   useEffect(() => {
     const fetchProjects = async () => {
-      const querySnapshot = await getDocs(collection(db, "projects"));
-      const projectsList = querySnapshot.docs.map((doc) => ({
-        id: doc.id, // Get the document ID
-        ...doc.data(), // Get the rest of the data
-      }));
-
-      // Sort projects by startDate
-      const sortedProjects = projectsList.sort(
-        (a, b) => new Date(a.startDate) - new Date(b.startDate)
-      );
-
-      setProjects(sortedProjects);
+      try {
+        const data = await api.get("/projects");
+        const projectsList = data.data || [];
+        const sortedProjects = projectsList.sort(
+          (a, b) => new Date(a.start_date) - new Date(b.start_date)
+        );
+        setProjects(sortedProjects);
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+      }
       setLoading(false);
     };
 
@@ -34,7 +31,7 @@ const Projects = () => {
   if (loading) {
     return <p>Loading...</p>;
   }
-  // console.log(projects);
+
   return (
     <div className="px-4 sm:px-6 md:px-8 lg:px-10 py-6">
       <motion.div variants={textVariant()}>

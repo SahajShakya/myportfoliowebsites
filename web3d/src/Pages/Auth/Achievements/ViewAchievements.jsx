@@ -1,156 +1,160 @@
-import { useEffect, useState } from "react";
-import { db } from "../../../firebase/firebase";
-import { collection, getDoc, deleteDoc, getDocs } from "firebase/firestore";
+import React, { useEffect, useState } from "react";
 import { useSnackbar } from "notistack";
-import AddAchievements from "./AddAchievements"; // Make sure you have this component
+import AddAchievements from "./AddAchievements";
 import Modal from "../../../Components/UI/Modal/Modal";
-import { deleteFilesFromSupabase } from "../../../utils/supabaseFIle";
+import api from "../../../api/client";
 
 const ViewAchievements = () => {
   const [achievements, setAchievements] = useState([]);
   const { enqueueSnackbar } = useSnackbar();
   const [modal, setModal] = useState(false);
   const [editData, setEditData] = useState(null);
+  const [isEdit, setIsEdit] = useState(false);
 
   useEffect(() => {
     const fetchAchievements = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, "achievements"));
-        const achievementsList = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
+        const data = await api.get("/achievements");
+        const achievementsList = (data.data || []).map((item) => ({
+          ...item,
+          id: String(item.id),
         }));
         setAchievements(achievementsList);
+        setIsEdit(false);
       } catch (error) {
         console.error("Error fetching achievements: ", error);
       }
     };
 
     fetchAchievements();
-  }, []);
+  }, [isEdit]);
 
   const handleEdit = (id) => {
-    const achievement = achievements.find((item) => item.id === id);
+    const achievement = achievements.find((item) => String(item.id) === String(id));
     setEditData(achievement);
     setModal(true);
   };
 
+  const handleEditSuccess = () => {
+    setModal(false);
+    setIsEdit(true);
+  };
+
   const handleDelete = async (id) => {
     try {
-      // Step 1: Get the achievement data
-      const docRef = doc(db, "achievements", id);
-      const achievementSnapshot = await getDoc(docRef);
-      const achievementData = achievementSnapshot.data();
-
-      if (!achievementData) {
-        throw new Error("Achievement not found");
-      }
-
-      // Step 2: Get the publicUrl from the images array
-      const { icons } = achievementData;
-      //   console.log("images", icons);
-      const publicUrl = icons?.publicUrl; // Directly access the publicUrl
-
-      if (!publicUrl) {
-        throw new Error("No public URL found in images object");
-      }
-
-      // Step 3: Delete the images from Supabase
-      await deleteFilesFromSupabase(publicUrl, "achievements");
-
-      // Step 4: Delete related achievementDetails documents
-      const achievementDetailsQuery = collection(db, "achievementDetails");
-      const achievementDetailsSnapshot = await getDocs(achievementDetailsQuery);
-
-      const achievementDetailsToDelete = achievementDetailsSnapshot.docs.filter(
-        (doc) => {
-          const data = doc.data();
-          return data.achievement_id && data.achievement_id === id;
-        }
-      );
-
-      // Delete each achievementDetails document
-      for (const detailDoc of achievementDetailsToDelete) {
-        const detailData = detailDoc.data();
-        if (detailData && detailData.icons) {
-          // Extract publicUrls inside the `images` array for the current achievementDetails document
-          const detailPublicUrls = detailData.icons.map(
-            (img) => img?.publicUrl
-          );
-
-          // Delete the images from Supabase
-          if (detailPublicUrls.length > 0) {
-            await deleteFilesFromSupabase(detailPublicUrls, "achievements");
-          }
-        }
-
-        // After deleting the images, delete the achievementDetails document
-        await deleteDoc(doc(db, "achievementDetails", detailDoc.id));
-      }
-
-      // Step 5: Delete the achievement document
-      await deleteDoc(docRef);
-
-      // Update the state to remove the achievement from the UI
-      setAchievements(
-        achievements.filter((achievement) => achievement.id !== id)
-      );
-
-      // Notify the user of success
-      enqueueSnackbar("Achievement deleted successfully!", {
-        variant: "success",
-      });
+      await api.delete(`/achievements/${id}`);
+      setAchievements(achievements.filter((a) => String(a.id) !== String(id)));
+      enqueueSnackbar("Achievement deleted successfully!", { variant: "success" });
     } catch (error) {
-      enqueueSnackbar("Failed to delete achievement. Please try again.", {
-        variant: "error",
-      });
-      console.error("Error deleting achievement:", error);
+      enqueueSnackbar("Failed to delete achievement. Please try again.", { variant: "error" });
     }
   };
 
   const handleCloseModal = () => setModal(false);
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-semibold mb-6">Achievements</h1>
-      <table className="w-full table-auto">
-        <thead>
-          <tr>
-            <th className="px-4 py-2 text-left">Achievement Name</th>
-            <th className="px-4 py-2 text-left">Description</th>
-            <th className="px-4 py-2 text-center">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {achievements.map((achievement) => (
-            <tr key={achievement.id}>
-              <td className="px-4 py-2">{achievement.name}</td>
-              <td className="px-4 py-2">{achievement.description}</td>
-              <td className="px-4 py-2 text-center">
-                <button
-                  onClick={() => handleEdit(achievement.id)}
-                  className="bg-blue-500 text-white px-4 py-2 rounded-md mr-2"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(achievement.id)}
-                  className="bg-red-500 text-white px-4 py-2 rounded-md"
-                >
-                  Delete
-                </button>
-              </td>
+    <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl sm:text-3xl font-semibold">Achievements</h1>
+        <button
+          onClick={() => { setEditData(null); setModal(true); }}
+          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+        >
+          + Add Achievement
+        </button>
+      </div>
+
+      <div className="hidden md:block overflow-x-auto">
+        <table className="w-full table-auto border-collapse">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="px-4 py-3 text-left font-semibold">Achievement Name</th>
+              <th className="px-4 py-3 text-center font-semibold">Icon</th>
+              <th className="px-4 py-3 text-left font-semibold">Description</th>
+              <th className="px-4 py-3 text-center font-semibold">Action</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {achievements.map((achievement) => (
+              <tr key={achievement.id} className="border-b hover:bg-gray-50">
+                <td className="px-4 py-3">{achievement.name}</td>
+                <td className="px-4 py-3 text-center">
+                  {achievement.icons ? (
+                    <img
+                      src={typeof achievement.icons === "string" ? achievement.icons : achievement.icons}
+                      alt={achievement.name}
+                      className="w-8 h-8 object-cover rounded mx-auto"
+                    />
+                  ) : (
+                    <span className="text-gray-400 text-sm">-</span>
+                  )}
+                </td>
+                <td className="px-4 py-3">{achievement.description}</td>
+                <td className="px-4 py-3 text-center">
+                  <button
+                    onClick={() => handleEdit(achievement.id)}
+                    className="bg-blue-500 text-white px-3 py-1.5 rounded-md mr-2 hover:bg-blue-600 transition-colors text-sm"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(achievement.id)}
+                    className="bg-red-500 text-white px-3 py-1.5 rounded-md hover:bg-red-600 transition-colors text-sm"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="md:hidden space-y-4">
+        {achievements.map((achievement) => (
+          <div key={achievement.id} className="bg-white border rounded-lg p-4 shadow-sm">
+            <div className="space-y-2 mb-4">
+              <div className="flex items-center gap-3">
+                {achievement.icons && (
+                  <img
+                    src={typeof achievement.icons === "string" ? achievement.icons : achievement.icons}
+                    alt={achievement.name}
+                    className="w-10 h-10 object-cover rounded flex-shrink-0"
+                  />
+                )}
+                <div>
+                  <span className="text-sm font-semibold text-gray-600">Achievement:</span>
+                  <p className="text-base">{achievement.name}</p>
+                </div>
+              </div>
+              <div>
+                <span className="text-sm font-semibold text-gray-600">Description:</span>
+                <p className="text-base">{achievement.description}</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleEdit(achievement.id)}
+                className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors text-sm"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => handleDelete(achievement.id)}
+                className="flex-1 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors text-sm"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
 
       {modal && (
-        <Modal onClose={handleCloseModal} title="Edit Achievement">
-          <AddAchievements
-            editData={editData}
-            handleEditSuccess={handleCloseModal}
-          />
+        <Modal onClose={handleCloseModal} title={editData ? "Edit Achievement" : "Add Achievement"}>
+          <div className="w-full">
+            <AddAchievements editData={editData} handleEditSuccess={handleEditSuccess} />
+          </div>
         </Modal>
       )}
     </div>

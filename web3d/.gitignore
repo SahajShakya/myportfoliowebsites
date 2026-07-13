@@ -22,6 +22,9 @@ dist-ssr
 *.sln
 *.sw?
 
+# Upload directory
+uploads/*
+!uploads/.gitkeep
 
-# Firebase admin files
-src/firebase/firebaseAdmin.json
+# PHP config (if needed)
+api/config/local.php

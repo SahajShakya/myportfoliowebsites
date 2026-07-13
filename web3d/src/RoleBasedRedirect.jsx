@@ -1,40 +1,24 @@
-import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React from "react";
+import { Navigate } from "react-router-dom";
+import { useAuthContext } from "./context/AuthContext";
 
+const RoleBasedRedirect = ({ role, routeName }) => {
+  const { user } = useAuthContext();
+  const storedRole = user?.role;
 
+  if (!storedRole) {
+    return <Navigate to="/login" />;
+  }
 
-const RoleBasedRedirect = ({
-  role,
-  routeName,
-}) => {
-  const navigate = useNavigate();
+  if (storedRole === "admin") {
+    return <Navigate to={routeName ? `/admin/${routeName}` : "/admin/dashboard"} />;
+  }
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    const storedRole = storedUser ? JSON.parse(storedUser).role : null;
+  if (storedRole === "patient" || storedRole === "employee" || storedRole === "doctor") {
+    return <Navigate to="/" />;
+  }
 
-    if (!storedRole) {
-      navigate("/login");
-    } else {
-      // Navigate based on the role
-      if (storedRole === "admin") {
-        const adminRoute = routeName
-          ? `/admin/${routeName}`
-          : "/admin/dashboard";
-        navigate(adminRoute);
-      } else if (storedRole === "patient") {
-        navigate("/");
-      } else if (storedRole === "doctor") {
-        navigate(`/doctor/${routeName}`);
-      } else if (storedRole === "employee") {
-        navigate(`/employee/${routeName}`);
-      } else {
-        navigate("/access-denied");
-      }
-    }
-  }, [role, routeName, navigate]);
-
-  return null; // No UI is rendered, only a redirect
+  return <Navigate to="/unauthorized" />;
 };
 
 export default RoleBasedRedirect;
