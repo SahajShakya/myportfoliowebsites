@@ -4,10 +4,9 @@ import Nav from "../../Components/NavBar/Nav";
 
 const DefaultLayout = () => {
   return (
-    <div className="bg-gray-200">
+    <div className="relative bg-gray-200">
       <Nav />
-      <div>
-        {/* Adds gap between navbar and outlet */}
+      <div className="pt-[44px]">
         <Outlet />
       </div>
     </div>

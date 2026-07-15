@@ -5,6 +5,7 @@ import InputField from "../../../Components/Input/InputField";
 import { enqueueSnackbar } from "notistack";
 import { useUser } from "../../../context/UserContext";
 import api from "../../../api/client";
+import DraggableUpload from "../../../Components/Upload/DraggableUpload";
 import mypic from "../../../assets/mypic.png";
 
 const ProfileSettings = () => {
@@ -75,8 +76,8 @@ const ProfileSettings = () => {
     fetchProfile();
   }, [user?.id]);
 
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
+  const handleImageUpload = async (files) => {
+    const file = files[0];
     if (!file) return;
 
     setUploading(true);
@@ -107,12 +108,11 @@ const ProfileSettings = () => {
               <span className="text-3xl text-gray-400">{user?.name?.[0] || "?"}</span>
             )}
           </div>
-          <div>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+          <div className="flex-1">
+            <DraggableUpload
+              onFilesChange={handleImageUpload}
+              maxFiles={1}
+              disabled={uploading}
             />
             {uploading && <span className="text-sm text-gray-500 block mt-1">Uploading...</span>}
             <p className="text-xs text-gray-400 mt-1">JPG, PNG. Max 5MB.</p>

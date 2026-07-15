@@ -14,6 +14,8 @@ import {
   FaUserCircle,
   FaKey,
   FaShareAlt,
+  FaBook,
+  FaQuoteLeft,
 } from "react-icons/fa";
 
 const AuthLayout = () => {
@@ -24,6 +26,8 @@ const AuthLayout = () => {
     journey: false,
     achievements: false,
     projects: false,
+    "academic-projects": false,
+    testimonials: false,
     settings: false,
   });
 
@@ -49,6 +53,8 @@ const AuthLayout = () => {
     { name: "journey", label: "Journey", icon: FaCogs },
     { name: "projects", label: "Projects", icon: FaProjectDiagram },
     { name: "achievements", label: "Achievements", icon: FaAward },
+    { name: "academic-projects", label: "Academic Projects", icon: FaBook },
+    { name: "testimonials", label: "Testimonials", icon: FaQuoteLeft },
   ];
 
   const settingsItems = [
@@ -58,10 +64,10 @@ const AuthLayout = () => {
   ];
 
   const generateDropdownItems = (section) => (
-    <ul className="ml-4 mt-2 space-y-2">
+    <ul className="mt-2 ml-4 space-y-2">
       <li>
-        <Link to={section === "academics" ? `/auth/${section}/` : `/auth/${section}/create`} className="block">
-          {section === "academics" ? "View All" : "Create"}
+        <Link to={section === "academics" || section === "academic-projects" ? `/auth/${section}/` : section === "testimonials" ? `/auth/${section}/create` : `/auth/${section}/create`} className="block">
+          Create
         </Link>
       </li>
     </ul>
@@ -70,15 +76,15 @@ const AuthLayout = () => {
   return (
     <>
       <Nav />
-      <div className="flex h-screen">
+      <div className="flex h-[calc(100vh-44px)] mt-[44px]">
         <div
           className={`transition-all duration-300 ${
             isCollapsed
               ? "w-20 bg-black text-white"
               : "w-64 bg-white text-black"
-          } p-4 overflow-y-auto`}
+          } pt-6 p-4 overflow-y-auto`}
         >
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center justify-between mb-6">
             <button onClick={toggleSidebar} className="text-black">
               {isCollapsed ? (
                 <FaBars className="text-2xl text-white" />
@@ -97,7 +103,7 @@ const AuthLayout = () => {
                 }`}
                 onClick={() => handleTabClick("dashboard")}
               >
-                {isCollapsed ? <FaUser className="text-xl text-white mx-auto" /> : "Dashboard"}
+                {isCollapsed ? <FaUser className="mx-auto text-xl text-white" /> : "Dashboard"}
               </Link>
             </li>
 
@@ -111,7 +117,7 @@ const AuthLayout = () => {
               >
                 <div className="flex items-center justify-between">
                   <Link
-                    to={name === "academics" || name === "journey" || name === "projects" || name === "achievements" ? `/auth/${name}/` : `/auth/${name}/view`}
+                    to={name === "academics" || name === "journey" || name === "projects" || name === "achievements" || name === "academic-projects" ? `/auth/${name}/` : name === "testimonials" ? `/auth/${name}` : `/auth/${name}/view`}
                     className={`block ${isCollapsed ? "text-center" : ""}`}
                   >
                     {isCollapsed ? (
@@ -160,7 +166,7 @@ const AuthLayout = () => {
                 </button>
               </div>
               {!isCollapsed && dropdowns["settings"] && (
-                <ul className="ml-4 mt-2 space-y-2">
+                <ul className="mt-2 ml-4 space-y-2">
                   {settingsItems.map((item) => (
                     <li key={item.name}>
                       <Link
@@ -178,7 +184,7 @@ const AuthLayout = () => {
           </ul>
         </div>
 
-        <div className="flex-1 bg-gray-100 p-6 overflow-y-auto">
+        <div className="flex-1 p-6 overflow-y-auto bg-gray-100">
           <Outlet />
         </div>
       </div>

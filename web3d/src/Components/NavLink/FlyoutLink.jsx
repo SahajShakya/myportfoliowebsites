@@ -17,7 +17,7 @@ const FlyoutLink = ({
     <div
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
-      className="relative w-fit h-fit"
+      className="relative"
     >
       <a href={href} className="relative text-white">
         {children}
@@ -31,18 +31,16 @@ const FlyoutLink = ({
       <AnimatePresence>
         {showFlyout && (
           <motion.div
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 15 }}
-            style={{ translateX: "-50%" }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-            className="absolute left-1/2 top-12 bg-white text-black shadow-lg rounded-md py-2 px-4"
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="absolute right-0 top-full mt-1 bg-white text-black shadow-lg rounded-md py-2 px-4 z-50"
           >
-            <div className="absolute -top-6 left-0 right-0 h-6 bg-transparent" />
-            <div className="absolute left-1/2 top-0 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-white" />
+            <div className="absolute -top-3 left-0 right-0 h-4 bg-transparent" />
             <FlyoutContent
               setDropdownVisible={setDropdownVisible}
-              handleOpenModal={handleOpenModal} // Pass handleOpenModal to FlyoutContent
+              handleOpenModal={handleOpenModal}
             />
           </motion.div>
         )}

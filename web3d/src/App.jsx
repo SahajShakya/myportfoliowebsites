@@ -5,7 +5,7 @@ import Login from "./Pages/NonAuth/Login/Login";
 import LoadingScreen from "./Components/UI/Loading/LoadingScreen";
 import DefaultLayout from "./Pages/Layout/DefaultLayout";
 import Home from "./Pages/NonAuth/Home/Home";
-import { UserProvider, useUser } from "./context/UserContext";
+import { UserProvider } from "./context/UserContext";
 import { AuthProvider, useAuthContext } from "./context/AuthContext";
 import { registerAuth } from "./api/client";
 import PrivateRoute from "./PrivateRoute";
@@ -28,8 +28,12 @@ import ViewAchievements from "./Pages/Auth/Achievements/ViewAchievements";
 import Achievements from "./Pages/NonAuth/Acheivements/Acheivements";
 import ProjectDetails from "./Pages/NonAuth/Projects/ProjectDetails";
 import AchievementDetails from "./Pages/NonAuth/Acheivements/AchievementDetails";
+import AcademicProjects from "./Pages/NonAuth/AcademicProjects/AcademicProjects";
+import AcademicProjectDetails from "./Pages/NonAuth/AcademicProjects/AcademicProjectDetails";
+import AddAcademicProjects from "./Pages/Auth/AcademicProjects/AddAcademicProjects";
+import ViewAcademicProjects from "./Pages/Auth/AcademicProjects/ViewAcademicProjects";
 import AboutMe from "./Pages/NonAuth/AboutMe/AboutMe";
-import AddTestinomial from "./Pages/Auth/Testinomial/AddTestinomial";
+import Testimonials from "./Pages/Auth/Testimonials/Testimonials";
 import ProfileSettings from "./Pages/Auth/Settings/ProfileSettings";
 import PasswordChange from "./Pages/Auth/Settings/PasswordChange";
 import SocialLinks from "./Pages/Auth/Settings/SocialLinks";
@@ -51,7 +55,6 @@ const AuthBridge = ({ children }) => {
 
 const AppRoutes = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const { user } = useUser();
 
   useEffect(() => {
     setIsLoading(false);
@@ -63,16 +66,7 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/" element={<DefaultLayout />}>
         <Route path="/me" element={<AboutMe />} />
-        <Route
-          path="/"
-          element={
-            user.role ? (
-              <PrivateRoute roleProps={user.role} element={<Home />} />
-            ) : (
-              <Home />
-            )
-          }
-        />
+        <Route path="/" element={<Home />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/academics" element={<Academics />} />
         <Route path="/journey" element={<Journey />} />
@@ -80,11 +74,13 @@ const AppRoutes = () => {
         <Route path="/projects/:id" element={<ProjectDetails />} />
         <Route path="/achievements" element={<Achievements />} />
         <Route path="/achievements/:id" element={<AchievementDetails />} />
+        <Route path="/academic-projects" element={<AcademicProjects />} />
+        <Route path="/academic-projects/:id" element={<AcademicProjectDetails />} />
         <Route path="/calendar" element={<Calendar />} />
       </Route>
 
       <Route
-        path="/login"
+        path="/vitra"
         element={
           <AuthRedirectWrapper>
             <Login />
@@ -109,7 +105,12 @@ const AppRoutes = () => {
         <Route path="/auth/achievements/" element={<PrivateRoute roleProps="admin" element={<ViewAchievements />} />} />
         <Route path="/auth/achievements/create" element={<PrivateRoute roleProps="admin" element={<AddAchievements />} />} />
         <Route path="/auth/achievements/view" element={<PrivateRoute roleProps="admin" element={<ViewAchievements />} />} />
-        <Route path="/auth/testinomial/create" element={<PrivateRoute roleProps="admin" element={<AddTestinomial />} />} />
+        <Route path="/auth/academic-projects/" element={<PrivateRoute roleProps="admin" element={<ViewAcademicProjects />} />} />
+        <Route path="/auth/academic-projects/create" element={<PrivateRoute roleProps="admin" element={<AddAcademicProjects />} />} />
+        <Route path="/auth/academic-projects/view" element={<PrivateRoute roleProps="admin" element={<ViewAcademicProjects />} />} />
+        <Route path="/auth/testimonials" element={<PrivateRoute roleProps="admin" element={<Testimonials />} />} />
+        <Route path="/auth/testimonials/create" element={<PrivateRoute roleProps="admin" element={<Testimonials />} />} />
+        <Route path="/auth/testinomial/create" element={<PrivateRoute roleProps="admin" element={<Testimonials />} />} />
         <Route path="/auth/profile" element={<PrivateRoute roleProps="admin" element={<ProfileSettings />} />} />
         <Route path="/auth/password" element={<PrivateRoute roleProps="admin" element={<PasswordChange />} />} />
         <Route path="/auth/social-links" element={<PrivateRoute roleProps="admin" element={<SocialLinks />} />} />

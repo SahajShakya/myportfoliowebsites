@@ -64,6 +64,24 @@ const Contact = () => {
   return (
     <div className="min-h-screen px-4 py-8 bg-gradient-to-br from-gray-100 to-gray-200 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
+        <motion.div
+          className="text-center mb-8"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <p className="text-sm font-semibold tracking-widest text-blue-600 uppercase mb-2">
+            Get in Touch
+          </p>
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-800">
+            Want to Work Together?
+          </h2>
+          <p className="mt-3 text-gray-500 max-w-xl mx-auto">
+            I&apos;m always open to discussing new projects, creative ideas, or
+            opportunities to be part of your vision.
+          </p>
+        </motion.div>
+
         <div className="flex flex-col items-center justify-center gap-8 lg:flex-row">
           {/* Contact Form */}
           <motion.div

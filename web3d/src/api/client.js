@@ -75,7 +75,6 @@ async function request(endpoint, options = {}) {
           } else {
             processQueue(new Error("Refresh failed"));
             if (clearFn) clearFn();
-            window.location.href = "/login";
             throw new Error("Session expired");
           }
         } else {
@@ -87,7 +86,6 @@ async function request(endpoint, options = {}) {
           if (!refreshResponse.ok) {
             processQueue(new Error("Refresh failed"));
             if (clearFn) clearFn();
-            window.location.href = "/login";
             throw new Error("Refresh failed");
           }
 
@@ -98,7 +96,6 @@ async function request(endpoint, options = {}) {
       } catch (err) {
         processQueue(err);
         if (clearFn) clearFn();
-        window.location.href = "/login";
         throw err;
       } finally {
         isRefreshing = false;

@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 import {
   motion,
   MotionValue,
@@ -56,20 +57,20 @@ const NavLink = ({ path, name, isActive, location, logo }) => {
       style={{ x, y }}
     >
       <motion.div
-        className={`relative inline-block w-full max-w-5xl py-2 px-4 text-sm transition-all duration-500 ease-out ${
+        className={`relative inline-block w-full max-w-5xl py-1.5 px-3 text-xs transition-all duration-500 ease-out ${
           isActive ? "bg-slate-300" : ""
         }`}
       >
         <a
-          href={path} // Use href to ensure the link behaves as a regular anchor tag
-          target="_blank" // Ensure it opens in a new tab
-          className="text-2xl relative"
+          href={path}
+          target="_blank"
+          className="text-sm font-medium relative"
         >
           <motion.span style={{ x: textX, y: textY }} className="z-10 relative">
             {logo ? (
               <img src={logo} alt="Logo" className="h-6 w-6 object-contain" />
             ) : (
-              <div className="py-2 px-4 text-xl pt-2 flex justify-around rounded-full border-2 border-black bg-white">
+              <div className="py-1 px-3 text-sm flex justify-around rounded-full border border-black bg-white">
                 {name}
               </div>
             )}
@@ -85,6 +86,14 @@ const NavLink = ({ path, name, isActive, location, logo }) => {
       </motion.div>
     </motion.li>
   );
+};
+
+NavLink.propTypes = {
+  path: PropTypes.string,
+  name: PropTypes.string.isRequired,
+  isActive: PropTypes.bool.isRequired,
+  location: PropTypes.string.isRequired,
+  logo: PropTypes.string,
 };
 
 export default NavLink;

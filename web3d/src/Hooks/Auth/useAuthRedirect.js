@@ -9,7 +9,7 @@ const useAuthRedirect = () => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
 
     if (!user || !user.id) {
-      navigate("/login");
+      navigate("/vitra");
       return;
     }
 
@@ -26,7 +26,7 @@ const useAuthRedirect = () => {
         }
       } catch (error) {
         console.error("Error fetching user role: ", error);
-        navigate("/login");
+        navigate("/vitra");
       }
     };
 

@@ -28,23 +28,23 @@ const NavElement = ({ token, path, pathName, logo }) => {
 
   const handleLogoutUser = () => {
     handleLogout();
-    navigate("/login");
+    navigate("/vitra");
     handleCloseModal();
   };
 
   return (
-    <nav className="p-8">
+    <nav className="p-8 relative z-50">
       <ul className="flex gap-12">
-        {/* Check if token is null */}
         {!token ? (
-          // Check if path is a string or array
-          <NavLink
-            path={Array.isArray(path) ? path[0] : path} // Ensure `path` is a string
-            name={pathName}
-            isActive={location.pathname === (Array.isArray(path) ? path[0] : path)} // Check if path is a string or array
-            location={location.pathname}
-            logo={logo}
-          />
+          path ? (
+            <NavLink
+              path={Array.isArray(path) ? path[0] : path}
+              name={pathName}
+              isActive={location.pathname === (Array.isArray(path) ? path[0] : path)}
+              location={location.pathname}
+              logo={logo}
+            />
+          ) : null
         ) : (
           <>
             {/* User Dropdown */}
@@ -86,7 +86,7 @@ const NavElement = ({ token, path, pathName, logo }) => {
       )}
 
       {modalContent === "logout" && (
-        <Modal title="Logout" onClose={handleCloseModal}>
+        <Modal title="Logout" onClose={handleCloseModal} small>
           <>
             <p>Are you sure you want to logout</p>
             <div className="flex justify-center gap-4">

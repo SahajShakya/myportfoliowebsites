@@ -44,7 +44,7 @@ const Journey = () => {
 
       <div className="py-8 sm:py-12 lg:py-16">
         <div className="mt-8 sm:mt-12 flex">
-          <VerticalTimeline lineColor="#6c5ce7" animate={true}>
+          <VerticalTimeline lineColor="#0ea5e9" animate={true}>
             {journey.map((journeyItem) => {
               const formattedEndDate = isNaN(
                 new Date(journeyItem.end_date).getTime()
@@ -59,10 +59,7 @@ const Journey = () => {
                 <VerticalTimelineElement
                   key={journeyItem.id || journeyItem.office_name}
                   date={
-                    <span
-                      className="text-base sm:text-lg font-semibold"
-                      style={{ color: "black" }}
-                    >
+                    <span className="text-base sm:text-lg font-semibold text-sky-600">
                       {`${new Date(
                         journeyItem.start_date
                       ).toLocaleDateString("en-GB", {
@@ -82,46 +79,42 @@ const Journey = () => {
                   }
                   iconStyle={{
                     background: "#fff",
-                    boxShadow: "0 0 0 4px #6c5ce7",
+                    boxShadow: "0 0 0 4px #0ea5e9",
                   }}
                   contentStyle={{
-                    borderBottom: "8px",
-                    borderStyle: "solid",
-                    borderBottomColor: "#6c5ce7",
-                    boxShadow: "0 3px 0 #6c5ce7",
-                    background: "#1d1836",
-                    color: "#fff",
+                    background: "#f0f9ff",
+                    color: "#1e293b",
+                    borderLeft: "4px solid #0ea5e9",
+                    boxShadow: "0 4px 12px rgba(14,165,233,0.1)",
                     padding: "1.5rem",
                     minHeight: "320px",
+                    borderRadius: "12px",
                   }}
-                  contentArrowStyle={{ borderRight: "7px solid #1d1836" }}
+                  contentArrowStyle={{ borderRight: "7px solid #f0f9ff" }}
                 >
                   <div className="mb-4">
-                    <h3 className="text-white text-xl sm:text-2xl font-bold mb-2 line-clamp-2">
+                    <h3 className="text-slate-800 text-xl sm:text-2xl font-bold mb-2 line-clamp-2">
                       {journeyItem.title}
                     </h3>
-                    <p
-                      className="text-gray-300 font-semibold text-sm sm:text-base mb-1"
-                      style={{ margin: 0 }}
-                    >
+                    <p className="text-sky-700 font-semibold text-sm sm:text-base mb-1">
                       {journeyItem.office_name}
                     </p>
-                    <p className="text-gray-400 text-xs sm:text-sm">
+                    <p className="text-slate-500 text-xs sm:text-sm">
                       {journeyItem.designation}
                     </p>
                   </div>
 
                   <div
-                    className="my-4 text-white-100 text-xs sm:text-sm leading-relaxed tracking-wider line-clamp-4 overflow-hidden"
+                    className="my-4 text-slate-600 text-xs sm:text-sm leading-relaxed tracking-wider line-clamp-4 overflow-hidden"
                     dangerouslySetInnerHTML={{ __html: journeyItem.contents }}
                   />
 
-                  <div className="mt-4 pt-3 border-t border-gray-600">
+                  <div className="mt-4 pt-3 border-t border-sky-200">
                     <a
                       href={journeyItem.url_of_company}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-400 hover:text-blue-300 text-sm sm:text-base font-bold transition-colors duration-300 underline"
+                      className="text-sky-600 hover:text-sky-800 text-sm sm:text-base font-bold transition-colors duration-300 underline"
                     >
                       Visit: {journeyItem.office_name}
                     </a>

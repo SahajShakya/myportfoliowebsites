@@ -50,12 +50,10 @@ async function request(endpoint, options = {}) {
           response = await fetch(endpoint, config);
         } else {
           if (clearFn) clearFn();
-          window.location.href = "/login";
           throw new Error("Session expired");
         }
       } else {
         if (clearFn) clearFn();
-        window.location.href = "/login";
         throw new Error("Unauthorized");
       }
     } else {

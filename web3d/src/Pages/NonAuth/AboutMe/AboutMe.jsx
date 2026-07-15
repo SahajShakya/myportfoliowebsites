@@ -16,6 +16,7 @@ const AboutMe = () => {
   const [text, setText] = useState("");
   const [delta, setDelta] = useState(100 - Math.random());
   const [index, setIndex] = useState(1);
+  const [bgImage, setBgImage] = useState(null);
   const toRotate = [
     "Electronics Engineer",
     "Computer Engineer",
@@ -63,6 +64,19 @@ const AboutMe = () => {
     }
   };
 
+  useEffect(() => {
+    const fetchBg = async () => {
+      try {
+        const res = await fetch("/api/settings/about_bg_image");
+        const data = await res.json();
+        if (data.data?.value) setBgImage(data.data.value);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchBg();
+  }, []);
+
   // Scroll and update URL only for the "intro" section
   useEffect(() => {
     const handleScroll = () => {
@@ -85,9 +99,17 @@ const AboutMe = () => {
 
   return (
     <div className="about-me">
-      <section id="intro" className={`relative w-full h-screen mx-auto mb-0`}>
+      <section
+        id="intro"
+        className="relative w-full h-screen mx-auto mb-0 bg-cover bg-center bg-no-repeat"
+        style={bgImage ? { backgroundImage: `url(${bgImage})` } : {}}
+      >
+        {!bgImage && (
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200" />
+        )}
+        <div className="absolute inset-0 bg-black/30" />
         <div
-          className={`absolute inset-0 top-[120px] max-w-7xl mx-auto ${styles.paddingX} flex flex-row items-start gap-5`}
+          className={`absolute inset-0 top-[120px] max-w-7xl mx-auto ${styles.paddingX} flex flex-row items-start gap-5 z-10`}
         >
           <div className="flex flex-col justify-center items-center mt-5">
             <div className="w-5 h-5 rounded-full bg-[#915EFF]" />
@@ -95,7 +117,7 @@ const AboutMe = () => {
           </div>
 
           <div>
-            <h1 className={`${styles.heroHeadBlackText} text-black`}>
+            <h1 className={`${styles.heroHeadBlackText} text-white`}>
               Hi, I'm <span className="text-[#915EFF]">Sahaj Shakya</span>
             </h1>
             <TrackVisibility>
@@ -105,10 +127,10 @@ const AboutMe = () => {
                     isVisible ? "animate__animated animate__fadeIn" : ""
                   }
                 >
-                  <h1 className="text-black">
+                  <h1 className="text-white">
                     {`I am a`}{" "}
                     <span
-                      className="txt-rotate text-black"
+                      className="txt-rotate text-white"
                       dataPeriod="1000"
                       data-rotate='[ "Electronics Engineer", "Computer Engineer", "Web Developer", "Teacher", "Researcher", "Photographer" ]'
                     >

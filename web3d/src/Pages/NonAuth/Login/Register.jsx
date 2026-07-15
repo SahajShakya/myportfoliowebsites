@@ -39,7 +39,7 @@ const Register = () => {
         await register(email, password, name);
         enqueueSnackbar("Registration successful!", { variant: "success" });
         formik.resetForm();
-        navigate("/login");
+        navigate("/vitra");
       } catch (error) {
         enqueueSnackbar(`Error: ${error.message}`, { variant: "error" });
         formik.setFieldValue("password", "");
@@ -133,7 +133,7 @@ const Register = () => {
         >
           <p className="text-sm text-gray-600">
             Already have an account?{" "}
-            <a href="/login" className="text-blue-500 hover:underline">
+            <a href="/vitra" className="text-blue-500 hover:underline">
               Login here
             </a>
           </p>

@@ -7,7 +7,7 @@ const RoleBasedRedirect = ({ role, routeName }) => {
   const storedRole = user?.role;
 
   if (!storedRole) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/vitra" />;
   }
 
   if (storedRole === "admin") {

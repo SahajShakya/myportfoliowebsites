@@ -25,37 +25,41 @@ const Achievements = () => {
     fetchAchievements();
   }, []);
 
-  if (loading) {
-    return <p>Loading...</p>;
-  }
-
   return (
-    <div className="px-4 sm:px-6 md:px-8 lg:px-10 py-6">
+    <>
       <motion.div variants={textVariant()}>
         <p className={styles.sectionSubText}>My Achievements</p>
         <h2 className={styles.sectionHeadText}>Achievements.</h2>
       </motion.div>
 
-      <motion.p
-        variants={fadeIn("", "", 0.1, 1)}
-        className="mt-3 text-secondary text-[17px] max-w-3xl leading-[30px]"
-      >
-        These achievements showcase milestones and recognitions in my career.
-        Each achievement is briefly described with links to relevant resources.
-      </motion.p>
-
-      <div className="mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {achievements.map((achievement) => (
-          <ProjectCard
-            key={achievement.id}
-            index={achievement.id}
-            {...achievement}
-            route="achievements"
-          />
-        ))}
+      <div className="w-full flex">
+        <motion.p
+          variants={fadeIn("", "", 0.1, 1)}
+          className="mt-3 text-secondary text-[17px] max-w-3xl leading-[30px]"
+        >
+          These achievements showcase milestones and recognitions in my career.
+          Each achievement is briefly described with links to relevant resources.
+        </motion.p>
       </div>
-    </div>
+
+      {loading ? (
+        <p className="mt-20 text-secondary text-[16px]">Loading...</p>
+      ) : achievements.length === 0 ? (
+        <p className="mt-20 text-secondary text-[16px]">No achievements found yet.</p>
+      ) : (
+        <div className="mt-20 flex flex-wrap gap-7">
+          {achievements.map((achievement) => (
+            <ProjectCard
+              key={achievement.id}
+              index={achievement.id}
+              {...achievement}
+              route="achievements"
+            />
+          ))}
+        </div>
+      )}
+    </>
   );
 };
 
-export default Achievements;
+export default SectionWrapper(Achievements, "achievements");

@@ -7,6 +7,8 @@ import { useSnackbar } from "notistack";
 
 const AddTestimonialForm = () => {
   const [focusedField, setFocusedField] = useState("");
+  const [imagePreview, setImagePreview] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
   const { enqueueSnackbar } = useSnackbar();
 
   const formik = useFormik({
@@ -15,23 +17,28 @@ const AddTestimonialForm = () => {
       name: "",
       designation: "",
       company: "",
-      image: "",
     },
     onSubmit: async (values, { resetForm }) => {
       try {
-        await api.post("/testimonials", {
-          testimonial: values.testimonial,
-          name: values.name,
-          designation: values.designation,
-          company: values.company,
-          image: values.image,
+        const formData = new FormData();
+        formData.append("testimonial", values.testimonial);
+        formData.append("name", values.name);
+        formData.append("designation", values.designation);
+        formData.append("company", values.company);
+        if (imageFile) {
+          formData.append("image", imageFile);
+        }
+
+        await api.post("/testimonials", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
         });
 
         enqueueSnackbar("Testimonial added successfully!", {
           variant: "success",
         });
-
         resetForm();
+        setImagePreview(null);
+        setImageFile(null);
       } catch (error) {
         console.error("Error adding testimonial: ", error);
         enqueueSnackbar("There was an error adding the testimonial", {
@@ -40,6 +47,21 @@ const AddTestimonialForm = () => {
       }
     },
   });
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setImagePreview(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImagePreview(null);
+    setImageFile(null);
+  };
 
   return (
     <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8 max-w-2xl">
@@ -105,18 +127,42 @@ const AddTestimonialForm = () => {
           setFocusedField={setFocusedField}
         />
 
-        <InputField
-          name="image"
-          type="text"
-          label="Image URL"
-          value={formik.values.image}
-          onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
-          error={formik.errors.image}
-          touched={formik.touched.image}
-          focusedField={focusedField}
-          setFocusedField={setFocusedField}
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Profile Image
+          </label>
+          <div className="flex items-center gap-4">
+            {imagePreview ? (
+              <div className="relative">
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-16 h-16 rounded-full object-cover border"
+                />
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center"
+                >
+                  ×
+                </button>
+              </div>
+            ) : (
+              <label className="flex flex-col items-center justify-center w-16 h-16 rounded-full border-2 border-dashed border-gray-300 cursor-pointer hover:border-blue-400 transition-colors">
+                <span className="text-2xl text-gray-400">+</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+              </label>
+            )}
+            <span className="text-sm text-gray-500">
+              {imageFile ? imageFile.name : "Upload a photo"}
+            </span>
+          </div>
+        </div>
 
         <button
           type="submit"

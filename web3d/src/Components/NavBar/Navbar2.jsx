@@ -68,10 +68,7 @@ const Navbar = ({ tabs, token }) => {
     setOpenDropdown(null);
   };
 
-  const updatedTabs =
-    isMobile && token === null
-      ? [...tabs, { name: "Login", hasDropdown: false, linkTo: "/login" }]
-      : tabs;
+  const updatedTabs = tabs;
 
   return (
     <div className="relative">
@@ -102,16 +99,29 @@ const Navbar = ({ tabs, token }) => {
 
       {/* Only show the Simple Navbar on Mobile when menu is open */}
       {isMobile && menuOpen && (
-        <div className="absolute inset-0 z-50 p-4" ref={menuRef}>
-          <SimpleNavbar
-            tabs={updatedTabs}
-            token={token}
-            openDropdown={openDropdown}
-            handleDropdownToggle={handleDropdownToggle}
-            setMenuOpen={setMenuOpen}
-            handleLinkClick={handleLinkClick}
-            currentPath={location.pathname}
-          />
+        <div
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+          onClick={() => setMenuOpen(false)}
+          ref={menuRef}
+        >
+          <motion.div
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="absolute right-0 top-0 h-full w-[280px] bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <SimpleNavbar
+              tabs={updatedTabs}
+              token={token}
+              openDropdown={openDropdown}
+              handleDropdownToggle={handleDropdownToggle}
+              setMenuOpen={setMenuOpen}
+              handleLinkClick={handleLinkClick}
+              currentPath={location.pathname}
+            />
+          </motion.div>
         </div>
       )}
     </div>
@@ -128,76 +138,89 @@ const SimpleNavbar = ({
   handleLinkClick,
   currentPath,
 }) => (
-  <ul className="flex flex-col items-start mt-4 bg w-[250px] rounded-lg shadow-lg bg-white absolute right-0 top-0 z-50">
-    {/* Close Button (X Icon) */}
-    <button
-      onClick={() => setMenuOpen(false)} // Close the menu on click
-      className="absolute top-0 right-0 p-2 text-gray-600"
-      aria-label="Close Menu"
-    >
-      <FiX size={24} />
-    </button>
+  <div className="flex flex-col h-full">
+    {/* Header */}
+    <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+      <span className="text-sm font-semibold text-gray-800">Menu</span>
+      <button
+        onClick={() => setMenuOpen(false)}
+        className="p-1.5 rounded-full hover:bg-gray-100 transition-colors text-gray-500"
+        aria-label="Close Menu"
+      >
+        <FiX size={20} />
+      </button>
+    </div>
 
-    {/* Render Tabs */}
-    {tabs.map((tab, index) => (
-      <li key={index} className="relative text-lg text-center text-black">
-        {tab.linkTo ? (
-          <Link 
-            to={tab.linkTo} 
-            onClick={handleLinkClick}
-            className={`block py-2 px-4 hover:bg-gray-100 transition-colors ${
-              currentPath === tab.linkTo ? 'bg-blue-50 text-blue-600 font-medium' : ''
-            }`}
-          >
-            {tab.name}
-          </Link>
-        ) : (
-          <span
-            className={`py-2 px-4 cursor-pointer flex hover:bg-gray-100 transition-colors ${
-              tab.dropdownOptions?.some(opt => opt.to === currentPath) ? 'bg-blue-50 text-blue-600' : ''
-            }`}
-            onClick={() => handleDropdownToggle(index)}
-          >
-            {tab.name}
-            {tab.hasDropdown && (
-              <span className="ml-2 text-sm">
-                {openDropdown === index ? <FiChevronUp /> : <FiChevronDown />}
-              </span>
-            )}
-          </span>
-        )}
+    {/* Nav Items */}
+    <ul className="flex-1 overflow-y-auto py-2">
+      {tabs.map((tab, index) => {
+        const isActive = tab.linkTo
+          ? currentPath === tab.linkTo
+          : tab.dropdownOptions?.some((opt) => opt.to === currentPath);
 
-        {/* Show dropdown if the tab has a dropdown */}
-        {tab.hasDropdown && openDropdown === index && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            transition={{ duration: 0.3 }}
-            className="absolute right-0 z-20 mt-2 bg-white rounded-md shadow-lg w-60"
-          >
-            <ul>
-              {tab.dropdownOptions?.map((option, index) => (
-                <li key={index}>
-                  <Link
-                    to={option.to}
-                    onClick={handleLinkClick}
-                    className={`block px-4 py-2 text-sm hover:bg-gray-100 transition-colors ${
-                      currentPath === option.to ? 'bg-blue-100 text-blue-600 font-medium' : 'text-gray-700'
-                    }`}
+        return (
+          <li key={index} className="relative">
+            {tab.linkTo ? (
+              <Link
+                to={tab.linkTo}
+                onClick={handleLinkClick}
+                className={`flex items-center px-5 py-3 text-sm transition-colors ${
+                  isActive
+                    ? "text-blue-600 bg-blue-50 font-medium border-l-3 border-blue-600"
+                    : "text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                {tab.name}
+              </Link>
+            ) : (
+              <>
+                <button
+                  className={`flex items-center justify-between w-full px-5 py-3 text-sm transition-colors ${
+                    isActive
+                      ? "text-blue-600 bg-blue-50 font-medium border-l-3 border-blue-600"
+                      : "text-gray-700 hover:bg-gray-50"
+                  }`}
+                  onClick={() => handleDropdownToggle(index)}
+                >
+                  <span>{tab.name}</span>
+                  {tab.hasDropdown && (
+                    <span className="text-gray-400">
+                      {openDropdown === index ? <FiChevronUp size={14} /> : <FiChevronDown size={14} />}
+                    </span>
+                  )}
+                </button>
+
+                {tab.hasDropdown && openDropdown === index && (
+                  <motion.ul
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    transition={{ duration: 0.2 }}
+                    className="bg-gray-50 border-t border-b border-gray-100"
                   >
-                    {option.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </motion.div>
-        )}
-      </li>
-    ))}
-  </ul>
+                    {tab.dropdownOptions?.map((option, optIdx) => (
+                      <li key={optIdx}>
+                        <Link
+                          to={option.to}
+                          onClick={handleLinkClick}
+                          className={`block pl-10 pr-5 py-2.5 text-xs transition-colors ${
+                            currentPath === option.to
+                              ? "text-blue-600 bg-blue-50/50 font-medium"
+                              : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          {option.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </motion.ul>
+                )}
+              </>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  </div>
 );
 
 // SlideTabs component (unchanged)
@@ -211,7 +234,7 @@ const SlideTabs = ({ tabs, isMobile, token, currentPath }) => {
 
   return (
     <ul
-      className={`relative mx-auto flex w-full max-w-5xl justify-around rounded-full border-2 border-black bg-white p-1 sm:p-1.5 md:p-2 ${
+      className={`relative mx-auto flex w-full max-w-5xl justify-around rounded-full border border-black bg-white py-2.5 px-1 ${
         isMobile ? "hidden" : ""
       }`}
     >
@@ -259,10 +282,10 @@ const Tab = ({
       onMouseEnter={handleMouseEnter} // Set hover state when tab is hovered
       onMouseLeave={handleMouseLeave} // Reset hover state when mouse leaves tab
       onClick={() => handleSetSelected(tab)} // Set selected tab
-      className={`relative z-10 block cursor-pointer px-2 py-1.5 text-xs uppercase sm:px-3 sm:text-sm md:px-4 md:py-2 lg:px-5 lg:py-3 lg:text-base ${
+      className={`relative z-10 block cursor-pointer px-2 py-1.5 text-[11px] sm:px-2.5 sm:text-xs md:px-3 md:py-2 lg:px-4 lg:py-2 lg:text-xs ${
         hovered === tab || selected === tab
-          ? "text-red-500 bg-gray-200 rounded-full" // Show gray background when hovered or selected
-          : "text-black" // Default state for non-hovered, non-selected tab
+          ? "text-red-500 bg-gray-200 rounded-full"
+          : "text-black"
       }`}
     >
       {linkTo ? (
@@ -282,10 +305,10 @@ const Tab = ({
             y: hovered === tab ? 0 : -10,
           }}
           transition={{ duration: 0.3 }}
-          className="absolute left-0 z-20 mt-2 bg-white rounded-md shadow-lg w-60"
+          className="absolute left-0 z-20 mt-2 bg-white rounded-md shadow-lg w-52"
         >
           {/* Tab Name Line (Background black) */}
-          <div className="px-4 py-2 text-lg font-semibold text-white bg-black">
+          <div className="px-3 py-1.5 text-sm font-semibold text-white bg-black">
             {children}
           </div>
 
@@ -295,7 +318,7 @@ const Tab = ({
               <li key={index}>
                 <Link
                   to={option.to}
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-300"
+                  className="block px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-300"
                 >
                   {option.label}
                 </Link>

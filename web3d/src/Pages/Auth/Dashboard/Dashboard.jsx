@@ -1,18 +1,17 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { enqueueSnackbar } from "notistack";
 import { useUser } from "../../../context/UserContext";
 import api from "../../../api/client";
+import DraggableUpload from "../../../Components/Upload/DraggableUpload";
 import {
   FaUser,
   FaEnvelope,
   FaPhone,
   FaFilePdf,
   FaUpload,
-  FaTrash,
   FaCheckCircle,
-  FaStar,
   FaEdit,
   FaImage,
   FaSave,
@@ -28,8 +27,6 @@ const Dashboard = ({ role }) => {
   const [uploading, setUploading] = useState(false);
   const [editingField, setEditingField] = useState(null);
   const [cvUploading, setCvUploading] = useState(false);
-  const cvInputRef = useRef(null);
-  const fileInputRef = useRef(null);
 
   const fetchProfile = async () => {
     try {
@@ -54,8 +51,8 @@ const Dashboard = ({ role }) => {
     fetchCvs();
   }, []);
 
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
+  const handleImageUpload = async (files) => {
+    const file = files[0];
     if (!file) return;
     setUploading(true);
     try {
@@ -71,8 +68,8 @@ const Dashboard = ({ role }) => {
     }
   };
 
-  const handleCvUpload = async (e) => {
-    const file = e.target.files[0];
+  const handleCvUpload = async (files) => {
+    const file = files[0];
     if (!file) return;
     setCvUploading(true);
     try {
@@ -87,7 +84,6 @@ const Dashboard = ({ role }) => {
       enqueueSnackbar(err.message, { variant: "error" });
     } finally {
       setCvUploading(false);
-      if (cvInputRef.current) cvInputRef.current.value = "";
     }
   };
 
@@ -127,30 +123,22 @@ const Dashboard = ({ role }) => {
               alt="Profile"
               className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
             />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition"
-            >
-              {uploading ? (
-                <span className="text-white text-xs">Uploading...</span>
-              ) : (
-                <FaImage className="text-white text-xl" />
-              )}
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-            />
           </div>
-          <div>
+          <div className="flex-1">
             <h2 className="text-xl font-semibold">{profile.name}</h2>
             <p className="text-gray-500">{profile.email}</p>
             {profile.phone && (
               <p className="text-gray-400 text-sm">{profile.phone}</p>
             )}
+            <div className="mt-2">
+              <DraggableUpload
+                onFilesChange={handleImageUpload}
+                maxFiles={1}
+                label="Profile Image"
+                disabled={uploading}
+              />
+              {uploading && <span className="text-xs text-gray-500">Uploading...</span>}
+            </div>
           </div>
         </div>
 
@@ -169,83 +157,32 @@ const Dashboard = ({ role }) => {
           <h2 className="text-xl font-semibold flex items-center gap-2">
             <FaFilePdf className="text-red-500" /> CV / Resume
           </h2>
-          <label className="flex items-center gap-2 cursor-pointer bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition text-sm font-medium">
-            <FaUpload />
-            {cvUploading ? "Uploading..." : "Upload CV"}
-            <input
-              ref={cvInputRef}
-              type="file"
-              accept=".pdf,.doc,.docx"
-              onChange={handleCvUpload}
-              className="hidden"
-              disabled={cvUploading}
-            />
-          </label>
         </div>
 
-        {cvs.length === 0 ? (
-          <p className="text-gray-400 text-center py-6">
-            No CVs uploaded yet.
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {cvs.map((cv) => (
-              <div
-                key={cv.id}
-                className={`flex items-center justify-between p-4 rounded-lg border ${
-                  cv.is_active
-                    ? "border-green-400 bg-green-50"
-                    : "border-gray-200"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <FaFilePdf className="text-red-400 text-xl" />
-                  <div>
-                    <div className="font-medium">{cv.title}</div>
-                    <div className="text-xs text-gray-400">
-                      {new Date(cv.created_at).toLocaleDateString()}
-                    </div>
-                  </div>
-                  {cv.is_active && (
-                    <span className="text-xs bg-green-500 text-white px-2 py-0.5 rounded-full">
-                      Active
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  <a
-                    href={cv.file_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-blue-500 hover:text-blue-700 text-sm"
-                  >
-                    View
-                  </a>
-                  {!cv.is_active && (
-                    <button
-                      onClick={() => handleCvSetActive(cv.id)}
-                      className="p-1.5 text-yellow-500 hover:bg-yellow-50 rounded"
-                      title="Set as active"
-                    >
-                      <FaStar />
-                    </button>
-                  )}
-                  <button
-                    onClick={() => handleCvDelete(cv.id)}
-                    className="p-1.5 text-red-500 hover:bg-red-50 rounded"
-                    title="Delete"
-                  >
-                    <FaTrash />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <DraggableUpload
+          onFilesChange={handleCvUpload}
+          existingFiles={cvs.map((cv) => cv.file_url)}
+          onRemoveExisting={async (url, idx) => {
+            const cv = cvs[idx];
+            if (cv) await handleCvDelete(cv.id);
+          }}
+          maxFiles={1}
+          label="Upload CV"
+          disabled={cvUploading}
+          accept={{
+            "application/pdf": [".pdf"],
+            "application/msword": [".doc"],
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+          }}
+        />
+        {cvUploading && <span className="text-xs text-gray-500 mt-1 block">Uploading...</span>}
       </div>
 
       {/* Materials URL */}
       <MaterialsUrlEditor profile={profile} setProfile={setProfile} addData={addData} />
+
+      {/* About Background Image */}
+      <AboutBgImageEditor />
 
       {/* Quick Links */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -451,6 +388,66 @@ const MaterialsUrlEditor = ({ profile, setProfile, addData }) => {
           </div>
         )}
       </div>
+    </div>
+  );
+};
+
+const AboutBgImageEditor = () => {
+  const [bgImage, setBgImage] = useState(null);
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    const fetchBg = async () => {
+      try {
+        const res = await fetch("/api/settings/about_bg_image");
+        const data = await res.json();
+        if (data.data?.value) setBgImage(data.data.value);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchBg();
+  }, []);
+
+  const handleUpload = async (files) => {
+    const file = files[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const data = await api.postForm("/auth/about-bg-image", formData);
+      setBgImage(data.url);
+      enqueueSnackbar("Background image updated!", { variant: "success" });
+    } catch (err) {
+      enqueueSnackbar(err.message, { variant: "error" });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow-md p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-semibold flex items-center gap-2">
+          <FaImage className="text-purple-500" /> About Section Background
+        </h2>
+      </div>
+      {bgImage && (
+        <img
+          src={bgImage}
+          alt="About background preview"
+          className="w-full h-40 object-cover rounded-lg mb-3 border"
+        />
+      )}
+      <DraggableUpload
+        onFilesChange={handleUpload}
+        maxFiles={1}
+        label="Upload Background Image"
+        disabled={uploading}
+        accept={{ "image/*": [".jpg", ".jpeg", ".png", ".webp"] }}
+      />
+      {uploading && <span className="text-xs text-gray-500 mt-1 block">Uploading...</span>}
     </div>
   );
 };

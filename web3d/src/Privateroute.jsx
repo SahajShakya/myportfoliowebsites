@@ -6,7 +6,7 @@ const PrivateRoute = ({ element, roleProps }) => {
   const { user, isAuthenticated } = useAuthContext();
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/vitra" />;
   }
 
   if (roleProps && user?.role !== roleProps) {

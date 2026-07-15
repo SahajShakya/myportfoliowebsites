@@ -1,143 +1,14 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Tilt } from "react-tilt";
 import { motion } from "framer-motion";
 
 import { styles } from "../../../styles";
 import github from "./github.png";
-import tiktak from "./tiktak.jpg";
-import jobit from "./jobit.png";
-import pcb from "./pcb.jpg";
-import bio from "./bio.jpg";
-import kecconf1 from "./kecconf1.jpg";
-import youtube from "./youtube.png";
 import { SectionWrapper } from "../../../hoc";
 
 import { fadeIn, textVariant } from "../../../utils/motion";
 
-const aprojects = [
-  {
-    name: "TikTak Project Using C",
-    description:
-      "My 1st semester project (Tiktactoe) C language, a simple application has been prepared. The Tic-tac-toe is a pencil game for two players, X and O, who takes turns marking the spaces in a 3X3 grid player. ",
-    tags: [
-      {
-        name: "C",
-        color: "blue-text-gradient",
-      },
-      {
-        name: "Array",
-        color: "green-text-gradient",
-      },
-    ],
-    image: tiktak,
-    source_code_link: "https://github.com/SahajShakya/Tiktaktoe_cProject",
-  },
-  {
-    name: "Bank Management Using C++",
-    description:
-      "The topic for our project is 'Bank Management System'. File handling has been effectively used for each feature of this project. Our Bank Management System can add records, search, modify & delete records. General concepts of if while loops, functions, classes and file has been used to create this program.",
-    tags: [
-      {
-        name: "C++",
-        color: "blue-text-gradient",
-      },
-      {
-        name: "OPP",
-        color: "green-text-gradient",
-      },
-    ],
-    image: jobit,
-    source_code_link: "https://github.com/SahajShakya/BankManagemet-C-Project-",
-  },
-  {
-    name: "Density Based Traffic Light",
-    description:
-      "Density Based Automatic Traffic Light Controlled System that helps to control traffics and reduces accidents.",
-    tags: [
-      {
-        name: "Arduino",
-        color: "blue-text-gradient",
-      },
-      {
-        name: "AVR",
-        color: "green-text-gradient",
-      },
-      {
-        name: "Python",
-        color: "pink-text-gradient",
-      },
-      {
-        name: "CNN",
-        color: "pink-text-gradient",
-      },
-    ],
-    image: pcb,
-    source_code_link:
-      "https://github.com/SahajShakya/Desnsity-based-Traffic-Control-System-AVR-",
-  },
-  {
-    name: "Bio Robotic Arm",
-    description:
-      "“Bio-Robotic arm” is project based on a biofeedback mechanical arm that uses a low dimensional input derived from EMG (electromyography) data. ",
-    tags: [
-      {
-        name: "arduino",
-        color: "blue-text-gradient",
-      },
-      {
-        name: "raspberry pi",
-        color: "green-text-gradient",
-      },
-      {
-        name: "EMG< EEG",
-        color: "pink-text-gradient",
-      },
-      {
-        name: "python",
-        color: "blue-text-gradient",
-      },
-      {
-        name: "ANN",
-        color: "green-text-gradient",
-      },
-    ],
-    image: bio,
-    source_code_link: "https://github.com/SahajShakya/Bio-Robotic-Arm",
-    link: true,
-    icon: youtube,
-  },
-
-  {
-    name: "Thesis: SDN-Loadbalancing-and-DDOS-Detections",
-    description:
-      "This prject reduces the overhead in traffic, classify between traffic and DDoS Attack using SVM, find optimal path using DFS",
-    tags: [
-      {
-        name: "python",
-        color: "blue-text-gradient",
-      },
-      {
-        name: "SVM",
-        color: "green-text-gradient",
-      },
-      {
-        name: "DFS",
-        color: "pink-text-gradient",
-      },
-      {
-        name: "GeneticAlgorithm",
-        color: "blue-text-gradient",
-      },
-      {
-        name: "SDN",
-        color: "green-text-gradient",
-      },
-    ],
-    image: kecconf1,
-    source_code_link:
-      "https://github.com/SahajShakya/SDN-Loadbalancing-and-DDOS-Detections",
-  },
-];
+const tagColors = ["blue-text-gradient", "green-text-gradient", "pink-text-gradient"];
 
 const ProjectCard = ({
   index,
@@ -184,12 +55,12 @@ const ProjectCard = ({
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
-          {tags.map((tag) => (
+          {tags.map((tag, i) => (
             <p
-              key={`${name}-${tag.name}`}
-              className={`text-[14px] ${tag.color}`}
+              key={`${name}-${tag}`}
+              className={`text-[14px] ${tagColors[i % tagColors.length]}`}
             >
-              #{tag.name}
+              #{tag}
             </p>
           ))}
         </div>
@@ -199,6 +70,19 @@ const ProjectCard = ({
 };
 
 const AcademicWorks = () => {
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/academic-projects")
+      .then((res) => res.json())
+      .then((res) => {
+        setProjects(res.data || []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
   return (
     <>
       <motion.div variants={textVariant()}>
@@ -216,9 +100,23 @@ const AcademicWorks = () => {
       </div>
 
       <div className="mt-20 flex flex-wrap gap-7">
-        {aprojects.map((project, index) => (
-          <ProjectCard key={`project-${index}`} index={index} {...project} />
-        ))}
+        {loading ? (
+          <p className="text-secondary">Loading...</p>
+        ) : projects.length === 0 ? (
+          <p className="text-secondary text-[16px]">No academic projects found yet.</p>
+        ) : (
+          projects.map((project, index) => (
+            <ProjectCard
+              key={`project-${project.id}`}
+              index={index}
+              name={project.name}
+              description={project.description}
+              tags={project.tags || []}
+              image={project.icons || ""}
+              source_code_link={project.source_code_link || "#"}
+            />
+          ))
+        )}
       </div>
     </>
   );
