@@ -3,10 +3,11 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import InputField from "../../../Components/Input/InputField";
 import { enqueueSnackbar } from "notistack";
-import api from "../../../api/client";
+import { useUpdatePassword } from "../../../Hooks/mutations/useAuthMutations";
 
 const PasswordChange = () => {
   const [focusedField, setFocusedField] = useState(null);
+  const updatePasswordMutation = useUpdatePassword();
 
   const validationSchema = Yup.object({
     current_password: Yup.string().required("Current password is required"),
@@ -26,16 +27,21 @@ const PasswordChange = () => {
     },
     validationSchema,
     onSubmit: async (values, { resetForm }) => {
-      try {
-        await api.put("/auth/password", {
+      updatePasswordMutation.mutate(
+        {
           current_password: values.current_password,
           new_password: values.new_password,
-        });
-        enqueueSnackbar("Password updated!", { variant: "success" });
-        resetForm();
-      } catch (err) {
-        enqueueSnackbar(err.message, { variant: "error" });
-      }
+        },
+        {
+          onSuccess: () => {
+            enqueueSnackbar("Password updated!", { variant: "success" });
+            resetForm();
+          },
+          onError: (err) => {
+            enqueueSnackbar(err.message, { variant: "error" });
+          },
+        }
+      );
     },
   });
 

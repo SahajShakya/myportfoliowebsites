@@ -1,58 +1,38 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useSnackbar } from "notistack";
 import AddJourney from "./AddJourney";
 import Modal from "../../../Components/UI/Modal/Modal";
-import api from "../../../api/client";
+import { useJourneyQuery } from "../../../Hooks/options/useJourneyQuery";
+import { useDeleteJourney } from "../../../Hooks/mutations/useJourneyMutations";
 
 const ViewJourney = () => {
-  const [journeys, setJourneys] = useState([]);
+  const { data: journeys = [] } = useJourneyQuery();
+  const deleteMutation = useDeleteJourney();
   const { enqueueSnackbar } = useSnackbar();
   const [modal, setModal] = useState(false);
   const [editData, setEditData] = useState(null);
-  const [isEdit, setIsEdit] = useState(false);
 
-  useEffect(() => {
-    const fetchJourneys = async () => {
-      try {
-        const data = await api.get("/journey");
-        const journeyList = (data.data || []).map((item) => ({
-          ...item,
-          id: String(item.id),
-        }));
-        journeyList.sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
-        setJourneys(journeyList);
-        setIsEdit(false);
-      } catch (error) {
-        console.error("Error fetching journeys: ", error);
-      }
-    };
-
-    fetchJourneys();
-  }, [isEdit]);
+  const sortedJourneys = [...journeys]
+    .map((item) => ({ ...item, id: String(item.id) }))
+    .sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
 
   const handleEdit = (id) => {
-    const journey = journeys.find((item) => String(item.id) === String(id));
+    const journey = sortedJourneys.find((item) => String(item.id) === String(id));
     setEditData(journey);
     setModal(true);
   };
 
-  const handleEditSuccess = () => {
-    setModal(false);
-    setIsEdit(true);
-  };
+  const handleEditSuccess = () => setModal(false);
 
-  const handleDelete = async (id) => {
-    try {
-      await api.delete(`/journey/${id}`);
-      setJourneys(journeys.filter((j) => String(j.id) !== String(id)));
-      enqueueSnackbar("Journey deleted successfully!", {
-        variant: "success",
-      });
-    } catch (error) {
-      enqueueSnackbar("Failed to delete journey. Please try again.", {
-        variant: "error",
-      });
-    }
+  const handleDelete = (id) => {
+    deleteMutation.mutate(id, {
+      onSuccess: () => {
+        enqueueSnackbar("Journey deleted successfully!", { variant: "success" });
+      },
+      onError: () => {
+        enqueueSnackbar("Failed to delete journey. Please try again.", { variant: "error" });
+      },
+    });
   };
 
   const handleCloseModal = () => setModal(false);
@@ -81,7 +61,7 @@ const ViewJourney = () => {
             </tr>
           </thead>
           <tbody>
-            {journeys.map((journey) => (
+            {sortedJourneys.map((journey) => (
               <tr key={journey.id} className="border-b hover:bg-gray-50">
                 <td className="px-4 py-3">{journey.title}</td>
                 <td className="px-4 py-3 text-center">
@@ -123,7 +103,7 @@ const ViewJourney = () => {
       </div>
 
       <div className="md:hidden space-y-4">
-        {journeys.map((journey) => (
+        {sortedJourneys.map((journey) => (
           <div key={journey.id} className="bg-white border rounded-lg p-4 shadow-sm">
             <div className="space-y-2 mb-4">
               <div className="flex items-center gap-3">

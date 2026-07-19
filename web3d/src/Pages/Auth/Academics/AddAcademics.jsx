@@ -6,7 +6,7 @@ import Upload from "../../../Components/Upload/Upload";
 import * as Yup from "yup";
 import { motion } from "framer-motion";
 import { uploadFiles, deleteFilesFromSupabase } from "../../../api/upload";
-import api from "../../../api/client";
+import { useCreateAcademic, useUpdateAcademic } from "../../../Hooks/mutations/useAcademicsMutations";
 import { useSnackbar } from "notistack";
 import { FaPlus, FaTrash } from "react-icons/fa";
 
@@ -24,6 +24,8 @@ const validationSchema = Yup.object({
 const AddAcademics = ({ editData, handleEditSuccess }) => {
   const [editorValue, setEditorValue] = useState(editData?.description || "");
   const { enqueueSnackbar } = useSnackbar();
+  const createMutation = useCreateAcademic();
+  const updateMutation = useUpdateAcademic();
 
   const buildInitialContentItems = () => {
     if (editData?.contents && Array.isArray(editData.contents) && editData.contents.length > 0) {
@@ -117,16 +119,26 @@ const AddAcademics = ({ editData, handleEditSuccess }) => {
         github_link: values.github_link,
       };
 
-      if (editData) {
-        await api.put(`/academics/${editData.id}`, academicData);
-        enqueueSnackbar("Academic updated successfully!", { variant: "success" });
-      } else {
-        await api.post("/academics", academicData);
-        enqueueSnackbar("Academic created successfully!", { variant: "success" });
-      }
+      const onSuccess = () => {
+        enqueueSnackbar(
+          editData ? "Academic updated successfully!" : "Academic created successfully!",
+          { variant: "success" }
+        );
+        setSubmitting(false);
+        window.location.reload();
+      };
 
-      setSubmitting(false);
-      window.location.reload();
+      const onError = (error) => {
+        console.error("Error submitting academic:", error);
+        enqueueSnackbar("Failed to submit academic. Please try again.", { variant: "error" });
+        setSubmitting(false);
+      };
+
+      if (editData) {
+        updateMutation.mutate({ id: editData.id, payload: academicData }, { onSuccess, onError });
+      } else {
+        createMutation.mutate(academicData, { onSuccess, onError });
+      }
     } catch (error) {
       console.error("Error submitting academic:", error);
       enqueueSnackbar("Failed to submit academic. Please try again.", { variant: "error" });

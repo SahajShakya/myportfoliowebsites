@@ -5,7 +5,9 @@ import { styles } from "../../../styles";
 import { useParams } from "react-router-dom";
 import { Tilt } from "react-tilt";
 import React from "react";
-import api from "../../../api/client";
+import { privateAgent } from "../../../api/authRequest";
+import { routesName } from "../../../constants/routesName";
+import MediaRenderer from "../../../Components/UI/MediaRenderer/MediaRenderer";
 
 const AchievementCard = ({ index, title, image }) => {
   return (
@@ -19,7 +21,7 @@ const AchievementCard = ({ index, title, image }) => {
         className="bg-tertiary p-5 rounded-2xl w-full h-[450px] flex flex-col"
       >
         <div className="relative w-full h-[220px] flex-shrink-0">
-          <img
+          <MediaRenderer
             src={image}
             alt="achievement_image"
             className="w-full h-full object-cover rounded-2xl"
@@ -44,7 +46,8 @@ const AchievementDetails = () => {
   useEffect(() => {
     const fetchAchievementDetails = async () => {
       try {
-        const data = await api.get(`/achievements/${id}/details`);
+        const response = await privateAgent.get(routesName.AchievementsRoute({ id }).details);
+        const data = response.data;
         setAchievementDetails(data.data || []);
       } catch (error) {
         console.error("Error fetching achievement details:", error);

@@ -4,6 +4,7 @@ function handleJourneyRoutes($method, $segments, $db) {
     require_once __DIR__ . '/../models/Document.php';
     require_once __DIR__ . '/../middleware/auth.php';
     require_once __DIR__ . '/../middleware/upload.php';
+    require_once __DIR__ . '/../helpers/retrain_chatbot.php';
 
     $model = new Journey($db);
     $documentModel = new Document($db);
@@ -81,6 +82,7 @@ function handleJourneyRoutes($method, $segments, $db) {
         $data['content_document_ids'] = $contentDocIds;
 
         $newId = $model->create($data);
+        retrainChatbot($db, 'journey');
         echo json_encode(["message" => "Journey created", "id" => $newId]);
         return;
     }
@@ -137,6 +139,7 @@ function handleJourneyRoutes($method, $segments, $db) {
         $data['content_document_ids'] = $contentDocIds;
 
         $model->update($id, $data);
+        retrainChatbot($db, 'journey');
         echo json_encode(["message" => "Journey updated"]);
         return;
     }
@@ -146,17 +149,14 @@ function handleJourneyRoutes($method, $segments, $db) {
 
         $result = $model->delete($id);
 
-        require_once __DIR__ . '/Document.php';
-        $docModel = new Document($db);
-
         if (!empty($result['icons'])) {
             foreach ($result['icons'] as $icon) {
                 $docId = $icon['document_id'] ?? null;
                 if ($docId) {
-                    $doc = $docModel->findById($docId);
+                    $doc = $documentModel->findById($docId);
                     if ($doc) {
                         $uploader->deleteFileByAbsolute($doc['absolute_path']);
-                        $docModel->delete($docId);
+                        $documentModel->delete($docId);
                     }
                 } else {
                     $iconUrl = $icon['icon_url'] ?? null;
@@ -172,15 +172,16 @@ function handleJourneyRoutes($method, $segments, $db) {
             foreach ($result['contents'] as $item) {
                 $docId = $item['document_id'] ?? null;
                 if ($docId) {
-                    $doc = $docModel->findById($docId);
+                    $doc = $documentModel->findById($docId);
                     if ($doc) {
                         $uploader->deleteFileByAbsolute($doc['absolute_path']);
-                        $docModel->delete($docId);
+                        $documentModel->delete($docId);
                     }
                 }
             }
         }
 
+        retrainChatbot($db, 'journey');
         echo json_encode(["message" => "Journey deleted"]);
         return;
     }

@@ -1,32 +1,13 @@
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { textVariant, fadeIn } from "../../../utils/motion";
 import { styles } from "../../../styles";
 import SectionWrapper from "../../../hoc/SectionWrapper";
 import ProjectCard from "../../../Components/UI/ProjectCard/ProjectCard";
-import api from "../../../api/client";
+import { useProjectsQuery } from "../../../Hooks/options/useProjectsQuery";
 
 const Projects = () => {
-  const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const data = await api.get("/projects");
-        const projectsList = data.data || [];
-        const sortedProjects = projectsList.sort(
-          (a, b) => new Date(a.start_date) - new Date(b.start_date)
-        );
-        setProjects(sortedProjects);
-      } catch (error) {
-        console.error("Error fetching projects:", error);
-      }
-      setLoading(false);
-    };
-
-    fetchProjects();
-  }, []);
+  const { data: projectsData, isLoading } = useProjectsQuery();
+  const projects = projectsData || [];
 
   return (
     <>
@@ -48,7 +29,7 @@ const Projects = () => {
         </motion.p>
       </div>
 
-      {loading ? (
+      {isLoading ? (
         <p className="mt-20 text-secondary text-[16px]">Loading...</p>
       ) : projects.length === 0 ? (
         <p className="mt-20 text-secondary text-[16px]">No projects found yet.</p>

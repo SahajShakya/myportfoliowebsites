@@ -4,6 +4,7 @@ function handleProjectsRoutes($method, $segments, $db) {
     require_once __DIR__ . '/../models/Document.php';
     require_once __DIR__ . '/../middleware/auth.php';
     require_once __DIR__ . '/../middleware/upload.php';
+    require_once __DIR__ . '/../helpers/retrain_chatbot.php';
 
     $model = new Project($db);
     $documentModel = new Document($db);
@@ -94,6 +95,7 @@ function handleProjectsRoutes($method, $segments, $db) {
         }
 
         echo json_encode(["message" => "Project created", "id" => $projectId]);
+        retrainChatbot($db, 'projects');
         return;
     }
 
@@ -150,6 +152,7 @@ function handleProjectsRoutes($method, $segments, $db) {
         }
 
         $model->update($id, $data);
+        retrainChatbot($db, 'projects');
         echo json_encode(["message" => "Project updated"]);
         return;
     }
@@ -157,24 +160,22 @@ function handleProjectsRoutes($method, $segments, $db) {
     if ($method === 'DELETE' && $id) {
         $auth->authenticate();
 
-        require_once __DIR__ . '/Document.php';
-        $docModel = new Document($db);
-
         $result = $model->delete($id);
 
         if (!empty($result['details'])) {
             foreach ($result['details'] as $detail) {
                 $docId = $detail['document_id'] ?? null;
                 if ($docId) {
-                    $doc = $docModel->findById($docId);
+                    $doc = $documentModel->findById($docId);
                     if ($doc) {
                         $uploader->deleteFileByAbsolute($doc['absolute_path']);
-                        $docModel->delete($docId);
+                        $documentModel->delete($docId);
                     }
                 }
             }
         }
 
+        retrainChatbot($db, 'projects');
         echo json_encode(["message" => "Project deleted"]);
         return;
     }

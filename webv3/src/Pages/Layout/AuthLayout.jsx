@@ -25,7 +25,7 @@ const AuthLayout = () => {
         <div
           className={`transition-all duration-300 ${isCollapsed ? "w-20" : "w-64"} bg-gray-200 text-black p-4`}
         >
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center justify-between mb-6">
             {/* Sidebar toggle button */}
             <button onClick={toggleSidebar} className="text-black">
               {isCollapsed ? (
@@ -74,7 +74,7 @@ const AuthLayout = () => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 bg-gray-100 p-6">
+        <div className="flex-1 p-6 bg-gray-100">
           <Outlet />
         </div>
       </div>

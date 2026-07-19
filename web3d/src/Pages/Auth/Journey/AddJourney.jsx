@@ -6,7 +6,7 @@ import Upload from "../../../Components/Upload/Upload";
 import * as Yup from "yup";
 import { motion } from "framer-motion";
 import { uploadFiles, deleteFilesFromSupabase } from "../../../api/upload";
-import api from "../../../api/client";
+import { useCreateJourney, useUpdateJourney } from "../../../Hooks/mutations/useJourneyMutations";
 import { useSnackbar } from "notistack";
 import { FaPlus, FaTrash } from "react-icons/fa";
 
@@ -30,6 +30,8 @@ const validationSchema = Yup.object({
 const AddJourney = ({ editData, handleEditSuccess }) => {
   const [editorValue, setEditorValue] = useState(editData?.description || "");
   const { enqueueSnackbar } = useSnackbar();
+  const createMutation = useCreateJourney();
+  const updateMutation = useUpdateJourney();
 
   const buildInitialContentItems = () => {
     if (editData?.contents && Array.isArray(editData.contents) && editData.contents.length > 0) {
@@ -121,16 +123,26 @@ const AddJourney = ({ editData, handleEditSuccess }) => {
         urlofCompany: values.urlofCompany,
       };
 
-      if (editData) {
-        await api.put(`/journey/${editData.id}`, journeyData);
-        enqueueSnackbar("Journey updated successfully!", { variant: "success" });
-      } else {
-        await api.post("/journey", journeyData);
-        enqueueSnackbar("Journey created successfully!", { variant: "success" });
-      }
+      const onSuccess = () => {
+        enqueueSnackbar(
+          editData ? "Journey updated successfully!" : "Journey created successfully!",
+          { variant: "success" }
+        );
+        setSubmitting(false);
+        window.location.reload();
+      };
 
-      setSubmitting(false);
-      window.location.reload();
+      const onError = (error) => {
+        console.error("Error submitting journey:", error);
+        enqueueSnackbar("Failed to submit journey. Please try again.", { variant: "error" });
+        setSubmitting(false);
+      };
+
+      if (editData) {
+        updateMutation.mutate({ id: editData.id, payload: journeyData }, { onSuccess, onError });
+      } else {
+        createMutation.mutate(journeyData, { onSuccess, onError });
+      }
     } catch (error) {
       console.error("Error submitting journey:", error);
       enqueueSnackbar("Failed to submit journey. Please try again.", { variant: "error" });
@@ -274,7 +286,7 @@ const AddJourney = ({ editData, handleEditSuccess }) => {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                           <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">Image</label>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Image / Video</label>
                             <Upload
                               name={`contentItems.${index}.image_url`}
                               value={item.image_url || []}
@@ -283,7 +295,7 @@ const AddJourney = ({ editData, handleEditSuccess }) => {
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">Image Description</label>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Media Description</label>
                             <input
                               type="text"
                               value={item.image_description}

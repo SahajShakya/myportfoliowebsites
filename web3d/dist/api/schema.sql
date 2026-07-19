@@ -256,4 +256,56 @@ CREATE TABLE academic_project_details (
     FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE photography (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE photography_photos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    photography_id INT NOT NULL,
+    photo_url VARCHAR(500) NOT NULL,
+    caption VARCHAR(500),
+    display_order INT DEFAULT 0,
+    document_id INT DEFAULT NULL,
+    FOREIGN KEY (photography_id) REFERENCES photography(id) ON DELETE CASCADE,
+    FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE photography_tags (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    photography_id INT NOT NULL,
+    tag VARCHAR(100) NOT NULL,
+    FOREIGN KEY (photography_id) REFERENCES photography(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 INSERT INTO roles (id, name) VALUES (1, 'admin'), (2, 'user') ON DUPLICATE KEY UPDATE name=VALUES(name);
+
+CREATE TABLE chat_sessions (
+    id VARCHAR(64) PRIMARY KEY,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE chat_messages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    session_id VARCHAR(64) NOT NULL,
+    role ENUM('user', 'assistant') NOT NULL,
+    content TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (session_id) REFERENCES chat_sessions(id) ON DELETE CASCADE,
+    INDEX idx_session_created (session_id, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE knowledge_chunks (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    source_table VARCHAR(50) NOT NULL,
+    source_id INT NOT NULL,
+    chunk_text TEXT NOT NULL,
+    metadata JSON,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FULLTEXT KEY ft_chunk (chunk_text)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

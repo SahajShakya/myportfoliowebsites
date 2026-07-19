@@ -4,7 +4,9 @@ import * as Yup from "yup";
 import InputField from "../../../Components/Input/InputField";
 import { enqueueSnackbar } from "notistack";
 import { useUser } from "../../../context/UserContext";
-import api from "../../../api/client";
+import { privateAgent } from "../../../api/authRequest";
+import { routesName } from "../../../constants/routesName";
+import { useUpdateProfile, useUploadProfileImage } from "../../../Hooks/mutations/useAuthMutations";
 import DraggableUpload from "../../../Components/Upload/DraggableUpload";
 import mypic from "../../../assets/mypic.png";
 
@@ -13,6 +15,8 @@ const ProfileSettings = () => {
   const [focusedField, setFocusedField] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [profileImage, setProfileImage] = useState(user?.profile_image || "");
+  const updateProfileMutation = useUpdateProfile();
+  const uploadProfileImageMutation = useUploadProfileImage();
 
   const validationSchema = Yup.object({
     name: Yup.string().required("Name is required"),
@@ -33,24 +37,29 @@ const ProfileSettings = () => {
     validationSchema,
     enableReinitialize: true,
     onSubmit: async (values) => {
-      try {
-        const data = await api.put("/auth/profile", {
+      updateProfileMutation.mutate(
+        {
           name: values.name,
           email: values.email,
           phone: values.phone || null,
           bio: values.bio || null,
           tagline: values.tagline || null,
           profile_image: profileImage || null,
-        });
-        addData({
-          ...user,
-          name: data.user.name,
-          email: data.user.email,
-        });
-        enqueueSnackbar("Profile updated!", { variant: "success" });
-      } catch (err) {
-        enqueueSnackbar(err.message, { variant: "error" });
-      }
+        },
+        {
+          onSuccess: (data) => {
+            addData({
+              ...user,
+              name: data.user.name,
+              email: data.user.email,
+            });
+            enqueueSnackbar("Profile updated!", { variant: "success" });
+          },
+          onError: (err) => {
+            enqueueSnackbar(err.message, { variant: "error" });
+          },
+        }
+      );
     },
   });
 
@@ -58,16 +67,16 @@ const ProfileSettings = () => {
     const fetchProfile = async () => {
       if (!user?.id) return;
       try {
-        const data = await api.get(`/auth/user/${user.id}`);
-        if (data.user) {
+        const data = await privateAgent.get(routesName.AuthRoute({}).user(user.id));
+        if (data.data.user) {
           formik.setValues({
-            name: data.user.name || "",
-            email: data.user.email || "",
-            phone: data.user.phone || "",
-            bio: data.user.bio || "",
-            tagline: data.user.tagline || "",
+            name: data.data.user.name || "",
+            email: data.data.user.email || "",
+            phone: data.data.user.phone || "",
+            bio: data.data.user.bio || "",
+            tagline: data.data.user.tagline || "",
           });
-          setProfileImage(data.user.profile_image || "");
+          setProfileImage(data.data.user.profile_image || "");
         }
       } catch (err) {
         console.error("Failed to fetch profile:", err);
@@ -84,12 +93,20 @@ const ProfileSettings = () => {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const data = await api.postForm("/auth/profile-image", formData);
-      setProfileImage(data.url);
-      enqueueSnackbar("Image uploaded!", { variant: "success" });
+      uploadProfileImageMutation.mutate(formData, {
+        onSuccess: (data) => {
+          setProfileImage(data.url);
+          enqueueSnackbar("Image uploaded!", { variant: "success" });
+        },
+        onError: (err) => {
+          enqueueSnackbar(err.message, { variant: "error" });
+        },
+        onSettled: () => {
+          setUploading(false);
+        },
+      });
     } catch (err) {
       enqueueSnackbar(err.message, { variant: "error" });
-    } finally {
       setUploading(false);
     }
   };

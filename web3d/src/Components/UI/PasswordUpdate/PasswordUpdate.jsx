@@ -3,13 +3,13 @@ import { enqueueSnackbar } from "notistack";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import InputField from "../../Input/InputField";
-import api from "../../../api/client";
+import { useUpdatePassword } from "../../../Hooks/mutations/useAuthMutations";
 import { useUser } from "../../../context/UserContext";
 
 const UpdatePassword = ({ handleCloseModal }) => {
-  const [loading, setLoading] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
   const { user } = useUser();
+  const updatePasswordMutation = useUpdatePassword();
 
   const formik = useFormik({
     initialValues: {
@@ -30,23 +30,25 @@ const UpdatePassword = ({ handleCloseModal }) => {
     }),
 
     onSubmit: async (values) => {
-      setLoading(true);
-      try {
-        await api.put(`/auth/user/${user.id}`, {
-          password: values.password,
-          newPassword: values.newPassword,
-        });
-        enqueueSnackbar("Password updated successfully!", {
-          variant: "success",
-        });
-        handleCloseModal();
-      } catch (error) {
-        enqueueSnackbar(error.message || "Update failed", {
-          variant: "error",
-        });
-      } finally {
-        setLoading(false);
-      }
+      updatePasswordMutation.mutate(
+        {
+          current_password: values.password,
+          new_password: values.newPassword,
+        },
+        {
+          onSuccess: () => {
+            enqueueSnackbar("Password updated successfully!", {
+              variant: "success",
+            });
+            handleCloseModal();
+          },
+          onError: (error) => {
+            enqueueSnackbar(error.message || "Update failed", {
+              variant: "error",
+            });
+          },
+        }
+      );
     },
   });
 
@@ -95,9 +97,9 @@ const UpdatePassword = ({ handleCloseModal }) => {
         <button
           type="submit"
           className="w-full bg-blue-500 text-white p-2 rounded-md"
-          disabled={loading}
+          disabled={updatePasswordMutation.isPending}
         >
-          {loading ? "Updating..." : "Update Password"}
+          {updatePasswordMutation.isPending ? "Updating..." : "Update Password"}
         </button>
       </form>
     </div>

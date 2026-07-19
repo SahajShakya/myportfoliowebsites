@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useDropzone } from "react-dropzone";
-import { FaFilePdf, FaTimes, FaImage } from "react-icons/fa";
+import { FaFilePdf, FaTimes, FaImage, FaVideo } from "react-icons/fa";
 
 export default function DraggableUpload({
   onFilesChange,
@@ -11,7 +11,10 @@ export default function DraggableUpload({
   required = false,
   disabled = false,
   hidePreviews = false,
-  accept = { "image/*": [".jpeg", ".jpg", ".png", ".gif", ".webp"] },
+  accept = {
+    "image/*": [".jpeg", ".jpg", ".png", ".gif", ".webp"],
+    "video/*": [".mp4", ".webm", ".mov", ".avi"],
+  },
   shape = "card",
 }) {
   const [newFiles, setNewFiles] = useState([]);
@@ -23,7 +26,7 @@ export default function DraggableUpload({
     const urls = {};
     newFiles.forEach((f) => {
       if (f._previewUrl) urls[f.id] = f._previewUrl;
-      else if (f.type?.startsWith("image/")) {
+      else if (f.type?.startsWith("image/") || f.type?.startsWith("video/")) {
         urls[f.id] = URL.createObjectURL(f);
       }
     });
@@ -82,24 +85,25 @@ export default function DraggableUpload({
       if (newFiles.length + existingFiles.length >= maxFiles) return;
       const items = e.clipboardData?.items;
       if (!items) return;
-      const imageFiles = [];
+      const mediaFiles = [];
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
-        if (item.type?.startsWith("image/")) {
+        if (item.type?.startsWith("image/") || item.type?.startsWith("video/")) {
           const blob = item.getAsFile();
           if (blob) {
+            const ext = blob.type.split("/")[1] || "bin";
             const named = new File(
               [blob],
-              `paste-${Date.now()}.${blob.type.split("/")[1]}`,
+              `paste-${Date.now()}.${ext}`,
               { type: blob.type },
             );
-            imageFiles.push(named);
+            mediaFiles.push(named);
           }
         }
       }
-      if (imageFiles.length > 0) {
+      if (mediaFiles.length > 0) {
         e.preventDefault();
-        addFiles(imageFiles);
+        addFiles(mediaFiles);
       }
     };
     document.addEventListener("paste", handler);
@@ -109,7 +113,7 @@ export default function DraggableUpload({
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept,
-    maxSize: 10 * 1024 * 1024,
+    maxSize: 100 * 1024 * 1024,
     maxFiles: maxFiles - newFiles.length - existingFiles.length,
     disabled: disabled || newFiles.length + existingFiles.length >= maxFiles,
     multiple: maxFiles > 1,
@@ -119,6 +123,14 @@ export default function DraggableUpload({
     if (f.type) return f.type.startsWith("image/");
     if (typeof f === "string") {
       return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(f);
+    }
+    return false;
+  };
+
+  const isVideoFile = (f) => {
+    if (f.type) return f.type.startsWith("video/");
+    if (typeof f === "string") {
+      return /\.(mp4|webm|mov|avi)$/i.test(f);
     }
     return false;
   };
@@ -181,12 +193,15 @@ export default function DraggableUpload({
             const name = isExistingUrl(f)
               ? f.split("/").pop()
               : f.name || f.original_name || "file";
+            const isVid = isExistingUrl(f) ? isVideoFile(f) : isVideoFile(f);
+            const isImg = isExistingUrl(f) ? isImageFile(f) : isImageFile(f.type || f);
             return (
               <PreviewCard
                 key={`existing-${idx}`}
                 url={url}
                 name={name}
-                isImage={isExistingUrl(f) ? isImageFile(f) : isImageFile(f.type || f)}
+                isImage={isImg}
+                isVideo={isVid}
                 onRemove={() => onRemoveExisting?.(f, idx)}
                 badge="Existing"
                 shape={shape}
@@ -200,6 +215,7 @@ export default function DraggableUpload({
               url={previews[f.id]}
               name={f.name}
               isImage={isImageFile(f)}
+              isVideo={isVideoFile(f)}
               onRemove={() => removeNew(f.id)}
               badge="New"
               shape={shape}
@@ -211,7 +227,7 @@ export default function DraggableUpload({
   );
 }
 
-function PreviewCard({ url, name, isImage, onRemove, badge, shape = "card" }) {
+function PreviewCard({ url, name, isImage, isVideo, onRemove, badge, shape = "card" }) {
   const sizeClasses = {
     circle: "w-20 h-20 rounded-full",
     rect: "w-32 h-20 rounded-lg",
@@ -222,7 +238,19 @@ function PreviewCard({ url, name, isImage, onRemove, badge, shape = "card" }) {
 
   return (
     <div className="relative group">
-      {isImage && url ? (
+      {isVideo && url ? (
+        <div className={`${size} relative border border-gray-200 overflow-hidden`}>
+          <video
+            src={url}
+            className="w-full h-full object-cover"
+            muted
+            preload="metadata"
+          />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+            <FaVideo className="text-white text-xl drop-shadow-lg" />
+          </div>
+        </div>
+      ) : isImage && url ? (
         <img
           src={url}
           alt={name}

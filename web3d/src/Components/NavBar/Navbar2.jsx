@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
 import { FiChevronDown, FiMenu, FiChevronUp, FiX } from "react-icons/fi";
 import { AnimatePresence, motion } from "framer-motion";
@@ -12,7 +13,7 @@ const Navbar = ({ tabs, token }) => {
 
   // Check the window width on resize to determine if it's mobile
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth <= 768); // Assuming 768px as the breakpoint for mobile
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
     checkMobile(); // Initial check
     window.addEventListener("resize", checkMobile); // Add resize listener
 
@@ -98,9 +99,9 @@ const Navbar = ({ tabs, token }) => {
       )}
 
       {/* Only show the Simple Navbar on Mobile when menu is open */}
-      {isMobile && menuOpen && (
+      {isMobile && menuOpen && createPortal(
         <div
-          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+          className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm"
           onClick={() => setMenuOpen(false)}
           ref={menuRef}
         >
@@ -109,7 +110,7 @@ const Navbar = ({ tabs, token }) => {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="absolute right-0 top-0 h-full w-[280px] bg-white shadow-2xl"
+            className="absolute right-0 top-0 flex flex-col h-full w-[280px] bg-white shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <SimpleNavbar
@@ -122,7 +123,8 @@ const Navbar = ({ tabs, token }) => {
               currentPath={location.pathname}
             />
           </motion.div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -279,9 +281,8 @@ const Tab = ({
 
   return (
     <li
-      onMouseEnter={handleMouseEnter} // Set hover state when tab is hovered
-      onMouseLeave={handleMouseLeave} // Reset hover state when mouse leaves tab
-      onClick={() => handleSetSelected(tab)} // Set selected tab
+      onMouseEnter={handleMouseEnter}
+      onClick={() => handleSetSelected(tab)}
       className={`relative z-10 block cursor-pointer px-2 py-1.5 text-[11px] sm:px-2.5 sm:text-xs md:px-3 md:py-2 lg:px-4 lg:py-2 lg:text-xs ${
         hovered === tab || selected === tab
           ? "text-red-500 bg-gray-200 rounded-full"
@@ -297,15 +298,17 @@ const Tab = ({
       )}
 
       {/* Show dropdown if the tab has a dropdown and is hovered */}
-      {hasDropdown && (
+      {hasDropdown && hovered === tab && (
+        <div
+          className="absolute left-0 z-20 w-52"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
         <motion.div
           initial={{ opacity: 0, y: -10 }}
-          animate={{
-            opacity: hovered === tab ? 1 : 0,
-            y: hovered === tab ? 0 : -10,
-          }}
-          transition={{ duration: 0.3 }}
-          className="absolute left-0 z-20 mt-2 bg-white rounded-md shadow-lg w-52"
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.15 }}
+          className="bg-white rounded-md shadow-lg"
         >
           {/* Tab Name Line (Background black) */}
           <div className="px-3 py-1.5 text-sm font-semibold text-white bg-black">
@@ -326,6 +329,7 @@ const Tab = ({
             ))}
           </ul>
         </motion.div>
+        </div>
       )}
       {/* Chevron icon */}
       {hasDropdown && (

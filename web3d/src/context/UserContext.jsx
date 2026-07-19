@@ -12,50 +12,23 @@ export const useUser = () => {
 };
 
 export const UserProvider = ({ children }) => {
-  const [user, setUser] = useState({
-    name: "",
-    email: "",
-    roleId: "",
-    role: "",
-  });
-
-  const { logout: authLogout, user: authUser } = useAuthContext();
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch {
-        localStorage.removeItem("user");
-      }
-    }
-  }, []);
+  const [user, setUser] = useState({});
+  const { user: authUser } = useAuthContext();
 
   useEffect(() => {
     if (authUser) {
-      setUser((prev) => ({ ...prev, ...authUser }));
+      setUser(authUser);
+    } else {
+      setUser({});
     }
   }, [authUser]);
 
   const addData = (userData) => {
     setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData));
-  };
-
-  const handleLogout = async () => {
-    await authLogout();
-    addData({
-      name: "",
-      email: "",
-      roleId: "",
-      role: "",
-    });
-    localStorage.removeItem("user");
   };
 
   return (
-    <UserContext.Provider value={{ user, addData, handleLogout }}>
+    <UserContext.Provider value={{ user, addData }}>
       {children}
     </UserContext.Provider>
   );

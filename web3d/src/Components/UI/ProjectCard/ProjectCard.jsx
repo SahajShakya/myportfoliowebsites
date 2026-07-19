@@ -2,7 +2,8 @@ import { motion } from "framer-motion";
 import { fadeIn } from "../../../utils/motion";
 import React from "react";
 import { Tilt } from "react-tilt";
-import { Link } from "react-router-dom"; // Import Link for routing
+import { Link } from "react-router-dom";
+import MediaRenderer from "../MediaRenderer/MediaRenderer";
 
 const ProjectCard = ({
   index,
@@ -22,15 +23,14 @@ const ProjectCard = ({
           scale: 1,
           speed: 450,
         }}
-        className="bg-tertiary p-5 rounded-2xl w-full h-[450px] flex flex-col" // Consistent height across all cards
+        className="bg-tertiary p-5 rounded-2xl w-full h-[450px] flex flex-col"
       >
         <Link to={`/${route}/${index}`} className="flex flex-col h-full">
           <div className="relative w-full h-[220px] flex-shrink-0">
-            {/* Fixed size image container */}
-            <img
+            <MediaRenderer
               src={icons.publicUrl}
               alt="project_image"
-              className="w-full h-full object-cover rounded-2xl" // Ensure image fits the container
+              className="w-full h-full object-cover rounded-2xl"
             />
             <div className="absolute inset-0 flex justify-end m-3 card-img_hover">
               <div

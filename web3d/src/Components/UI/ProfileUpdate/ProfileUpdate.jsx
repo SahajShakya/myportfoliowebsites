@@ -3,13 +3,13 @@ import InputField from "../../Input/InputField";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { enqueueSnackbar } from "notistack";
-import api from "../../../api/client";
+import { useUpdateProfile } from "../../../Hooks/mutations/useAuthMutations";
 import { useUser } from "../../../context/UserContext";
 
 const ProfileUpdate = ({ handleCloseModal }) => {
   const [focusedField, setFocusedField] = useState(null);
-  const [loading, setLoading] = useState(false);
   const { user } = useUser();
+  const updateProfileMutation = useUpdateProfile();
 
   const formik = useFormik({
     enableReinitialize: true,
@@ -20,20 +20,22 @@ const ProfileUpdate = ({ handleCloseModal }) => {
       name: Yup.string().required("Name is required"),
     }),
     onSubmit: async (values) => {
-      setLoading(true);
-      try {
-        await api.put(`/auth/user/${user.id}`, { name: values.name });
-        enqueueSnackbar("Profile updated successfully!", {
-          variant: "success",
-        });
-        handleCloseModal();
-      } catch (error) {
-        enqueueSnackbar("Update failed. Please try again.", {
-          variant: "error",
-        });
-      } finally {
-        setLoading(false);
-      }
+      updateProfileMutation.mutate(
+        { name: values.name, email: user?.email || "" },
+        {
+          onSuccess: () => {
+            enqueueSnackbar("Profile updated successfully!", {
+              variant: "success",
+            });
+            handleCloseModal();
+          },
+          onError: () => {
+            enqueueSnackbar("Update failed. Please try again.", {
+              variant: "error",
+            });
+          },
+        }
+      );
     },
   });
 
@@ -55,9 +57,9 @@ const ProfileUpdate = ({ handleCloseModal }) => {
         <button
           type="submit"
           className="mt-4 p-2 bg-blue-500 text-white rounded-md"
-          disabled={loading}
+          disabled={updateProfileMutation.isPending}
         >
-          {loading ? "Updating..." : "Update Profile"}
+          {updateProfileMutation.isPending ? "Updating..." : "Update Profile"}
         </button>
       </form>
     </div>

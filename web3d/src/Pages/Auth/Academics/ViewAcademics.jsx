@@ -1,64 +1,46 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
 import { useSnackbar } from "notistack";
 import AddAcademics from "./AddAcademics";
 import Modal from "../../../Components/UI/Modal/Modal";
 import { deleteFilesFromSupabase } from "../../../api/upload";
-import api from "../../../api/client";
+import { useAcademicsQuery } from "../../../Hooks/options/useAcademicsQuery";
+import { useDeleteAcademic } from "../../../Hooks/mutations/useAcademicsMutations";
 
 const ViewAcademics = () => {
-  const [academics, setAcademics] = useState([]);
-  const navigate = useNavigate();
+  const { data: academics = [] } = useAcademicsQuery();
+  const deleteMutation = useDeleteAcademic();
   const { enqueueSnackbar } = useSnackbar();
   const [modal, setModal] = useState(false);
   const [editData, setEditData] = useState(null);
-  const [isEdit, setIsEdit] = useState(false);
 
-  useEffect(() => {
-    const fetchAcademics = async () => {
-      try {
-        const data = await api.get("/academics");
-        const academicList = (data.data || []).map((item) => ({
-          ...item,
-          id: String(item.id),
-        }));
-        academicList.sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
-        setAcademics(academicList);
-        setIsEdit(false);
-      } catch (error) {
-        console.error("Error fetching academics: ", error);
-      }
-    };
-
-    fetchAcademics();
-  }, [isEdit]);
+  const sortedAcademics = [...academics]
+    .map((item) => ({ ...item, id: String(item.id) }))
+    .sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
 
   const handleEdit = (id) => {
-    const academic = academics.find((item) => String(item.id) === String(id));
+    const academic = sortedAcademics.find((item) => String(item.id) === String(id));
     setEditData(academic);
     setModal(true);
   };
 
-  const handleEditSuccess = () => {
-    setModal(false);
-    setIsEdit(true);
-  };
+  const handleEditSuccess = () => setModal(false);
 
   const handleDelete = async (id) => {
     try {
-      const academic = academics.find((item) => String(item.id) === String(id));
+      const academic = sortedAcademics.find((item) => String(item.id) === String(id));
       if (academic && academic.icons) {
         await deleteFilesFromSupabase(academic.icons);
       }
-      await api.delete(`/academics/${id}`);
-      setAcademics(academics.filter((a) => String(a.id) !== String(id)));
-      enqueueSnackbar("Academic data deleted successfully!", {
-        variant: "success",
+      deleteMutation.mutate(id, {
+        onSuccess: () => {
+          enqueueSnackbar("Academic data deleted successfully!", { variant: "success" });
+        },
+        onError: () => {
+          enqueueSnackbar("Failed to delete academic data. Please try again.", { variant: "error" });
+        },
       });
     } catch (error) {
-      enqueueSnackbar("Failed to delete academic data. Please try again.", {
-        variant: "error",
-      });
+      enqueueSnackbar("Failed to delete academic data. Please try again.", { variant: "error" });
     }
   };
 
@@ -88,7 +70,7 @@ const ViewAcademics = () => {
             </tr>
           </thead>
           <tbody>
-            {academics.map((academic) => (
+            {sortedAcademics.map((academic) => (
               <tr key={academic.id} className="border-b hover:bg-gray-50">
                 <td className="px-4 py-3">{academic.title}</td>
                 <td className="px-4 py-3 text-center">
@@ -130,7 +112,7 @@ const ViewAcademics = () => {
       </div>
 
       <div className="md:hidden space-y-4">
-        {academics.map((academic) => (
+        {sortedAcademics.map((academic) => (
           <div key={academic.id} className="bg-white border rounded-lg p-4 shadow-sm">
             <div className="space-y-2 mb-4">
               <div className="flex items-center gap-3">

@@ -1,5 +1,6 @@
+/* eslint-disable no-unused-vars */
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import PropTypes from "prop-types";
 import { motion, useMotionValue, useTransform } from "framer-motion";
 import {
@@ -26,9 +27,14 @@ import { FaXTwitter } from "react-icons/fa6";
 import Navbar from "./Navbar2";
 import NavElement from "../NavLink/NavElement";
 import mypic from "../../assets/mypic.png";
-import api from "../../api/client";
 import { useAuthContext } from "../../context/AuthContext";
 import { useUser } from "../../context/UserContext";
+import { privateAgent } from "../../api/authRequest";
+import { routesName } from "../../constants/routesName";
+import { useProjectsQuery } from "../../Hooks/options/useProjectsQuery";
+import { useAchievementsQuery } from "../../Hooks/options/useAchievementsQuery";
+import { useSocialLinksQuery } from "../../Hooks/options/useSocialLinksQuery";
+import { useCvActiveQuery, useMaterialsUrlQuery } from "../../Hooks/options/useSettingsQuery";
 
 const ICON_MAP = {
   FaGithub: FaGithub,
@@ -56,87 +62,24 @@ const Nav = () => {
   const { user: contextUser, addData } = useUser();
   const location = useLocation();
   const isAuthPage = location.pathname.startsWith("/auth") || location.pathname.startsWith("/admin");
-  const [projects, setProjects] = useState([]);
-  const [Acheivements, setAcheivement] = useState([]);
-  const [socialLinks, setSocialLinks] = useState([]);
   const [profile, setProfile] = useState({});
-  const [activeCv, setActiveCv] = useState(null);
-  const [materialsUrl, setMaterialsUrl] = useState(null);
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const data = await api.get("/projects");
-        const projectsList = data.data || [];
-        const sortedProjects = projectsList.sort(
-          (a, b) => new Date(a.start_date) - new Date(b.start_date)
-        );
-        setProjects(sortedProjects);
-      } catch (error) {
-        console.error("Error fetching projects:", error);
-      }
-    };
-    fetchProjects();
-  }, []);
+  const { data: projectsData } = useProjectsQuery();
+  const { data: achievementsData } = useAchievementsQuery();
+  const { data: socialLinksData } = useSocialLinksQuery();
+  const { data: activeCv } = useCvActiveQuery();
+  const { data: materialsUrlData } = useMaterialsUrlQuery();
 
-  useEffect(() => {
-    const fetchAcheivement = async () => {
-      try {
-        const data = await api.get("/achievements");
-        const achievementsList = data.data || [];
-        setAcheivement(achievementsList);
-      } catch (error) {
-        console.error("Error fetching achievements:", error);
-      }
-    };
-    fetchAcheivement();
-  }, []);
-
-  useEffect(() => {
-    const fetchSocialLinks = async () => {
-      try {
-        const data = await api.get("/auth/social-links");
-        setSocialLinks(data.data || []);
-      } catch (error) {
-        console.error("Error fetching social links:", error);
-      }
-    };
-    fetchSocialLinks();
-  }, []);
-
-  useEffect(() => {
-    const fetchActiveCv = async () => {
-      try {
-        const data = await api.get("/settings/cv-active");
-        if (data.data) {
-          setActiveCv(data.data);
-        }
-      } catch (error) {
-        console.error("Error fetching active CV:", error);
-      }
-    };
-    fetchActiveCv();
-  }, []);
-
-  useEffect(() => {
-    const fetchMaterialsUrl = async () => {
-      try {
-        const data = await api.get("/settings/materials_url");
-        if (data.data?.value) {
-          setMaterialsUrl(data.data.value);
-        }
-      } catch (error) {
-        console.error("Error fetching materials URL:", error);
-      }
-    };
-    fetchMaterialsUrl();
-  }, []);
+  const projects = projectsData || [];
+  const Acheivements = achievementsData || [];
+  const materialsUrl = materialsUrlData?.value || null;
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
         if (authUser?.id) {
-          const data = await api.get(`/auth/user/${authUser.id}`);
+          const response = await privateAgent.get(routesName.AuthRoute({}).user(authUser.id));
+          const data = response.data;
           if (data.user) {
             setProfile(data.user);
             addData({ ...contextUser, ...data.user });
@@ -204,73 +147,50 @@ const Nav = () => {
       linkTo: "https://scholar.google.com/citations?user=TyG1JqoAAAAJ&hl=en",
     },
     ...(!isAdmin ? [{ name: "Academic Works", hasDropdown: false, linkTo: "/academic-projects" }] : []),
+    { name: "Photography", hasDropdown: false, linkTo: "/photography" },
     { name: "About Me", hasDropdown: false, linkTo: "/me" },
     { name: "Contact", hasDropdown: false, linkTo: "/contact" },
   ];
 
   return (
     <motion.div
-      className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between min-h-[44px] px-3 sm:px-4 md:px-6 lg:px-8 py-2 bg-black/30 backdrop-blur-sm"
+      className="absolute top-0 left-0 right-0 z-40 flex items-center justify-between px-3 py-2 sm:px-4 md:px-6 lg:px-8 bg-black/30 backdrop-blur-sm"
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
-      <div className="flex flex-col items-center justify-center">
-        <div className="flex items-center justify-content-center">
-          {profile.profile_image ? (
-            <img
-              src={profile.profile_image}
-              alt={profile.name || "Profile"}
-              className="object-cover w-8 h-8 rounded-full sm:w-9 sm:h-9 md:w-10 md:h-10"
-            />
-          ) : (
-            <img
-              src={mypic}
-              alt="Sahaj Shakya"
-              className="object-cover rounded-full w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9"
-            />
-          )}
-          <div className="ml-2 text-white sm:ml-3 align-content-center align-item-center">
-            <div className="text-sm font-semibold text-black sm:text-base md:text-lg">
-              {profile.name || "Sahaj Shakya"}
-            </div>
-            <div className="flex items-center text-[11px] sm:text-xs md:text-sm">
-              <FaEnvelope className="mr-1 text-blue-500" />
-              <h3 className="text-blue-700">{profile.email || "saz.shakya@gmail.com"}</h3>
-            </div>
-            {profile.phone && (
-              <div className="flex items-center text-[11px] sm:text-xs md:text-sm">
-                <FaPhoneAlt className="mr-1 text-green-400" />
-                <h3 className="text-green-700">{profile.phone}</h3>
-              </div>
-            )}
+      <div className="flex items-center">
+        {profile.profile_image ? (
+          <img
+            src={profile.profile_image}
+            alt={profile.name || "Profile"}
+            className="object-cover w-8 h-8 rounded-full sm:w-9 sm:h-9 md:w-10 md:h-10"
+          />
+        ) : (
+          <img
+            src={mypic}
+            alt="Sahaj Shakya"
+            className="object-cover rounded-full w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9"
+          />
+        )}
+        <div className="hidden ml-2 text-white sm:ml-3 sm:block">
+          <div className="text-sm font-semibold text-black sm:text-base md:text-lg">
+            {profile.name || "Sahaj Shakya"}
           </div>
-        </div>
-
-        <div className="flex-row hidden gap-1 md:gap-1 lg:gap-2 md:flex">
-          {socialLinks.map((link) => {
-            const IconComponent = ICON_MAP[link.icon_name];
-            return (
-              <StickyNavLink
-                key={link.id}
-                path={link.url}
-                logo={
-                  IconComponent ? (
-                    <IconComponent size={18} />
-                  ) : (
-                    <span className="text-xs font-bold">
-                      {link.platform.substring(0, 2).toUpperCase()}
-                    </span>
-                  )
-                }
-                name={link.platform}
-              />
-            );
-          })}
+          <div className="flex items-center text-[11px] sm:text-xs md:text-sm">
+            <FaEnvelope className="mr-1 text-blue-500" />
+            <h3 className="text-blue-700">{profile.email || "saz.shakya@gmail.com"}</h3>
+          </div>
+          {profile.phone && (
+            <div className="hidden items-center md:flex text-[11px] sm:text-xs md:text-sm">
+              <FaPhoneAlt className="mr-1 text-green-400" />
+              <h3 className="text-green-700">{profile.phone}</h3>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="z-50 flex-1 mx-4 sm:mx-6 md:mx-8">
+      <div className="flex-1 mx-4 sm:mx-6 md:mx-8">
         <Navbar tabs={tabs} token={token} />
       </div>
 
@@ -285,12 +205,12 @@ const Nav = () => {
                   pathName="Materials"
                 />
               ) : (
-                <a
-                  href="/admin/dashboard"
+                <Link
+                  to="/admin/dashboard"
                   className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition bg-white border border-black rounded-full hover:bg-gray-100"
                 >
                   Dashboard
-                </a>
+                </Link>
               )
             )}
             {!isAdmin && activeCv && (

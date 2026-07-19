@@ -3,31 +3,17 @@ import {
   VerticalTimelineElement,
 } from "react-vertical-timeline-component";
 import "react-vertical-timeline-component/style.min.css";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import { textVariant } from "../../../utils/motion";
 import { styles } from "../../../styles";
-import api from "../../../api/client";
+import { useJourneyQuery } from "../../../Hooks/options/useJourneyQuery";
 
 const Journey = () => {
-  const [journey, setJourney] = useState([]);
-
-  useEffect(() => {
-    const fetchJourney = async () => {
-      try {
-        const data = await api.get("/journey");
-        const journeyList = data.data || [];
-        journeyList.sort(
-          (a, b) => new Date(a.start_date) - new Date(b.start_date)
-        );
-        setJourney(journeyList);
-      } catch (error) {
-        console.error("Error fetching journey: ", error);
-      }
-    };
-
-    fetchJourney();
-  }, []);
+  const { data: journeyData } = useJourneyQuery();
+  const journey = (journeyData || []).sort(
+    (a, b) => new Date(a.start_date) - new Date(b.start_date)
+  );
 
   return (
     <section className="max-container px-4 sm:px-6 lg:px-8 py-6">

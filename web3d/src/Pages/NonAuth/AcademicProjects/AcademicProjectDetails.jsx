@@ -5,7 +5,8 @@ import { styles } from "../../../styles";
 import { useParams } from "react-router-dom";
 import { Tilt } from "react-tilt";
 import React from "react";
-import api from "../../../api/client";
+import { privateAgent } from "../../../api/authRequest";
+import { routesName } from "../../../constants/routesName";
 
 const DetailCard = ({ index, name, image }) => {
   return (
@@ -40,7 +41,8 @@ const AcademicProjectDetails = () => {
   useEffect(() => {
     const fetchDetails = async () => {
       try {
-        const data = await api.get(`/academic_projects/${id}/details`);
+        const response = await privateAgent.get(routesName.AcademicProjectsRoute({ id }).details);
+        const data = response.data;
         setDetails(data.data || []);
       } catch (error) {
         console.error("Error fetching academic project details:", error);

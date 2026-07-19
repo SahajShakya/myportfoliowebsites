@@ -1,12 +1,12 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FiUser } from "react-icons/fi";
-import NavLink from "./NavLink"; // Import the NavLink component
-import Modal from "../UI/Modal/Modal"; // Import the Modal component
-import FlyoutLink from "./FlyoutLink"; // Import FlyoutLink
-// import { getAuth, signOut } from "firebase/auth";
+import NavLink from "./NavLink";
+import Modal from "../UI/Modal/Modal";
+import FlyoutLink from "./FlyoutLink";
 import ProfileUpdate from "../UI/ProfileUpdate/ProfileUpdate";
-import { useUser } from "../../context/UserContext";
+import { useAuthContext } from "../../context/AuthContext";
 import PasswordUpdate from "../UI/PasswordUpdate/PasswordUpdate";
 
 const NavElement = ({ token, path, pathName, logo }) => {
@@ -14,20 +14,20 @@ const NavElement = ({ token, path, pathName, logo }) => {
   const [modalContent, setModalContent] = useState(null);
   const [isDropdownVisible, setDropdownVisible] = useState(false);
   const [isCounting, setIsCounting] = useState(false);
-  const { handleLogout } = useUser();
+  const { logout } = useAuthContext();
   const navigate = useNavigate();
 
   const handleOpenModal = (type) => {
     setModalContent(type);
-    setDropdownVisible(false); // Close the dropdown when a modal is triggered
+    setDropdownVisible(false);
   };
 
   const handleCloseModal = () => {
     setModalContent(null);
   };
 
-  const handleLogoutUser = () => {
-    handleLogout();
+  const handleLogoutUser = async () => {
+    await logout();
     navigate("/vitra");
     handleCloseModal();
   };
@@ -45,6 +45,14 @@ const NavElement = ({ token, path, pathName, logo }) => {
               logo={logo}
             />
           ) : null
+        ) : path ? (
+          <NavLink
+            path={Array.isArray(path) ? path[0] : path}
+            name={pathName}
+            isActive={location.pathname === (Array.isArray(path) ? path[0] : path)}
+            location={location.pathname}
+            logo={logo}
+          />
         ) : (
           <>
             {/* User Dropdown */}
@@ -59,52 +67,55 @@ const NavElement = ({ token, path, pathName, logo }) => {
         )}
       </ul>
 
-      {/* Modals */}
-      {modalContent === "update" && (
-        <Modal
-          title="Update Profile"
-          onClose={() => {
-            if (!isCounting) {
-              handleCloseModal();
-              setIsCounting(false);
-            }
-          }}
-        >
-          <ProfileUpdate
-            handleCloseModal={handleCloseModal}
-            isCounting={isCounting}
-            setIsCounting={setIsCounting}
-          />
-        </Modal>
-      )}
+      {createPortal(
+        <>
+          {modalContent === "update" && (
+            <Modal
+              title="Update Profile"
+              onClose={() => {
+                if (!isCounting) {
+                  handleCloseModal();
+                  setIsCounting(false);
+                }
+              }}
+            >
+              <ProfileUpdate
+                handleCloseModal={handleCloseModal}
+                isCounting={isCounting}
+                setIsCounting={setIsCounting}
+              />
+            </Modal>
+          )}
 
-      {/* Modals */}
-      {modalContent === "updatePassword" && (
-        <Modal title="Update Password" onClose={handleCloseModal}>
-          <PasswordUpdate handleCloseModal={handleCloseModal} />
-        </Modal>
-      )}
+          {modalContent === "updatePassword" && (
+            <Modal title="Update Password" onClose={handleCloseModal}>
+              <PasswordUpdate handleCloseModal={handleCloseModal} />
+            </Modal>
+          )}
 
-      {modalContent === "logout" && (
-        <Modal title="Logout" onClose={handleCloseModal} small>
-          <>
-            <p>Are you sure you want to logout</p>
-            <div className="flex justify-center gap-4">
-              <button
-                onClick={handleLogoutUser}
-                className="mt-4 p-2 bg-blue-500 text-white rounded-md w-20"
-              >
-                Yes
-              </button>
-              <button
-                onClick={handleCloseModal}
-                className="mt-4 p-2 bg-red-500 text-white rounded-md w-20"
-              >
-                No
-              </button>
-            </div>
-          </>
-        </Modal>
+          {modalContent === "logout" && (
+            <Modal title="Logout" onClose={handleCloseModal} small>
+              <>
+                <p>Are you sure you want to logout</p>
+                <div className="flex justify-center gap-4">
+                  <button
+                    onClick={handleLogoutUser}
+                    className="mt-4 p-2 bg-blue-500 text-white rounded-md w-20"
+                  >
+                    Yes
+                  </button>
+                  <button
+                    onClick={handleCloseModal}
+                    className="mt-4 p-2 bg-red-500 text-white rounded-md w-20"
+                  >
+                    No
+                  </button>
+                </div>
+              </>
+            </Modal>
+          )}
+        </>,
+        document.body
       )}
     </nav>
   );

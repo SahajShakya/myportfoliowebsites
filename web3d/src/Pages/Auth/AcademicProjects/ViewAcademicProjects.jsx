@@ -1,52 +1,36 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useSnackbar } from "notistack";
 import AddAcademicProjects from "./AddAcademicProjects";
 import Modal from "../../../Components/UI/Modal/Modal";
-import api from "../../../api/client";
+import { useAcademicProjectsQuery } from "../../../Hooks/options/useAcademicProjectsQuery";
+import { useDeleteAcademicProject } from "../../../Hooks/mutations/useAcademicProjectsMutations";
 
 const ViewAcademicProjects = () => {
-  const [projects, setProjects] = useState([]);
+  const { data: projects = [] } = useAcademicProjectsQuery();
+  const deleteMutation = useDeleteAcademicProject();
   const { enqueueSnackbar } = useSnackbar();
   const [modal, setModal] = useState(false);
   const [editData, setEditData] = useState(null);
-  const [isEdit, setIsEdit] = useState(false);
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const data = await api.get("/academic_projects");
-        const list = (data.data || []).map((item) => ({
-          ...item,
-          id: String(item.id),
-        }));
-        setProjects(list);
-        setIsEdit(false);
-      } catch (error) {
-        console.error("Error fetching academic projects:", error);
-      }
-    };
-    fetchProjects();
-  }, [isEdit]);
+  const projectList = projects.map((item) => ({ ...item, id: String(item.id) }));
 
   const handleEdit = (id) => {
-    const project = projects.find((item) => String(item.id) === String(id));
+    const project = projectList.find((item) => String(item.id) === String(id));
     setEditData(project);
     setModal(true);
   };
 
-  const handleEditSuccess = () => {
-    setModal(false);
-    setIsEdit(true);
-  };
+  const handleEditSuccess = () => setModal(false);
 
-  const handleDelete = async (id) => {
-    try {
-      await api.delete(`/academic_projects/${id}`);
-      setProjects(projects.filter((p) => String(p.id) !== String(id)));
-      enqueueSnackbar("Academic project deleted!", { variant: "success" });
-    } catch (error) {
-      enqueueSnackbar("Failed to delete.", { variant: "error" });
-    }
+  const handleDelete = (id) => {
+    deleteMutation.mutate(id, {
+      onSuccess: () => {
+        enqueueSnackbar("Academic project deleted!", { variant: "success" });
+      },
+      onError: () => {
+        enqueueSnackbar("Failed to delete.", { variant: "error" });
+      },
+    });
   };
 
   const handleCloseModal = () => setModal(false);
@@ -74,7 +58,7 @@ const ViewAcademicProjects = () => {
             </tr>
           </thead>
           <tbody>
-            {projects.map((project) => (
+            {projectList.map((project) => (
               <tr key={project.id} className="border-b hover:bg-gray-50">
                 <td className="px-4 py-3">{project.name}</td>
                 <td className="px-4 py-3 text-center">
@@ -110,7 +94,7 @@ const ViewAcademicProjects = () => {
       </div>
 
       <div className="md:hidden space-y-4">
-        {projects.map((project) => (
+        {projectList.map((project) => (
           <div key={project.id} className="bg-white border rounded-lg p-4 shadow-sm">
             <div className="space-y-2 mb-4">
               <div className="flex items-center gap-3">

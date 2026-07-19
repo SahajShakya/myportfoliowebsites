@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import {
   VerticalTimeline,
@@ -8,7 +8,7 @@ import "react-vertical-timeline-component/style.min.css";
 import { styles } from "../../../styles";
 import { SectionWrapper } from "../../../hoc";
 import { textVariant } from "../../../utils/motion";
-import api from "../../../api/client";
+import { useAcademicsQuery } from "../../../Hooks/options/useAcademicsQuery";
 
 const ExperienceCard = ({ education }) => {
   const startYear = new Date(education.start_date).getFullYear();
@@ -78,24 +78,10 @@ const ExperienceCard = ({ education }) => {
 };
 
 const Academics = () => {
-  const [academics, setAcademics] = useState([]);
-
-  useEffect(() => {
-    const fetchAcademics = async () => {
-      try {
-        const data = await api.get("/academics");
-        const academicList = data.data || [];
-        academicList.sort(
-          (a, b) => new Date(a.start_date) - new Date(b.start_date)
-        );
-        setAcademics(academicList);
-      } catch (error) {
-        console.error("Error fetching academics: ", error);
-      }
-    };
-
-    fetchAcademics();
-  }, []);
+  const { data: academicsData } = useAcademicsQuery();
+  const academics = (academicsData || []).sort(
+    (a, b) => new Date(a.start_date) - new Date(b.start_date)
+  );
 
   return (
     <div className="px-4 py-6 sm:px-6 lg:px-8">

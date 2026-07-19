@@ -1,3 +1,4 @@
+
 import { Outlet, Link } from "react-router-dom";
 import { useState } from "react";
 import Nav from "../../Components/NavBar/Nav";
@@ -16,6 +17,7 @@ import {
   FaShareAlt,
   FaBook,
   FaQuoteLeft,
+  FaCamera,
 } from "react-icons/fa";
 
 const AuthLayout = () => {
@@ -28,9 +30,11 @@ const AuthLayout = () => {
     projects: false,
     "academic-projects": false,
     testimonials: false,
+    photography: false,
     settings: false,
   });
 
+  /** @param {string} tab */
   const handleTabClick = (tab) => {
     setActiveTab(tab);
   };
@@ -39,9 +43,10 @@ const AuthLayout = () => {
     setIsCollapsed(!isCollapsed);
   };
 
+  /** @param {string} tab */
   const toggleDropdown = (tab) => {
     setDropdowns((prevState) => ({
-      ...Object.keys(prevState).reduce((acc, key) => {
+      ...Object.keys(prevState).reduce((/** @type {Record<string, boolean>} */ acc, key) => {
         acc[key] = key === tab ? !prevState[key] : prevState[key];
         return acc;
       }, {}),
@@ -49,24 +54,26 @@ const AuthLayout = () => {
   };
 
   const routes = [
-    { name: "academics", label: "Academics", icon: FaUser },
-    { name: "journey", label: "Journey", icon: FaCogs },
-    { name: "projects", label: "Projects", icon: FaProjectDiagram },
-    { name: "achievements", label: "Achievements", icon: FaAward },
-    { name: "academic-projects", label: "Academic Projects", icon: FaBook },
-    { name: "testimonials", label: "Testimonials", icon: FaQuoteLeft },
+    { name: "academics", label: "Academics", icon: /** @type {React.ComponentType<{className?: string}>} */ (FaUser) },
+    { name: "journey", label: "Journey", icon: /** @type {React.ComponentType<{className?: string}>} */ (FaCogs) },
+    { name: "projects", label: "Projects", icon: /** @type {React.ComponentType<{className?: string}>} */ (FaProjectDiagram) },
+    { name: "achievements", label: "Achievements", icon: /** @type {React.ComponentType<{className?: string}>} */ (FaAward) },
+    { name: "academic-projects", label: "Academic Projects", icon: /** @type {React.ComponentType<{className?: string}>} */ (FaBook) },
+    { name: "testimonials", label: "Testimonials", icon: /** @type {React.ComponentType<{className?: string}>} */ (FaQuoteLeft) },
+    { name: "photography", label: "Photography", icon: /** @type {React.ComponentType<{className?: string}>} */ (FaCamera) },
   ];
 
   const settingsItems = [
-    { name: "profile", label: "Profile Settings", path: "/auth/profile", icon: FaUserCircle },
-    { name: "password", label: "Change Password", path: "/auth/password", icon: FaKey },
-    { name: "social-links", label: "Social Links", path: "/auth/social-links", icon: FaShareAlt },
+    { name: "profile", label: "Profile Settings", path: "/auth/profile", icon: /** @type {React.ComponentType<{className?: string}>} */ (FaUserCircle) },
+    { name: "password", label: "Change Password", path: "/auth/password", icon: /** @type {React.ComponentType<{className?: string}>} */ (FaKey) },
+    { name: "social-links", label: "Social Links", path: "/auth/social-links", icon: /** @type {React.ComponentType<{className?: string}>} */ (FaShareAlt) },
   ];
 
+  /** @param {string} section */
   const generateDropdownItems = (section) => (
     <ul className="mt-2 ml-4 space-y-2">
       <li>
-        <Link to={section === "academics" || section === "academic-projects" ? `/auth/${section}/` : section === "testimonials" ? `/auth/${section}/create` : `/auth/${section}/create`} className="block">
+        <Link to={section === "academics" || section === "academic-projects" ? `/auth/${section}/` : section === "testimonials" || section === "photography" ? `/auth/${section}/create` : `/auth/${section}/create`} className="block">
           Create
         </Link>
       </li>
@@ -76,7 +83,7 @@ const AuthLayout = () => {
   return (
     <>
       <Nav />
-      <div className="flex h-[calc(100vh-44px)] mt-[44px]">
+      <div className="flex h-[calc(100vh-80px)] mt-[100px]">
         <div
           className={`transition-all duration-300 ${
             isCollapsed
@@ -117,7 +124,7 @@ const AuthLayout = () => {
               >
                 <div className="flex items-center justify-between">
                   <Link
-                    to={name === "academics" || name === "journey" || name === "projects" || name === "achievements" || name === "academic-projects" ? `/auth/${name}/` : name === "testimonials" ? `/auth/${name}` : `/auth/${name}/view`}
+                    to={name === "academics" || name === "journey" || name === "projects" || name === "achievements" || name === "academic-projects" || name === "photography" ? `/auth/${name}/` : name === "testimonials" ? `/auth/${name}` : `/auth/${name}/view`}
                     className={`block ${isCollapsed ? "text-center" : ""}`}
                   >
                     {isCollapsed ? (

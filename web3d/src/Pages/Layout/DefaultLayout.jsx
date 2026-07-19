@@ -6,7 +6,7 @@ const DefaultLayout = () => {
   return (
     <div className="relative bg-gray-200">
       <Nav />
-      <div className="pt-[44px]">
+      <div className="pt-[80px]">
         <Outlet />
       </div>
     </div>

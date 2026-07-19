@@ -1,35 +1,24 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useFormik } from "formik";
-import api from "../../../api/client";
 import InputField from "../../../Components/Input/InputField";
 import Modal from "../../../Components/UI/Modal/Modal";
 import DraggableUpload from "../../../Components/Upload/DraggableUpload";
 import { useSnackbar } from "notistack";
 import { FaPlus, FaEdit, FaTrash } from "react-icons/fa";
+import { useTestimonialsQuery } from "../../../Hooks/options/useTestimonialsQuery";
+import { useCreateTestimonial, useUpdateTestimonial, useDeleteTestimonial } from "../../../Hooks/mutations/useTestimonialsMutations";
 
 const Testimonials = () => {
-  const [testimonials, setTestimonials] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: testimonials = [], isLoading } = useTestimonialsQuery();
+  const createMutation = useCreateTestimonial();
+  const updateMutation = useUpdateTestimonial();
+  const deleteMutation = useDeleteTestimonial();
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const { enqueueSnackbar } = useSnackbar();
   const [focusedField, setFocusedField] = useState("");
-
-  const fetchTestimonials = async () => {
-    try {
-      const data = await api.get("/testimonials");
-      setTestimonials(data.data || []);
-    } catch (error) {
-      console.error("Error fetching testimonials:", error);
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchTestimonials();
-  }, []);
 
   const formik = useFormik({
     initialValues: {
@@ -38,38 +27,47 @@ const Testimonials = () => {
       designation: "",
       company: "",
     },
-    onSubmit: async (values, { resetForm }) => {
-      try {
-        const formData = new FormData();
-        formData.append("testimonial", values.testimonial);
-        formData.append("name", values.name);
-        formData.append("designation", values.designation);
-        formData.append("company", values.company);
-        if (imageFile) {
-          formData.append("image", imageFile);
-        }
+    onSubmit: (values, { resetForm }) => {
+      const formData = new FormData();
+      formData.append("testimonial", values.testimonial);
+      formData.append("name", values.name);
+      formData.append("designation", values.designation);
+      formData.append("company", values.company);
+      if (imageFile) {
+        formData.append("image", imageFile);
+      }
 
-        if (editingId) {
-          await api.put(`/testimonials/${editingId}`, formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
-          enqueueSnackbar("Testimonial updated!", { variant: "success" });
-        } else {
-          await api.post("/testimonials", formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
-          enqueueSnackbar("Testimonial added!", { variant: "success" });
-        }
-
+      const onSuccess = () => {
         resetForm();
         setShowModal(false);
         setEditingId(null);
         setImageFile(null);
         setImagePreview(null);
-        fetchTestimonials();
-      } catch (error) {
-        console.error("Error saving testimonial:", error);
-        enqueueSnackbar("Error saving testimonial", { variant: "error" });
+      };
+
+      if (editingId) {
+        updateMutation.mutate(
+          { id: editingId, payload: formData },
+          {
+            onSuccess: () => {
+              enqueueSnackbar("Testimonial updated!", { variant: "success" });
+              onSuccess();
+            },
+            onError: () => {
+              enqueueSnackbar("Error saving testimonial", { variant: "error" });
+            },
+          }
+        );
+      } else {
+        createMutation.mutate(formData, {
+          onSuccess: () => {
+            enqueueSnackbar("Testimonial added!", { variant: "success" });
+            onSuccess();
+          },
+          onError: () => {
+            enqueueSnackbar("Error saving testimonial", { variant: "error" });
+          },
+        });
       }
     },
   });
@@ -87,15 +85,16 @@ const Testimonials = () => {
     setShowModal(true);
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = (id) => {
     if (!confirm("Delete this testimonial?")) return;
-    try {
-      await api.delete(`/testimonials/${id}`);
-      setTestimonials((prev) => prev.filter((t) => t.id !== id));
-      enqueueSnackbar("Testimonial deleted!", { variant: "success" });
-    } catch (error) {
-      enqueueSnackbar("Error deleting testimonial", { variant: "error" });
-    }
+    deleteMutation.mutate(id, {
+      onSuccess: () => {
+        enqueueSnackbar("Testimonial deleted!", { variant: "success" });
+      },
+      onError: () => {
+        enqueueSnackbar("Error deleting testimonial", { variant: "error" });
+      },
+    });
   };
 
   const handleImageChange = (files) => {
@@ -122,7 +121,7 @@ const Testimonials = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-6 py-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Testimonials</h1>
         <button
@@ -133,9 +132,8 @@ const Testimonials = () => {
         </button>
       </div>
 
-      {/* Table */}
       <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        {loading ? (
+        {isLoading ? (
           <p className="p-6 text-gray-500">Loading...</p>
         ) : testimonials.length === 0 ? (
           <p className="p-6 text-gray-500">No testimonials yet. Click "Add Testimonial" to create one.</p>
@@ -194,7 +192,6 @@ const Testimonials = () => {
         )}
       </div>
 
-      {/* Modal */}
       {showModal && (
         <Modal
           title={editingId ? "Edit Testimonial" : "Add Testimonial"}

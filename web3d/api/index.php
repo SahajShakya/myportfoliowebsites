@@ -21,6 +21,9 @@ require_once __DIR__ . '/routes/achievements.php';
 require_once __DIR__ . '/routes/testimonials.php';
 require_once __DIR__ . '/routes/settings.php';
 require_once __DIR__ . '/routes/academic_projects.php';
+require_once __DIR__ . '/routes/photography.php';
+require_once __DIR__ . '/routes/contact.php';
+require_once __DIR__ . '/routes/chat.php';
 
 $db = (new Database())->getConnection();
 $method = $_SERVER['REQUEST_METHOD'];
@@ -60,6 +63,15 @@ switch ($resource) {
         break;
     case 'academic_projects':
         handleAcademicProjectsRoutes($method, $segments, $db);
+        break;
+    case 'photography':
+        handlePhotographyRoutes($method, $segments, $db);
+        break;
+    case 'contact':
+        handleContactRoutes($method, $segments, $db);
+        break;
+    case 'chat':
+        handleChatRoutes($method, $segments, $db);
         break;
     default:
         http_response_code(404);

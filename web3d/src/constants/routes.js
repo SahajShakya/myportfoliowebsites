@@ -70,5 +70,12 @@ export const routes = {
     update: (id) => `${API_BASE}/testimonials/${id}`,
     delete: (id) => `${API_BASE}/testimonials/${id}`,
   },
+  photography: {
+    list: `${API_BASE}/photography`,
+    get: (id) => `${API_BASE}/photography/${id}`,
+    create: `${API_BASE}/photography`,
+    update: (id) => `${API_BASE}/photography/${id}`,
+    delete: (id) => `${API_BASE}/photography/${id}`,
+  },
   upload: `${API_BASE}/upload`,
 };

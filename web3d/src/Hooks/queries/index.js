@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import api from "../../api/client";
-import { routes } from "../constants/routes";
+import { routes } from "../../constants/routes";
 
 export const useProfileQuery = (userId) => {
   return useQuery({

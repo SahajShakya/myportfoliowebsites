@@ -6,7 +6,7 @@ import Upload from "../../../Components/Upload/Upload";
 import * as Yup from "yup";
 import { motion } from "framer-motion";
 import { uploadFiles, deleteFilesFromSupabase } from "../../../api/upload";
-import api from "../../../api/client";
+import { useCreateAchievement, useUpdateAchievement } from "../../../Hooks/mutations/useAchievementsMutations";
 import { useSnackbar } from "notistack";
 import { FaPlus, FaTrash } from "react-icons/fa";
 
@@ -28,6 +28,8 @@ const validationSchema = Yup.object({
 const AddAchievements = ({ editData, handleEditSuccess }) => {
   const [editorValue, setEditorValue] = useState(editData?.contents || "");
   const { enqueueSnackbar } = useSnackbar();
+  const createMutation = useCreateAchievement();
+  const updateMutation = useUpdateAchievement();
 
   const buildInitialDetails = () => {
     if (editData?.details && Array.isArray(editData.details) && editData.details.length > 0) {
@@ -100,16 +102,26 @@ const AddAchievements = ({ editData, handleEditSuccess }) => {
         details: detailItems,
       };
 
-      if (editData) {
-        await api.put(`/achievements/${editData.id}`, achievementData);
-        enqueueSnackbar("Achievement updated successfully!", { variant: "success" });
-      } else {
-        await api.post("/achievements", achievementData);
-        enqueueSnackbar("Achievement created successfully!", { variant: "success" });
-      }
+      const onSuccess = () => {
+        enqueueSnackbar(
+          editData ? "Achievement updated successfully!" : "Achievement created successfully!",
+          { variant: "success" }
+        );
+        setSubmitting(false);
+        window.location.reload();
+      };
 
-      setSubmitting(false);
-      window.location.reload();
+      const onError = (error) => {
+        console.error("Error submitting achievement:", error);
+        enqueueSnackbar("Failed to submit achievement. Please try again.", { variant: "error" });
+        setSubmitting(false);
+      };
+
+      if (editData) {
+        updateMutation.mutate({ id: editData.id, payload: achievementData }, { onSuccess, onError });
+      } else {
+        createMutation.mutate(achievementData, { onSuccess, onError });
+      }
     } catch (error) {
       console.error("Error submitting achievement:", error);
       enqueueSnackbar("Failed to submit achievement. Please try again.", { variant: "error" });
@@ -240,7 +252,7 @@ const AddAchievements = ({ editData, handleEditSuccess }) => {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                           <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">Image</label>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Image / Video</label>
                             <Upload
                               name={`details.${index}.image_url`}
                               value={item.image_url || []}
@@ -248,7 +260,7 @@ const AddAchievements = ({ editData, handleEditSuccess }) => {
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">Image Description</label>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Media Description</label>
                             <input
                               type="text"
                               value={item.image_description}

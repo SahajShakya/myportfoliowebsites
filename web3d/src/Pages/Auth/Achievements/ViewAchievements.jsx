@@ -1,53 +1,36 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useSnackbar } from "notistack";
 import AddAchievements from "./AddAchievements";
 import Modal from "../../../Components/UI/Modal/Modal";
-import api from "../../../api/client";
+import { useAchievementsQuery } from "../../../Hooks/options/useAchievementsQuery";
+import { useDeleteAchievement } from "../../../Hooks/mutations/useAchievementsMutations";
 
 const ViewAchievements = () => {
-  const [achievements, setAchievements] = useState([]);
+  const { data: achievements = [] } = useAchievementsQuery();
+  const deleteMutation = useDeleteAchievement();
   const { enqueueSnackbar } = useSnackbar();
   const [modal, setModal] = useState(false);
   const [editData, setEditData] = useState(null);
-  const [isEdit, setIsEdit] = useState(false);
 
-  useEffect(() => {
-    const fetchAchievements = async () => {
-      try {
-        const data = await api.get("/achievements");
-        const achievementsList = (data.data || []).map((item) => ({
-          ...item,
-          id: String(item.id),
-        }));
-        setAchievements(achievementsList);
-        setIsEdit(false);
-      } catch (error) {
-        console.error("Error fetching achievements: ", error);
-      }
-    };
-
-    fetchAchievements();
-  }, [isEdit]);
+  const achievementList = achievements.map((item) => ({ ...item, id: String(item.id) }));
 
   const handleEdit = (id) => {
-    const achievement = achievements.find((item) => String(item.id) === String(id));
+    const achievement = achievementList.find((item) => String(item.id) === String(id));
     setEditData(achievement);
     setModal(true);
   };
 
-  const handleEditSuccess = () => {
-    setModal(false);
-    setIsEdit(true);
-  };
+  const handleEditSuccess = () => setModal(false);
 
-  const handleDelete = async (id) => {
-    try {
-      await api.delete(`/achievements/${id}`);
-      setAchievements(achievements.filter((a) => String(a.id) !== String(id)));
-      enqueueSnackbar("Achievement deleted successfully!", { variant: "success" });
-    } catch (error) {
-      enqueueSnackbar("Failed to delete achievement. Please try again.", { variant: "error" });
-    }
+  const handleDelete = (id) => {
+    deleteMutation.mutate(id, {
+      onSuccess: () => {
+        enqueueSnackbar("Achievement deleted successfully!", { variant: "success" });
+      },
+      onError: () => {
+        enqueueSnackbar("Failed to delete achievement. Please try again.", { variant: "error" });
+      },
+    });
   };
 
   const handleCloseModal = () => setModal(false);
@@ -75,7 +58,7 @@ const ViewAchievements = () => {
             </tr>
           </thead>
           <tbody>
-            {achievements.map((achievement) => (
+            {achievementList.map((achievement) => (
               <tr key={achievement.id} className="border-b hover:bg-gray-50">
                 <td className="px-4 py-3">{achievement.name}</td>
                 <td className="px-4 py-3 text-center">
@@ -111,7 +94,7 @@ const ViewAchievements = () => {
       </div>
 
       <div className="md:hidden space-y-4">
-        {achievements.map((achievement) => (
+        {achievementList.map((achievement) => (
           <div key={achievement.id} className="bg-white border rounded-lg p-4 shadow-sm">
             <div className="space-y-2 mb-4">
               <div className="flex items-center gap-3">

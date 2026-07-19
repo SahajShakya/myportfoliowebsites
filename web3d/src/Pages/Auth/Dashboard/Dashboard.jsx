@@ -1,16 +1,18 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable react/prop-types */
 import React, { useState, useEffect } from "react";
-import { useFormik } from "formik";
-import * as Yup from "yup";
+import { Link } from "react-router-dom";
 import { enqueueSnackbar } from "notistack";
 import { useUser } from "../../../context/UserContext";
-import api from "../../../api/client";
+import { useAuthContext } from "../../../context/AuthContext";
+import { privateAgent } from "../../../api/authRequest";
+import { routesName } from "../../../constants/routesName";
 import DraggableUpload from "../../../Components/Upload/DraggableUpload";
 import {
   FaUser,
   FaEnvelope,
   FaPhone,
   FaFilePdf,
-  FaUpload,
   FaCheckCircle,
   FaEdit,
   FaImage,
@@ -19,125 +21,132 @@ import {
   FaLink,
 } from "react-icons/fa";
 import mypic from "../../../assets/mypic.png";
+import { useCvsQuery } from "../../../Hooks/options/useCvsQuery";
+import { useUploadProfileImage, useUpdateProfile, useUpdateMaterialsUrl } from "../../../Hooks/mutations/useAuthMutations";
+import { useUploadCv, useDeleteCv, useUpdateCv } from "../../../Hooks/mutations/useCvsMutations";
 
-const Dashboard = ({ role }) => {
+const Dashboard = () => {
+  const { user: authUser } = useAuthContext();
   const { user, addData } = useUser();
   const [profile, setProfile] = useState({});
-  const [cvs, setCvs] = useState([]);
-  const [uploading, setUploading] = useState(false);
   const [editingField, setEditingField] = useState(null);
-  const [cvUploading, setCvUploading] = useState(false);
+
+  const { data: cvsData, refetch: refetchCvs } = useCvsQuery();
+  const cvs = cvsData || [];
+
+  const uploadProfileImageMutation = useUploadProfileImage();
+  const updateProfileMutation = useUpdateProfile();
+  const updateMaterialsUrlMutation = useUpdateMaterialsUrl();
+  const uploadCvMutation = useUploadCv();
+  const deleteCvMutation = useDeleteCv();
+  const updateCvMutation = useUpdateCv();
 
   const fetchProfile = async () => {
     try {
-      const data = await api.get(`/auth/user/${user.id}`);
-      if (data.user) setProfile(data.user);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const fetchCvs = async () => {
-    try {
-      const data = await api.get("/auth/cvs");
-      setCvs(data.data || []);
+      const response = await privateAgent.get(routesName.AuthRoute({}).me);
+      const data = response.data;
+      if (data.user) {
+        setProfile(data.user);
+        addData({ ...user, ...data.user });
+      }
     } catch (err) {
       console.error(err);
     }
   };
 
   useEffect(() => {
-    fetchProfile();
-    fetchCvs();
-  }, []);
+    if (authUser?.id) {
+      fetchProfile();
+    }
+  }, [authUser?.id]);
 
   const handleImageUpload = async (files) => {
     const file = files[0];
     if (!file) return;
-    setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const data = await api.postForm("/auth/profile-image", formData);
-      setProfile((prev) => ({ ...prev, profile_image: data.url }));
-      enqueueSnackbar("Profile image updated!", { variant: "success" });
-    } catch (err) {
-      enqueueSnackbar(err.message, { variant: "error" });
-    } finally {
-      setUploading(false);
-    }
+    const formData = new FormData();
+    formData.append("file", file);
+    uploadProfileImageMutation.mutate(formData, {
+      onSuccess: (response) => {
+        const data = response.data;
+        setProfile((prev) => ({ ...prev, profile_image: data.url }));
+        enqueueSnackbar("Profile image updated!", { variant: "success" });
+      },
+      onError: (err) => {
+        enqueueSnackbar(err.message, { variant: "error" });
+      },
+    });
   };
 
   const handleCvUpload = async (files) => {
     const file = files[0];
     if (!file) return;
-    setCvUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("title", file.name.replace(/\.[^.]+$/, ""));
-      formData.append("is_active", cvs.length === 0 ? "true" : "false");
-      const data = await api.postForm("/auth/cvs", formData);
-      setCvs((prev) => [data.data, ...prev]);
-      enqueueSnackbar("CV uploaded!", { variant: "success" });
-    } catch (err) {
-      enqueueSnackbar(err.message, { variant: "error" });
-    } finally {
-      setCvUploading(false);
-    }
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("title", file.name.replace(/\.[^.]+$/, ""));
+    formData.append("is_active", cvs.length === 0 ? "true" : "false");
+    uploadCvMutation.mutate(formData, {
+      onSuccess: () => {
+        refetchCvs();
+        enqueueSnackbar("CV uploaded!", { variant: "success" });
+      },
+      onError: (err) => {
+        enqueueSnackbar(err.message, { variant: "error" });
+      },
+    });
   };
 
   const handleCvDelete = async (id) => {
     if (!confirm("Delete this CV?")) return;
-    try {
-      await api.delete(`/auth/cvs/${id}`);
-      setCvs((prev) => prev.filter((cv) => cv.id !== id));
-      enqueueSnackbar("CV deleted!", { variant: "success" });
-    } catch (err) {
-      enqueueSnackbar(err.message, { variant: "error" });
-    }
+    deleteCvMutation.mutate(id, {
+      onSuccess: () => {
+        enqueueSnackbar("CV deleted!", { variant: "success" });
+      },
+      onError: (err) => {
+        enqueueSnackbar(err.message, { variant: "error" });
+      },
+    });
   };
 
   const handleCvSetActive = async (id) => {
-    try {
-      await api.put(`/auth/cvs/${id}`, { is_active: true });
-      setCvs((prev) =>
-        prev.map((cv) => ({ ...cv, is_active: cv.id === id }))
-      );
-      enqueueSnackbar("Active CV set!", { variant: "success" });
-    } catch (err) {
-      enqueueSnackbar(err.message, { variant: "error" });
-    }
+    updateCvMutation.mutate({ id, payload: { is_active: true } }, {
+      onSuccess: () => {
+        refetchCvs();
+        enqueueSnackbar("Active CV set!", { variant: "success" });
+      },
+      onError: (err) => {
+        enqueueSnackbar(err.message, { variant: "error" });
+      },
+    });
   };
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
-      <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+      <h1 className="mt-10 text-3xl font-bold">Admin Dashboard</h1>
 
       {/* Profile Card */}
-      <div className="bg-white rounded-xl shadow-md p-6">
+      <div className="p-6 bg-white shadow-md rounded-xl">
         <div className="flex items-center gap-6 mb-6">
           <div className="relative group">
             <img
               src={profile.profile_image || mypic}
               alt="Profile"
-              className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+              className="object-cover w-24 h-24 border-2 border-gray-200 rounded-full"
             />
           </div>
           <div className="flex-1">
             <h2 className="text-xl font-semibold">{profile.name}</h2>
             <p className="text-gray-500">{profile.email}</p>
             {profile.phone && (
-              <p className="text-gray-400 text-sm">{profile.phone}</p>
+              <p className="text-sm text-gray-400">{profile.phone}</p>
             )}
             <div className="mt-2">
               <DraggableUpload
                 onFilesChange={handleImageUpload}
                 maxFiles={1}
                 label="Profile Image"
-                disabled={uploading}
+                disabled={uploadProfileImageMutation.isPending}
               />
-              {uploading && <span className="text-xs text-gray-500">Uploading...</span>}
+              {uploadProfileImageMutation.isPending && <span className="text-xs text-gray-500">Uploading...</span>}
             </div>
           </div>
         </div>
@@ -148,13 +157,14 @@ const Dashboard = ({ role }) => {
           editingField={editingField}
           setEditingField={setEditingField}
           addData={addData}
+          updateProfileMutation={updateProfileMutation}
         />
       </div>
 
       {/* CV Management */}
-      <div className="bg-white rounded-xl shadow-md p-6">
+      <div className="p-6 bg-white shadow-md rounded-xl">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold flex items-center gap-2">
+          <h2 className="flex items-center gap-2 text-xl font-semibold">
             <FaFilePdf className="text-red-500" /> CV / Resume
           </h2>
         </div>
@@ -168,54 +178,54 @@ const Dashboard = ({ role }) => {
           }}
           maxFiles={1}
           label="Upload CV"
-          disabled={cvUploading}
+          disabled={uploadCvMutation.isPending}
           accept={{
             "application/pdf": [".pdf"],
             "application/msword": [".doc"],
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
           }}
         />
-        {cvUploading && <span className="text-xs text-gray-500 mt-1 block">Uploading...</span>}
+        {uploadCvMutation.isPending && <span className="block mt-1 text-xs text-gray-500">Uploading...</span>}
       </div>
 
       {/* Materials URL */}
-      <MaterialsUrlEditor profile={profile} setProfile={setProfile} addData={addData} />
+      <MaterialsUrlEditor profile={profile} setProfile={setProfile} addData={addData} updateMaterialsUrlMutation={updateMaterialsUrlMutation} />
 
       {/* About Background Image */}
       <AboutBgImageEditor />
 
       {/* Quick Links */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <a
-          href="/auth/profile"
-          className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition flex items-center gap-3"
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <Link
+          to="/auth/profile"
+          className="flex items-center gap-3 p-5 transition bg-white shadow-md rounded-xl hover:shadow-lg"
         >
-          <FaUser className="text-blue-500 text-xl" />
+          <FaUser className="text-xl text-blue-500" />
           <div>
             <div className="font-medium">Profile Settings</div>
             <div className="text-xs text-gray-400">Edit name, bio, tagline</div>
           </div>
-        </a>
-        <a
-          href="/auth/social-links"
-          className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition flex items-center gap-3"
+        </Link>
+        <Link
+          to="/auth/social-links"
+          className="flex items-center gap-3 p-5 transition bg-white shadow-md rounded-xl hover:shadow-lg"
         >
-          <FaEdit className="text-purple-500 text-xl" />
+          <FaEdit className="text-xl text-purple-500" />
           <div>
             <div className="font-medium">Social Links</div>
             <div className="text-xs text-gray-400">GitHub, LinkedIn, etc.</div>
           </div>
-        </a>
-        <a
-          href="/auth/password"
-          className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition flex items-center gap-3"
+        </Link>
+        <Link
+          to="/auth/password"
+          className="flex items-center gap-3 p-5 transition bg-white shadow-md rounded-xl hover:shadow-lg"
         >
-          <FaCheckCircle className="text-green-500 text-xl" />
+          <FaCheckCircle className="text-xl text-green-500" />
           <div>
             <div className="font-medium">Change Password</div>
             <div className="text-xs text-gray-400">Update credentials</div>
           </div>
-        </a>
+        </Link>
       </div>
     </div>
   );
@@ -227,6 +237,7 @@ const InlineProfileEditor = ({
   editingField,
   setEditingField,
   addData,
+  updateProfileMutation,
 }) => {
   const [editValue, setEditValue] = useState("");
 
@@ -242,29 +253,32 @@ const InlineProfileEditor = ({
   };
 
   const saveField = async (field) => {
-    try {
-      const payload = {
-        name: profile.name || "",
-        email: profile.email || "",
-        phone: profile.phone || null,
-        bio: profile.bio || null,
-        tagline: profile.tagline || null,
-        profile_image: profile.profile_image || null,
-      };
-      payload[field.key] = editValue || null;
+    const payload = {
+      name: profile.name || "",
+      email: profile.email || "",
+      phone: profile.phone || null,
+      bio: profile.bio || null,
+      tagline: profile.tagline || null,
+      profile_image: profile.profile_image || null,
+    };
+    payload[field.key] = editValue || null;
 
-      const data = await api.put("/auth/profile", payload);
-      setProfile((prev) => ({ ...prev, [field.key]: editValue }));
-      addData({
-        ...profile,
-        name: data.user.name,
-        email: data.user.email,
-      });
-      setEditingField(null);
-      enqueueSnackbar(`${field.label} updated!`, { variant: "success" });
-    } catch (err) {
-      enqueueSnackbar(err.message, { variant: "error" });
-    }
+    updateProfileMutation.mutate(payload, {
+      onSuccess: (response) => {
+        const data = response.data;
+        setProfile((prev) => ({ ...prev, [field.key]: editValue }));
+        addData({
+          ...profile,
+          name: data.user.name,
+          email: data.user.email,
+        });
+        setEditingField(null);
+        enqueueSnackbar(`${field.label} updated!`, { variant: "success" });
+      },
+      onError: (err) => {
+        enqueueSnackbar(err.message, { variant: "error" });
+      },
+    });
   };
 
   return (
@@ -274,10 +288,10 @@ const InlineProfileEditor = ({
           key={field.key}
           className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50"
         >
-          <field.icon className="text-gray-400 w-5" />
-          <span className="text-gray-500 w-16 text-sm">{field.label}</span>
+          <field.icon className="w-5 text-gray-400" />
+          <span className="w-16 text-sm text-gray-500">{field.label}</span>
           {editingField === field.key ? (
-            <div className="flex items-center gap-2 flex-1">
+            <div className="flex items-center flex-1 gap-2">
               <input
                 type={field.type}
                 value={editValue}
@@ -303,8 +317,8 @@ const InlineProfileEditor = ({
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-2 flex-1">
-              <span className="text-sm flex-1">{profile[field.key] || "—"}</span>
+            <div className="flex items-center flex-1 gap-2">
+              <span className="flex-1 text-sm">{profile[field.key] || "—"}</span>
               <button
                 onClick={() => startEdit(field)}
                 className="p-1.5 text-blue-500 hover:bg-blue-50 rounded"
@@ -319,7 +333,7 @@ const InlineProfileEditor = ({
   );
 };
 
-const MaterialsUrlEditor = ({ profile, setProfile, addData }) => {
+const MaterialsUrlEditor = ({ profile, setProfile, addData, updateMaterialsUrlMutation }) => {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(profile.materials_url || "");
 
@@ -328,29 +342,30 @@ const MaterialsUrlEditor = ({ profile, setProfile, addData }) => {
   }, [profile.materials_url]);
 
   const handleSave = async () => {
-    try {
-      const data = await api.put("/auth/materials-url", {
-        materials_url: value || null,
-      });
-      setProfile((prev) => ({ ...prev, materials_url: data.user.materials_url }));
-      addData({ ...profile, materials_url: data.user.materials_url });
-      setEditing(false);
-      enqueueSnackbar("Materials URL updated!", { variant: "success" });
-    } catch (err) {
-      enqueueSnackbar(err.message, { variant: "error" });
-    }
+    updateMaterialsUrlMutation.mutate({ materials_url: value || null }, {
+      onSuccess: (response) => {
+        const data = response.data;
+        setProfile((prev) => ({ ...prev, materials_url: data.user.materials_url }));
+        addData({ ...profile, materials_url: data.user.materials_url });
+        setEditing(false);
+        enqueueSnackbar("Materials URL updated!", { variant: "success" });
+      },
+      onError: (err) => {
+        enqueueSnackbar(err.message, { variant: "error" });
+      },
+    });
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-6">
-      <h2 className="text-xl font-semibold flex items-center gap-2 mb-4">
+    <div className="p-6 bg-white shadow-md rounded-xl">
+      <h2 className="flex items-center gap-2 mb-4 text-xl font-semibold">
         <FaLink className="text-blue-500" /> Site Links
       </h2>
       <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50">
-        <FaLink className="text-gray-400 w-5" />
-        <span className="text-gray-500 w-28 text-sm">Materials URL</span>
+        <FaLink className="w-5 text-gray-400" />
+        <span className="text-sm text-gray-500 w-28">Materials URL</span>
         {editing ? (
-          <div className="flex items-center gap-2 flex-1">
+          <div className="flex items-center flex-1 gap-2">
             <input
               type="url"
               value={value}
@@ -380,8 +395,8 @@ const MaterialsUrlEditor = ({ profile, setProfile, addData }) => {
             </button>
           </div>
         ) : (
-          <div className="flex items-center gap-2 flex-1">
-            <span className="text-sm flex-1 truncate">{profile.materials_url || "Not set"}</span>
+          <div className="flex items-center flex-1 gap-2">
+            <span className="flex-1 text-sm truncate">{profile.materials_url || "Not set"}</span>
             <button onClick={() => setEditing(true)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded">
               <FaEdit />
             </button>
@@ -399,8 +414,8 @@ const AboutBgImageEditor = () => {
   useEffect(() => {
     const fetchBg = async () => {
       try {
-        const res = await fetch("/api/settings/about_bg_image");
-        const data = await res.json();
+        const response = await privateAgent.get(routesName.SettingsRoute().aboutBgImage);
+        const data = response.data;
         if (data.data?.value) setBgImage(data.data.value);
       } catch (err) {
         console.error(err);
@@ -416,7 +431,8 @@ const AboutBgImageEditor = () => {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const data = await api.postForm("/auth/about-bg-image", formData);
+      const response = await privateAgent.post(routesName.AuthRoute({}).profileImage, formData);
+      const data = response.data;
       setBgImage(data.url);
       enqueueSnackbar("Background image updated!", { variant: "success" });
     } catch (err) {
@@ -427,9 +443,9 @@ const AboutBgImageEditor = () => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-6">
+    <div className="p-6 bg-white shadow-md rounded-xl">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold flex items-center gap-2">
+        <h2 className="flex items-center gap-2 text-xl font-semibold">
           <FaImage className="text-purple-500" /> About Section Background
         </h2>
       </div>
@@ -437,7 +453,7 @@ const AboutBgImageEditor = () => {
         <img
           src={bgImage}
           alt="About background preview"
-          className="w-full h-40 object-cover rounded-lg mb-3 border"
+          className="object-cover w-full h-40 mb-3 border rounded-lg"
         />
       )}
       <DraggableUpload
@@ -447,7 +463,7 @@ const AboutBgImageEditor = () => {
         disabled={uploading}
         accept={{ "image/*": [".jpg", ".jpeg", ".png", ".webp"] }}
       />
-      {uploading && <span className="text-xs text-gray-500 mt-1 block">Uploading...</span>}
+      {uploading && <span className="block mt-1 text-xs text-gray-500">Uploading...</span>}
     </div>
   );
 };

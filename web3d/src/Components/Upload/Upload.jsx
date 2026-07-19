@@ -42,7 +42,7 @@ const Upload = ({
         existingFiles={existingFiles}
         onRemoveExisting={handleRemoveExisting}
         maxFiles={maxFiles}
-        accept={{ "image/*": [".jpeg", ".jpg", ".png", ".gif", ".webp"] }}
+        accept={{ "image/*": [".jpeg", ".jpg", ".png", ".gif", ".webp"], "video/*": [".mp4", ".webm", ".mov", ".avi"] }}
       />
       {error && touched && <p className="text-red-500 text-sm mt-1">{error}</p>}
     </div>

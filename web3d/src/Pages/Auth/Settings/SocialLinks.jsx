@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { enqueueSnackbar } from "notistack";
-import api from "../../../api/client";
 import { useAuthContext } from "../../../context/AuthContext";
+import { useCreateSocialLink, useUpdateSocialLink, useDeleteSocialLink } from "../../../Hooks/mutations/useSocialLinksMutations";
+import { useSocialLinksQuery } from "../../../Hooks/queries";
 import { FaPlus, FaTrash, FaEdit, FaSave, FaTimes } from "react-icons/fa";
 
 const ICON_OPTIONS = [
@@ -28,41 +29,30 @@ const emptyLink = { platform: "", icon_name: "", url: "", display_order: 0 };
 
 const SocialLinks = () => {
   const { user } = useAuthContext();
-  const [links, setLinks] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({ ...emptyLink });
   const [adding, setAdding] = useState(false);
 
-  const fetchLinks = async () => {
-    try {
-      const data = await api.get(`/auth/social-links/${user?.id || ""}`);
-      setLinks(data.data || []);
-    } catch (err) {
-      enqueueSnackbar(err.message, { variant: "error" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchLinks();
-  }, [user?.id]);
+  const { data: links = [], isLoading: loading } = useSocialLinksQuery(user?.id);
+  const createMutation = useCreateSocialLink();
+  const updateMutation = useUpdateSocialLink();
+  const deleteMutation = useDeleteSocialLink();
 
   const handleAdd = async () => {
     if (!editForm.platform || !editForm.url) {
       enqueueSnackbar("Platform and URL are required", { variant: "error" });
       return;
     }
-    try {
-      const data = await api.post("/auth/social-links", editForm);
-      setLinks([...links, data.data]);
-      setAdding(false);
-      setEditForm({ ...emptyLink });
-      enqueueSnackbar("Link added!", { variant: "success" });
-    } catch (err) {
-      enqueueSnackbar(err.message, { variant: "error" });
-    }
+    createMutation.mutate(editForm, {
+      onSuccess: (data) => {
+        setAdding(false);
+        setEditForm({ ...emptyLink });
+        enqueueSnackbar("Link added!", { variant: "success" });
+      },
+      onError: (err) => {
+        enqueueSnackbar(err.message, { variant: "error" });
+      },
+    });
   };
 
   const handleUpdate = async (id) => {
@@ -70,26 +60,31 @@ const SocialLinks = () => {
       enqueueSnackbar("Platform and URL are required", { variant: "error" });
       return;
     }
-    try {
-      const data = await api.put(`/auth/social-links/${id}`, editForm);
-      setLinks(links.map((l) => (l.id === id ? data.data : l)));
-      setEditingId(null);
-      setEditForm({ ...emptyLink });
-      enqueueSnackbar("Link updated!", { variant: "success" });
-    } catch (err) {
-      enqueueSnackbar(err.message, { variant: "error" });
-    }
+    updateMutation.mutate(
+      { id, payload: editForm },
+      {
+        onSuccess: () => {
+          setEditingId(null);
+          setEditForm({ ...emptyLink });
+          enqueueSnackbar("Link updated!", { variant: "success" });
+        },
+        onError: (err) => {
+          enqueueSnackbar(err.message, { variant: "error" });
+        },
+      }
+    );
   };
 
   const handleDelete = async (id) => {
     if (!confirm("Delete this link?")) return;
-    try {
-      await api.delete(`/auth/social-links/${id}`);
-      setLinks(links.filter((l) => l.id !== id));
-      enqueueSnackbar("Link deleted!", { variant: "success" });
-    } catch (err) {
-      enqueueSnackbar(err.message, { variant: "error" });
-    }
+    deleteMutation.mutate(id, {
+      onSuccess: () => {
+        enqueueSnackbar("Link deleted!", { variant: "success" });
+      },
+      onError: (err) => {
+        enqueueSnackbar(err.message, { variant: "error" });
+      },
+    });
   };
 
   const startEdit = (link) => {

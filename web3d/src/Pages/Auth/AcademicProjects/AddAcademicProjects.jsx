@@ -6,7 +6,7 @@ import Upload from "../../../Components/Upload/Upload";
 import * as Yup from "yup";
 import { motion } from "framer-motion";
 import { uploadFiles } from "../../../api/upload";
-import api from "../../../api/client";
+import { useCreateAcademicProject, useUpdateAcademicProject } from "../../../Hooks/mutations/useAcademicProjectsMutations";
 import { useSnackbar } from "notistack";
 import { FaPlus, FaTrash } from "react-icons/fa";
 
@@ -28,6 +28,8 @@ const validationSchema = Yup.object({
 const AddAcademicProjects = ({ editData, handleEditSuccess }) => {
   const [editorValue, setEditorValue] = useState(editData?.contents || "");
   const { enqueueSnackbar } = useSnackbar();
+  const createMutation = useCreateAcademicProject();
+  const updateMutation = useUpdateAcademicProject();
 
   const buildInitialDetails = () => {
     if (editData?.details && Array.isArray(editData.details) && editData.details.length > 0) {
@@ -100,16 +102,26 @@ const AddAcademicProjects = ({ editData, handleEditSuccess }) => {
         details: detailItems,
       };
 
-      if (editData) {
-        await api.put(`/academic_projects/${editData.id}`, projectData);
-        enqueueSnackbar("Academic project updated!", { variant: "success" });
-      } else {
-        await api.post("/academic_projects", projectData);
-        enqueueSnackbar("Academic project created!", { variant: "success" });
-      }
+      const onSuccess = () => {
+        enqueueSnackbar(
+          editData ? "Academic project updated!" : "Academic project created!",
+          { variant: "success" }
+        );
+        setSubmitting(false);
+        window.location.reload();
+      };
 
-      setSubmitting(false);
-      window.location.reload();
+      const onError = (error) => {
+        console.error("Error submitting academic project:", error);
+        enqueueSnackbar("Failed to submit. Please try again.", { variant: "error" });
+        setSubmitting(false);
+      };
+
+      if (editData) {
+        updateMutation.mutate({ id: editData.id, payload: projectData }, { onSuccess, onError });
+      } else {
+        createMutation.mutate(projectData, { onSuccess, onError });
+      }
     } catch (error) {
       console.error("Error submitting academic project:", error);
       enqueueSnackbar("Failed to submit. Please try again.", { variant: "error" });

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import { styles } from "../../../styles";
 import { SectionWrapper } from "../../../hoc";
 import { fadeIn, textVariant } from "../../../utils/motion";
-import api from "../../../api/client";
+import { useTestimonialsQuery } from "../../../Hooks/options/useTestimonialsQuery";
 
 const FeedbackCard = ({
   index,
@@ -43,22 +43,8 @@ const FeedbackCard = ({
 );
 
 const Feedbacks = () => {
-  const [testinomail, setTestinomial] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchTestinomial = async () => {
-      try {
-        const data = await api.get("/testimonials");
-        setTestinomial(data.data || []);
-      } catch (error) {
-        console.error("Error fetching testimonials: ", error);
-      }
-      setLoading(false);
-    };
-
-    fetchTestinomial();
-  }, []);
+  const { data: testimonialsData, isLoading } = useTestimonialsQuery();
+  const testinomail = testimonialsData || [];
 
   return (
     <>
@@ -76,7 +62,7 @@ const Feedbacks = () => {
         </motion.p>
       </div>
 
-      {loading ? (
+      {isLoading ? (
         <p className="mt-20 text-secondary text-[16px]">Loading...</p>
       ) : testinomail.length === 0 ? (
         <p className="mt-20 text-secondary text-[16px]">No testimonials found yet.</p>

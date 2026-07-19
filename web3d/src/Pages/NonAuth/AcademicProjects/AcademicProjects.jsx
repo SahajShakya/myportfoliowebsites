@@ -1,28 +1,14 @@
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { textVariant, fadeIn } from "../../../utils/motion";
 import { styles } from "../../../styles";
 import AcademicProjectCard from "../../../Components/UI/AcademicProjectCard/AcademicProjectCard";
-import api from "../../../api/client";
+import { useAcademicProjectsQuery } from "../../../Hooks/options/useAcademicProjectsQuery";
 
 const AcademicProjects = () => {
-  const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: projectsData, isLoading } = useAcademicProjectsQuery();
+  const projects = projectsData || [];
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const data = await api.get("/academic_projects");
-        setProjects(data.data || []);
-      } catch (error) {
-        console.error("Error fetching academic projects:", error);
-      }
-      setLoading(false);
-    };
-    fetchProjects();
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return <p>Loading...</p>;
   }
 

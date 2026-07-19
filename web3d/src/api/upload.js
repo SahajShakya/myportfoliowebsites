@@ -1,4 +1,5 @@
-import api from "./client";
+import { privateAgent } from "./authRequest";
+import { routesName } from "../constants/routesName";
 
 export const uploadFiles = async (files, basePath = "") => {
   try {
@@ -14,7 +15,8 @@ export const uploadFiles = async (files, basePath = "") => {
       formData.append("files[]", file);
     }
 
-    const data = await api.postForm("/upload", formData);
+    const response = await privateAgent.post(routesName.UploadRoute().upload, formData);
+    const data = response.data;
     return data.files || [];
   } catch (error) {
     console.error("Error uploading files:", error.message);
@@ -30,7 +32,7 @@ export const deleteFile = async (fileUrl) => {
       typeof fileUrl === "string"
         ? fileUrl
         : fileUrl.publicUrl || fileUrl.url || fileUrl;
-    await api.delete("/upload", { body: { path: url } });
+    await privateAgent.delete(routesName.UploadRoute().upload, { data: { path: url } });
     return { success: true };
   } catch (error) {
     console.error("Error deleting file:", error.message);

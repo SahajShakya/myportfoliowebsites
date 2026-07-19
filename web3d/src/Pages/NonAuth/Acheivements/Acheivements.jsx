@@ -1,29 +1,13 @@
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { textVariant, fadeIn } from "../../../utils/motion";
 import { styles } from "../../../styles";
 import SectionWrapper from "../../../hoc/SectionWrapper";
 import ProjectCard from "../../../Components/UI/ProjectCard/ProjectCard";
-import api from "../../../api/client";
+import { useAchievementsQuery } from "../../../Hooks/options/useAchievementsQuery";
 
 const Achievements = () => {
-  const [achievements, setAchievements] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchAchievements = async () => {
-      try {
-        const data = await api.get("/achievements");
-        const achievementsList = data.data || [];
-        setAchievements(achievementsList);
-      } catch (error) {
-        console.error("Error fetching achievements:", error);
-      }
-      setLoading(false);
-    };
-
-    fetchAchievements();
-  }, []);
+  const { data: achievementsData, isLoading } = useAchievementsQuery();
+  const achievements = achievementsData || [];
 
   return (
     <>
@@ -42,7 +26,7 @@ const Achievements = () => {
         </motion.p>
       </div>
 
-      {loading ? (
+      {isLoading ? (
         <p className="mt-20 text-secondary text-[16px]">Loading...</p>
       ) : achievements.length === 0 ? (
         <p className="mt-20 text-secondary text-[16px]">No achievements found yet.</p>

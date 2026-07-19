@@ -4,6 +4,7 @@ function handleAchievementsRoutes($method, $segments, $db) {
     require_once __DIR__ . '/../models/Document.php';
     require_once __DIR__ . '/../middleware/auth.php';
     require_once __DIR__ . '/../middleware/upload.php';
+    require_once __DIR__ . '/../helpers/retrain_chatbot.php';
 
     $model = new Achievement($db);
     $documentModel = new Document($db);
@@ -94,6 +95,7 @@ function handleAchievementsRoutes($method, $segments, $db) {
         }
 
         echo json_encode(["message" => "Achievement created", "id" => $achievementId]);
+        retrainChatbot($db, 'achievements');
         return;
     }
 
@@ -150,6 +152,7 @@ function handleAchievementsRoutes($method, $segments, $db) {
         }
 
         $model->update($id, $data);
+        retrainChatbot($db, 'achievements');
         echo json_encode(["message" => "Achievement updated"]);
         return;
     }
@@ -157,24 +160,22 @@ function handleAchievementsRoutes($method, $segments, $db) {
     if ($method === 'DELETE' && $id) {
         $auth->authenticate();
 
-        require_once __DIR__ . '/Document.php';
-        $docModel = new Document($db);
-
         $result = $model->delete($id);
 
         if (!empty($result['details'])) {
             foreach ($result['details'] as $detail) {
                 $docId = $detail['document_id'] ?? null;
                 if ($docId) {
-                    $doc = $docModel->findById($docId);
+                    $doc = $documentModel->findById($docId);
                     if ($doc) {
                         $uploader->deleteFileByAbsolute($doc['absolute_path']);
-                        $docModel->delete($docId);
+                        $documentModel->delete($docId);
                     }
                 }
             }
         }
 
+        retrainChatbot($db, 'achievements');
         echo json_encode(["message" => "Achievement deleted"]);
         return;
     }

@@ -6,8 +6,7 @@ import LoadingScreen from "./Components/UI/Loading/LoadingScreen";
 import DefaultLayout from "./Pages/Layout/DefaultLayout";
 import Home from "./Pages/NonAuth/Home/Home";
 import { UserProvider } from "./context/UserContext";
-import { AuthProvider, useAuthContext } from "./context/AuthContext";
-import { registerAuth } from "./api/client";
+import { AuthProvider } from "./context/AuthContext";
 import PrivateRoute from "./PrivateRoute";
 import Unauthorized from "./Pages/Unauthorized";
 import AuthRedirectWrapper from "./AuthRedirectWrapper";
@@ -34,24 +33,19 @@ import AddAcademicProjects from "./Pages/Auth/AcademicProjects/AddAcademicProjec
 import ViewAcademicProjects from "./Pages/Auth/AcademicProjects/ViewAcademicProjects";
 import AboutMe from "./Pages/NonAuth/AboutMe/AboutMe";
 import Testimonials from "./Pages/Auth/Testimonials/Testimonials";
+import Photography from "./Pages/Auth/Photography/Photography";
+import PhotographyPublic from "./Pages/NonAuth/Photography/Photography";
 import ProfileSettings from "./Pages/Auth/Settings/ProfileSettings";
 import PasswordChange from "./Pages/Auth/Settings/PasswordChange";
 import SocialLinks from "./Pages/Auth/Settings/SocialLinks";
 import NotFound from "./Pages/NonAuth/NotFound/NotFound";
+import ChatWidget from "./Components/ChatWidget/ChatWidget";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: { refetchOnWindowFocus: false, retry: false },
   },
 });
-
-const AuthBridge = ({ children }) => {
-  const { accessToken, refreshAccessToken, clearAuth } = useAuthContext();
-  useEffect(() => {
-    registerAuth(() => accessToken, refreshAccessToken, clearAuth);
-  }, [accessToken, refreshAccessToken, clearAuth]);
-  return children;
-};
 
 const AppRoutes = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -76,6 +70,7 @@ const AppRoutes = () => {
         <Route path="/achievements/:id" element={<AchievementDetails />} />
         <Route path="/academic-projects" element={<AcademicProjects />} />
         <Route path="/academic-projects/:id" element={<AcademicProjectDetails />} />
+        <Route path="/photography" element={<PhotographyPublic />} />
         <Route path="/calendar" element={<Calendar />} />
       </Route>
 
@@ -111,6 +106,8 @@ const AppRoutes = () => {
         <Route path="/auth/testimonials" element={<PrivateRoute roleProps="admin" element={<Testimonials />} />} />
         <Route path="/auth/testimonials/create" element={<PrivateRoute roleProps="admin" element={<Testimonials />} />} />
         <Route path="/auth/testinomial/create" element={<PrivateRoute roleProps="admin" element={<Testimonials />} />} />
+        <Route path="/auth/photography" element={<PrivateRoute roleProps="admin" element={<Photography />} />} />
+        <Route path="/auth/photography/create" element={<PrivateRoute roleProps="admin" element={<Photography />} />} />
         <Route path="/auth/profile" element={<PrivateRoute roleProps="admin" element={<ProfileSettings />} />} />
         <Route path="/auth/password" element={<PrivateRoute roleProps="admin" element={<PasswordChange />} />} />
         <Route path="/auth/social-links" element={<PrivateRoute roleProps="admin" element={<SocialLinks />} />} />
@@ -126,13 +123,12 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <AuthBridge>
-          <UserProvider>
-            <Router>
-              <AppRoutes />
-            </Router>
-          </UserProvider>
-        </AuthBridge>
+        <UserProvider>
+          <Router>
+            <AppRoutes />
+            <ChatWidget />
+          </Router>
+        </UserProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

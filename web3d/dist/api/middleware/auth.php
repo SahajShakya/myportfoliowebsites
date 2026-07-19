@@ -63,12 +63,13 @@ class AuthMiddleware {
     public function setTokenCookies($accessToken, $refreshToken) {
         $accessExp = time() + 900;
         $refreshExp = time() + 604800;
+        $isProduction = !empty($_ENV['DB_NAME_PROD']) && (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'localhost') === false);
 
         setcookie('access_token', $accessToken, [
             'expires' => $accessExp,
             'path' => '/',
             'httponly' => true,
-            'secure' => false,
+            'secure' => $isProduction,
             'samesite' => 'Lax'
         ]);
 
@@ -76,17 +77,19 @@ class AuthMiddleware {
             'expires' => $refreshExp,
             'path' => '/',
             'httponly' => true,
-            'secure' => false,
+            'secure' => $isProduction,
             'samesite' => 'Lax'
         ]);
     }
 
     public function clearTokenCookies() {
+        $isProduction = !empty($_ENV['DB_NAME_PROD']) && (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'localhost') === false);
+
         setcookie('access_token', '', [
             'expires' => time() - 3600,
             'path' => '/',
             'httponly' => true,
-            'secure' => false,
+            'secure' => $isProduction,
             'samesite' => 'Lax'
         ]);
 
@@ -94,7 +97,7 @@ class AuthMiddleware {
             'expires' => time() - 3600,
             'path' => '/',
             'httponly' => true,
-            'secure' => false,
+            'secure' => $isProduction,
             'samesite' => 'Lax'
         ]);
     }

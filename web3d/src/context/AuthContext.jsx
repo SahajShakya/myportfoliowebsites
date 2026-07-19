@@ -1,5 +1,8 @@
-import React, { createContext, useState, useContext, useCallback, useEffect } from "react";
-import { routes } from "../constants/routes";
+/* eslint-disable react/prop-types */
+/* eslint-disable no-empty */
+import { createContext, useState, useContext, useCallback, useEffect } from "react";
+import { privateAgent, publicAgent } from "../api/authRequest";
+import { routesName } from "../constants/routesName";
 
 const AuthContext = createContext(null);
 
@@ -10,122 +13,73 @@ export const useAuthContext = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [accessToken, setAccessToken] = useState(() => {
-    return sessionStorage.getItem("accessToken");
-  });
-  const [user, setUser] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem("user")) || null;
-    } catch {
-      return null;
-    }
-  });
-  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const saveTokens = useCallback((access, refresh, userData) => {
-    setAccessToken(access);
-    sessionStorage.setItem("accessToken", access);
-    if (refresh) sessionStorage.setItem("refreshToken", refresh);
-    if (userData) {
-      setUser(userData);
-      localStorage.setItem("user", JSON.stringify(userData));
-    }
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data } = await privateAgent.get(
+          routesName.AuthRoute({}).me
+        );
+        if (data.user) {
+          setUser(data.user);
+          setLoading(false);
+          return;
+        }
+      } catch {
+        // Access token may have expired — try refresh
+        try {
+          const refreshRes = await publicAgent.post(
+            routesName.AuthRoute({}).refresh
+          );
+          if (refreshRes.status === 200) {
+            const { data: retryData } = await privateAgent.get(
+              routesName.AuthRoute({}).me
+            );
+            if (retryData.user) {
+              setUser(retryData.user);
+            }
+          }
+        } catch {}
+      }
+      setLoading(false);
+    };
+    checkAuth();
   }, []);
 
-  const clearAuth = useCallback(() => {
-    setAccessToken(null);
-    setUser(null);
-    sessionStorage.removeItem("accessToken");
-    sessionStorage.removeItem("refreshToken");
-    localStorage.removeItem("user");
+  const login = useCallback(async (email, password) => {
+    const { data } = await publicAgent.post(
+      routesName.AuthRoute({}).login,
+      { email, password }
+    );
+    if (data.user) setUser(data.user);
+    return data;
   }, []);
 
-  const refreshAccessToken = useCallback(async () => {
-    const storedRefresh = sessionStorage.getItem("refreshToken");
-    if (!storedRefresh) {
-      clearAuth();
-      return null;
-    }
-    try {
-      const res = await fetch(routes.auth.refresh, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-      });
-      if (!res.ok) {
-        clearAuth();
-        return null;
-      }
-      const data = await res.json();
-      if (data.accessToken) {
-        saveTokens(data.accessToken, data.refreshToken, data.user);
-        return data.accessToken;
-      }
-      clearAuth();
-      return null;
-    } catch {
-      clearAuth();
-      return null;
-    }
-  }, [clearAuth, saveTokens]);
-
-  const login = useCallback(
-    async (email, password) => {
-      const res = await fetch(routes.auth.login, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Login failed");
-      saveTokens(data.accessToken, data.refreshToken, data.user);
-      return data;
-    },
-    [saveTokens]
-  );
-
-  const register = useCallback(
-    async (email, password, name, role) => {
-      const res = await fetch(routes.auth.register, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, name, role }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Registration failed");
-      saveTokens(data.accessToken, data.refreshToken, data.user);
-      return data;
-    },
-    [saveTokens]
-  );
+  const register = useCallback(async (email, password, name, role) => {
+    const { data } = await publicAgent.post(
+      routesName.AuthRoute({}).register,
+      { email, password, name, role }
+    );
+    if (data.user) setUser(data.user);
+    return data;
+  }, []);
 
   const logout = useCallback(async () => {
     try {
-      await fetch(routes.auth.logout, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      await privateAgent.post(routesName.AuthRoute({}).logout);
     } catch {}
-    clearAuth();
-  }, [accessToken, clearAuth]);
+    setUser(null);
+  }, []);
 
   const value = {
     user,
-    accessToken,
     isAuthenticated: !!user?.id,
     loading,
     login,
     register,
     logout,
-    saveTokens,
-    refreshAccessToken,
-    clearAuth,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

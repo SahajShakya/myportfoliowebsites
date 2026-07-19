@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Tilt } from "react-tilt";
 import { motion } from "framer-motion";
 
@@ -7,6 +7,7 @@ import github from "./github.png";
 import { SectionWrapper } from "../../../hoc";
 
 import { fadeIn, textVariant } from "../../../utils/motion";
+import { useAcademicProjectsQuery } from "../../../Hooks/options/useAcademicProjectsQuery";
 
 const tagColors = ["blue-text-gradient", "green-text-gradient", "pink-text-gradient"];
 
@@ -70,18 +71,7 @@ const ProjectCard = ({
 };
 
 const AcademicWorks = () => {
-  const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/academic-projects")
-      .then((res) => res.json())
-      .then((res) => {
-        setProjects(res.data || []);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+  const { data: projects = [], isLoading: loading } = useAcademicProjectsQuery();
 
   return (
     <>

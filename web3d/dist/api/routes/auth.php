@@ -68,8 +68,6 @@ function handleAuthRoutes($method, $segments, $db) {
 
         echo json_encode([
             "message" => "User registered successfully",
-            "accessToken" => $accessToken,
-            "refreshToken" => $refreshToken,
             "user" => ["id" => $userId, "name" => $name, "email" => $email, "role" => $role['name'], "materials_url" => null, "profile_image" => null]
         ]);
         return;
@@ -114,8 +112,6 @@ function handleAuthRoutes($method, $segments, $db) {
 
         echo json_encode([
             "message" => "Login successful",
-            "accessToken" => $accessToken,
-            "refreshToken" => $refreshToken,
             "user" => [
                 "id" => $user['id'],
                 "name" => $user['name'],
@@ -176,8 +172,6 @@ function handleAuthRoutes($method, $segments, $db) {
 
         echo json_encode([
             "message" => "Token refreshed",
-            "accessToken" => $newAccessToken,
-            "refreshToken" => $newRefreshToken,
             "user" => [
                 "id" => $user['id'],
                 "name" => $user['name'],

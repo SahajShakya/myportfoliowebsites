@@ -6,7 +6,7 @@ class UploadMiddleware {
     private $imageQuality;
     private $maxImageWidth;
 
-    public function __construct($uploadDir = null, $maxFileSize = 10485760) {
+    public function __construct($uploadDir = null, $maxFileSize = 104857600) {
         $this->uploadDir = $uploadDir ?? dirname(__DIR__, 2) . '/uploads';
         $this->maxFileSize = $maxFileSize;
         $this->imageQuality = 82;
@@ -80,6 +80,12 @@ class UploadMiddleware {
                 } else {
                     move_uploaded_file($fileTmp, $savedPath);
                 }
+            } elseif ($this->isVideo($fileType)) {
+                move_uploaded_file($fileTmp, $savedPath);
+                $compressed = $this->compressVideo($savedPath);
+                if ($compressed) {
+                    $fileSize = filesize($savedPath);
+                }
             } else {
                 move_uploaded_file($fileTmp, $savedPath);
             }
@@ -103,6 +109,50 @@ class UploadMiddleware {
 
     private function isImage($mimeType) {
         return in_array($mimeType, ['image/jpeg', 'image/png', 'image/webp']);
+    }
+
+    private function isVideo($mimeType) {
+        return in_array($mimeType, ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo']);
+    }
+
+    private function compressVideo($filePath) {
+        $ffmpeg = $this->findFfmpeg();
+        if (!$ffmpeg) {
+            return false;
+        }
+
+        $tempPath = $filePath . '.tmp.mp4';
+        $cmd = sprintf(
+            '%s -y -i %s -c:v libx264 -preset fast -crf 28 -c:a aac -b:a 96k -vf "scale=min(1280\\,iw):-2" -movflags +faststart %s 2>&1',
+            escapeshellcmd($ffmpeg),
+            escapeshellarg($filePath),
+            escapeshellarg($tempPath)
+        );
+
+        exec($cmd, $output, $returnCode);
+
+        if ($returnCode === 0 && file_exists($tempPath) && filesize($tempPath) > 0) {
+            rename($tempPath, $filePath);
+            return true;
+        }
+
+        if (file_exists($tempPath)) {
+            unlink($tempPath);
+        }
+        return false;
+    }
+
+    private function findFfmpeg() {
+        $paths = ['/usr/local/bin/ffmpeg', '/usr/bin/ffmpeg', 'ffmpeg'];
+        foreach ($paths as $path) {
+            $output = [];
+            $returnCode = 0;
+            exec(escapeshellcmd($path) . ' -version 2>&1', $output, $returnCode);
+            if ($returnCode === 0) {
+                return $path;
+            }
+        }
+        return null;
     }
 
     private function compressImage($sourcePath, $destPath, $mimeType) {
