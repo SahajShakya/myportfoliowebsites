@@ -303,7 +303,7 @@ const Tab = ({
       {/* Show dropdown if the tab has a dropdown and is hovered */}
       {hasDropdown && hovered === tab && (
         <div
-          className="absolute left-0 z-20 w-52"
+          className="absolute left-0 top-full pt-2 z-20 w-52"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
