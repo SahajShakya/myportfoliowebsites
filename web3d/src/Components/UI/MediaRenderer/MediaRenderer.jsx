@@ -1,5 +1,6 @@
 import React from "react";
 import { FaVideo } from "react-icons/fa";
+import { imageUrl } from "../../../utils/imageUrl";
 
 const isVideoUrl = (url) => {
   if (!url || typeof url !== "string") return false;
@@ -9,10 +10,12 @@ const isVideoUrl = (url) => {
 const MediaRenderer = ({ src, alt, className, rounded, controls = false, ...props }) => {
   if (!src) return null;
 
-  if (isVideoUrl(src)) {
+  const resolvedSrc = imageUrl(src);
+
+  if (isVideoUrl(resolvedSrc)) {
     return (
       <video
-        src={src}
+        src={resolvedSrc}
         className={className}
         controls={controls}
         muted
@@ -25,7 +28,7 @@ const MediaRenderer = ({ src, alt, className, rounded, controls = false, ...prop
 
   return (
     <img
-      src={src}
+      src={resolvedSrc}
       alt={alt || ""}
       className={className}
       loading="lazy"

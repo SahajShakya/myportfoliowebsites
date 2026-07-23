@@ -1,8 +1,6 @@
 import axios from "axios";
 
-const HOST_URL = "";
-const ROOT_ROUTE = "/api";
-const baseURL = HOST_URL + ROOT_ROUTE;
+const baseURL = import.meta.env.VITE_API_URL || "/api";
 
 const privateAgent = axios.create({
   baseURL,

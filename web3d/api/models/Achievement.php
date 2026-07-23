@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../helpers/uuid.php';
+require_once __DIR__ . '/../helpers/url.php';
 
 class Achievement {
     private $conn;
@@ -24,6 +25,7 @@ class Achievement {
         foreach ($achievements as &$achievement) {
             $achievement['tags'] = $this->getTags($achievement['id']);
             $achievement['details'] = $this->getDetails($achievement['id']);
+            $achievement = resolveRecordUrls($achievement);
         }
         return $achievements;
     }
@@ -41,6 +43,7 @@ class Achievement {
         if ($achievement) {
             $achievement['tags'] = $this->getTags($achievement['id']);
             $achievement['details'] = $this->getDetails($achievement['id']);
+            $achievement = resolveRecordUrls($achievement);
         }
         return $achievement;
     }

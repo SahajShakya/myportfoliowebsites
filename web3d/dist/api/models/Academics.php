@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../helpers/uuid.php';
+require_once __DIR__ . '/../helpers/url.php';
 
 class Academics {
     private $conn;
@@ -25,6 +26,7 @@ class Academics {
         foreach ($academics as &$academic) {
             $academic['icons'] = $this->buildIconData($academic);
             $academic['contents'] = $this->getContents($academic['id']);
+            $academic = resolveRecordUrls($academic);
         }
         return $academics;
     }
@@ -45,6 +47,7 @@ class Academics {
         if ($academic) {
             $academic['icons'] = $this->buildIconData($academic);
             $academic['contents'] = $this->getContents($academic['id']);
+            $academic = resolveRecordUrls($academic);
         }
         return $academic;
     }

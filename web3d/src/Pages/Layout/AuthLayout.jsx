@@ -1,6 +1,6 @@
 
 import { Outlet, Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Nav from "../../Components/NavBar/Nav";
 import {
   FaBars,
@@ -43,6 +43,15 @@ const AuthLayout = () => {
     setIsCollapsed(!isCollapsed);
   };
 
+  useEffect(() => {
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+    };
+  }, []);
+
   /** @param {string} tab */
   const toggleDropdown = (tab) => {
     setDropdowns((prevState) => ({
@@ -83,9 +92,9 @@ const AuthLayout = () => {
   return (
     <>
       <Nav />
-      <div className="flex h-[calc(100vh-80px)] mt-[100px]">
+      <div className="flex h-screen pt-[100px]">
         <div
-          className={`transition-all duration-300 ${
+          className={`transition-all duration-300 flex-shrink-0 ${
             isCollapsed
               ? "w-20 bg-black text-white"
               : "w-64 bg-white text-black"
@@ -191,7 +200,7 @@ const AuthLayout = () => {
           </ul>
         </div>
 
-        <div className="flex-1 p-6 overflow-y-auto bg-gray-100">
+        <div className="flex-1 min-w-0 p-6 overflow-y-auto bg-white">
           <Outlet />
         </div>
       </div>

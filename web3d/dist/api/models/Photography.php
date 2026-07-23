@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../helpers/uuid.php';
+require_once __DIR__ . '/../helpers/url.php';
 
 class Photography {
     private $conn;
@@ -144,7 +145,7 @@ class Photography {
             $url = $photo['relative_path'] ?? $photo['photo_url'] ?? '';
             return [
                 'id' => $photo['id'],
-                'photo_url' => $url,
+                'photo_url' => toAbsoluteUrl($url),
                 'caption' => $photo['caption'],
                 'display_order' => $photo['display_order'],
                 'document_id' => $photo['document_id'],
