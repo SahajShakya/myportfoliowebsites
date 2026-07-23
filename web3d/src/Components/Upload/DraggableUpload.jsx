@@ -186,9 +186,9 @@ export default function DraggableUpload({
 
       {error && <p className="text-xs text-red-400">{error}</p>}
 
-      {!hidePreviews && (existingFiles.length > 0 || newFiles.length > 0) && (
+      {!hidePreviews && (existingFiles.filter(Boolean).length > 0 || newFiles.length > 0) && (
         <div className="flex flex-wrap gap-2">
-          {existingFiles.map((f, idx) => {
+          {existingFiles.filter(Boolean).map((f, idx) => {
             const url = isExistingUrl(f) ? f : f.url || f.preview || "";
             const name = isExistingUrl(f)
               ? f.split("/").pop()

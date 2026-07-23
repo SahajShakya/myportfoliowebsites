@@ -75,11 +75,8 @@ function handleAcademicProjectsRoutes($method, $segments, $db) {
             $detailFiles = [];
         }
 
-        $itemId = $model->create($data);
-
-        if (!empty($data['details']) && is_array($data['details'])) {
-            foreach ($data['details'] as $idx => $detail) {
-                $detailDocId = null;
+        if (!empty($data['details']) && is_array($data['details']) && !empty($detailFiles)) {
+            foreach ($data['details'] as $idx => &$detail) {
                 if (isset($detailFiles[$idx])) {
                     $fi = $detailFiles[$idx];
                     $detailDocId = $documentModel->create(
@@ -90,9 +87,11 @@ function handleAcademicProjectsRoutes($method, $segments, $db) {
                     $detail['image_url'] = $fi['relative_path'];
                     $detail['document_id'] = $detailDocId;
                 }
-                $model->createDetail($itemId, $detail);
             }
+            unset($detail);
         }
+
+        $itemId = $model->create($data);
 
         echo json_encode(["message" => "Academic project created", "id" => $itemId]);
         retrainChatbot($db, 'academic_projects');
@@ -137,7 +136,7 @@ function handleAcademicProjectsRoutes($method, $segments, $db) {
         }
 
         if (!empty($data['details']) && is_array($data['details'])) {
-            foreach ($data['details'] as $idx => $detail) {
+            foreach ($data['details'] as $idx => &$detail) {
                 if (isset($detailFiles[$idx])) {
                     $fi = $detailFiles[$idx];
                     $detailDocId = $documentModel->create(
@@ -149,6 +148,7 @@ function handleAcademicProjectsRoutes($method, $segments, $db) {
                     $detail['document_id'] = $detailDocId;
                 }
             }
+            unset($detail);
         }
 
         $model->update($id, $data);

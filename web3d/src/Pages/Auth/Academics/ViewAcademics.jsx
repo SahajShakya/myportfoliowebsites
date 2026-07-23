@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useSnackbar } from "notistack";
 import AddAcademics from "./AddAcademics";
 import Modal from "../../../Components/UI/Modal/Modal";
-import { deleteFilesFromSupabase } from "../../../api/upload";
 import { useAcademicsQuery } from "../../../Hooks/options/useAcademicsQuery";
 import { useDeleteAcademic } from "../../../Hooks/mutations/useAcademicsMutations";
 
@@ -27,20 +26,20 @@ const ViewAcademics = () => {
 
   const handleDelete = async (id) => {
     try {
-      const academic = sortedAcademics.find((item) => String(item.id) === String(id));
-      if (academic && academic.icons) {
-        await deleteFilesFromSupabase(academic.icons);
-      }
       deleteMutation.mutate(id, {
         onSuccess: () => {
           enqueueSnackbar("Academic data deleted successfully!", { variant: "success" });
         },
-        onError: () => {
-          enqueueSnackbar("Failed to delete academic data. Please try again.", { variant: "error" });
+        onError: (error) => {
+          const msg = error?.response?.data?.error || error?.message || "Failed to delete academic data. Please try again.";
+          console.error("Delete academic failed:", error);
+          enqueueSnackbar(msg, { variant: "error" });
         },
       });
     } catch (error) {
-      enqueueSnackbar("Failed to delete academic data. Please try again.", { variant: "error" });
+      const msg = error?.response?.data?.error || error?.message || "Failed to delete academic data. Please try again.";
+      console.error("Delete academic failed:", error);
+      enqueueSnackbar(msg, { variant: "error" });
     }
   };
 
@@ -79,7 +78,7 @@ const ViewAcademics = () => {
                       {academic.icons.map((icon, idx) => (
                         <img
                           key={idx}
-                          src={typeof icon === "string" ? icon : icon.icon_url || icon}
+                          src={typeof icon === "string" ? icon : icon.icon_url || ""}
                           alt={`Icon ${idx}`}
                           className="w-8 h-8 object-cover rounded"
                         />
@@ -91,19 +90,21 @@ const ViewAcademics = () => {
                 </td>
                 <td className="px-4 py-3">{academic.university_name}</td>
                 <td className="px-4 py-3">{academic.college_name}</td>
-                <td className="px-4 py-3 text-center">
-                  <button
-                    onClick={() => handleEdit(academic.id)}
-                    className="bg-blue-500 text-white px-3 py-1.5 rounded-md mr-2 hover:bg-blue-600 transition-colors text-sm"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(academic.id)}
-                    className="bg-red-500 text-white px-3 py-1.5 rounded-md hover:bg-red-600 transition-colors text-sm"
-                  >
-                    Delete
-                  </button>
+                <td className="px-4 py-3 text-center whitespace-nowrap">
+                  <div className="flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => handleEdit(academic.id)}
+                      className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors text-sm font-medium"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(academic.id)}
+                      className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors text-sm font-medium"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

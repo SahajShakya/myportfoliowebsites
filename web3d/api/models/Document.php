@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../helpers/uuid.php';
+
 class Document {
     private $conn;
     private $table = 'documents';
@@ -8,12 +10,13 @@ class Document {
     }
 
     public function create($userId, $fileName, $originalName, $relativePath, $absolutePath, $fileType, $mimeType, $fileSize) {
+        $id = generateUUID();
         $stmt = $this->conn->prepare(
-            "INSERT INTO {$this->table} (user_id, file_name, original_name, relative_path, absolute_path, file_type, mime_type, file_size, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())"
+            "INSERT INTO {$this->table} (id, user_id, file_name, original_name, relative_path, absolute_path, file_type, mime_type, file_size, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())"
         );
-        $stmt->execute([$userId, $fileName, $originalName, $relativePath, $absolutePath, $fileType, $mimeType, $fileSize]);
-        return $this->conn->lastInsertId();
+        $stmt->execute([$id, $userId, $fileName, $originalName, $relativePath, $absolutePath, $fileType, $mimeType, $fileSize]);
+        return $id;
     }
 
     public function findById($id) {

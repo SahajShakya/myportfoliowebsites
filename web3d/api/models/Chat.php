@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../helpers/uuid.php';
+
 class Chat {
     private $conn;
 
@@ -24,9 +26,10 @@ class Chat {
     }
 
     public function addMessage($sessionId, $role, $content) {
-        $stmt = $this->conn->prepare("INSERT INTO chat_messages (session_id, role, content) VALUES (?, ?, ?)");
-        $stmt->execute([$sessionId, $role, $content]);
-        return $this->conn->lastInsertId();
+        $id = generateUUID();
+        $stmt = $this->conn->prepare("INSERT INTO chat_messages (id, session_id, role, content) VALUES (?, ?, ?, ?)");
+        $stmt->execute([$id, $sessionId, $role, $content]);
+        return $id;
     }
 
     public function getMessages($sessionId, $limit = 20) {

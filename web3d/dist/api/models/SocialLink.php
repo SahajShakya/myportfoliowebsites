@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../helpers/uuid.php';
+
 class SocialLink {
     private $conn;
     private $table = 'social_links';
@@ -22,11 +24,12 @@ class SocialLink {
     }
 
     public function create($userId, $platform, $iconName, $url, $displayOrder = 0) {
+        $id = generateUUID();
         $stmt = $this->conn->prepare(
-            "INSERT INTO {$this->table} (user_id, platform, icon_name, url, display_order) VALUES (?, ?, ?, ?, ?)"
+            "INSERT INTO {$this->table} (id, user_id, platform, icon_name, url, display_order) VALUES (?, ?, ?, ?, ?, ?)"
         );
-        $stmt->execute([$userId, $platform, $iconName, $url, $displayOrder]);
-        return $this->conn->lastInsertId();
+        $stmt->execute([$id, $userId, $platform, $iconName, $url, $displayOrder]);
+        return $id;
     }
 
     public function update($id, $platform, $iconName, $url, $displayOrder) {

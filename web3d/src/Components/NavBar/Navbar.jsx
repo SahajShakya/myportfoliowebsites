@@ -144,7 +144,7 @@ const Tab = ({
     <li
       onMouseEnter={() => setHovered(tab)} // Set hovered tab
       onClick={() => handleSetSelected(tab)} // Set selected tab
-      className={`relative z-10 block cursor-pointer px-3 py-1.5 text-xs uppercase md:px-5 md:py-3 md:text-base ${
+      className={`relative z-10 block cursor-pointer px-3 py-1 text-[10px] uppercase md:px-5 md:py-3 md:text-base ${
         hovered === tab || selected === tab ? "text-red-500" : "text-black"
       }`}
     >

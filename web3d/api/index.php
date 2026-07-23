@@ -25,7 +25,10 @@ require_once __DIR__ . '/routes/photography.php';
 require_once __DIR__ . '/routes/contact.php';
 require_once __DIR__ . '/routes/chat.php';
 
+require_once __DIR__ . '/config/migrate.php';
+
 $db = (new Database())->getConnection();
+runMigrations($db);
 $method = $_SERVER['REQUEST_METHOD'];
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $segments = array_values(array_filter(explode('/', $uri)));

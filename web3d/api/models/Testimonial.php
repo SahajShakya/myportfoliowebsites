@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../helpers/uuid.php';
+
 class Testimonial {
     private $conn;
     private $table = 'testimonials';
@@ -20,15 +22,17 @@ class Testimonial {
     }
 
     public function create($data) {
+        $id = generateUUID();
         $stmt = $this->conn->prepare(
-            "INSERT INTO {$this->table} (testimonial, name, designation, company, image) 
-             VALUES (?, ?, ?, ?, ?)"
+            "INSERT INTO {$this->table} (id, testimonial, name, designation, company, image) 
+             VALUES (?, ?, ?, ?, ?, ?)"
         );
         $stmt->execute([
+            $id,
             $data['testimonial'], $data['name'], $data['designation'],
             $data['company'], $data['image']
         ]);
-        return $this->conn->lastInsertId();
+        return $id;
     }
 
     public function update($id, $data) {

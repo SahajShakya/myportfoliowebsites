@@ -16,9 +16,11 @@ import Contact from "./Pages/NonAuth/Contact/Contact";
 import ViewAcademics from "./Pages/Auth/Academics/ViewAcademics";
 import Calendar from "./Pages/Calendar/Calendar";
 import Academics from "./Pages/NonAuth/Academics/Academics";
+import AcademicDetails from "./Pages/NonAuth/Academics/AcademicDetails";
 import AddJourney from "./Pages/Auth/Journey/AddJourney";
 import ViewJourney from "./Pages/Auth/Journey/ViewJourney";
 import Journey from "./Pages/NonAuth/Journey/Journey";
+import JourneyDetails from "./Pages/NonAuth/Journey/JourneyDetails";
 import AddProjects from "./Pages/Auth/Projects/AddProjects";
 import ViewProjects from "./Pages/Auth/Projects/ViewProjects";
 import Projects from "./Pages/NonAuth/Projects/Projects";
@@ -63,7 +65,9 @@ const AppRoutes = () => {
         <Route path="/" element={<Home />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/academics" element={<Academics />} />
+        <Route path="/academics/:id" element={<AcademicDetails />} />
         <Route path="/journey" element={<Journey />} />
+        <Route path="/journey/:id" element={<JourneyDetails />} />
         <Route path="/projects" element={<Projects />} />
         <Route path="/projects/:id" element={<ProjectDetails />} />
         <Route path="/achievements" element={<Achievements />} />

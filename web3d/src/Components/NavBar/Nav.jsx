@@ -154,7 +154,7 @@ const Nav = () => {
 
   return (
     <motion.div
-      className="absolute top-0 left-0 right-0 z-40 flex items-center justify-between px-3 py-2 sm:px-4 md:px-6 lg:px-8 bg-black/30 backdrop-blur-sm"
+      className="absolute top-0 left-0 right-0 z-40 flex items-center justify-between px-3 sm:px-4 md:px-6 lg:px-8 pb-1 pt-2 bg-white/80 backdrop-blur-md"
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
@@ -164,27 +164,27 @@ const Nav = () => {
           <img
             src={profile.profile_image}
             alt={profile.name || "Profile"}
-            className="object-cover w-8 h-8 rounded-full sm:w-9 sm:h-9 md:w-10 md:h-10"
+            className="object-cover rounded-full w-7 h-7 sm:w-8 sm:h-8 md:w-8 md:h-8"
           />
         ) : (
           <img
             src={mypic}
             alt="Sahaj Shakya"
-            className="object-cover rounded-full w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9"
+            className="object-cover w-6 h-6 rounded-full sm:w-7 sm:h-7 md:w-8 md:h-8"
           />
         )}
-        <div className="hidden ml-2 text-white sm:ml-3 sm:block">
-          <div className="text-sm font-semibold text-black sm:text-base md:text-lg">
+        <div className="hidden ml-2 text-gray-800 sm:ml-3 sm:block">
+          <div className="text-xs font-semibold text-gray-900 sm:text-sm md:text-base">
             {profile.name || "Sahaj Shakya"}
           </div>
-          <div className="flex items-center text-[11px] sm:text-xs md:text-sm">
-            <FaEnvelope className="mr-1 text-blue-500" />
-            <h3 className="text-blue-700">{profile.email || "saz.shakya@gmail.com"}</h3>
+          <div className="flex items-center text-[10px] sm:text-[11px] md:text-xs">
+            <FaEnvelope className="mr-1 text-blue-400" />
+            <h3 className="text-blue-400">{profile.email || "saz.shakya@gmail.com"}</h3>
           </div>
           {profile.phone && (
-            <div className="hidden items-center md:flex text-[11px] sm:text-xs md:text-sm">
+            <div className="hidden items-center md:flex text-[10px] sm:text-[11px] md:text-xs">
               <FaPhoneAlt className="mr-1 text-green-400" />
-              <h3 className="text-green-700">{profile.phone}</h3>
+              <h3 className="text-green-400">{profile.phone}</h3>
             </div>
           )}
         </div>
@@ -207,7 +207,7 @@ const Nav = () => {
               ) : (
                 <Link
                   to="/admin/dashboard"
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition bg-white border border-black rounded-full hover:bg-gray-100"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition text-gray-800 border border-gray-300 rounded-full hover:bg-gray-100"
                 >
                   Dashboard
                 </Link>
@@ -217,7 +217,7 @@ const Nav = () => {
               <a
                 href={activeCv.file_url}
                 download
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition bg-white border border-black rounded-full hover:bg-gray-100"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition text-gray-800 border border-gray-300 rounded-full hover:bg-gray-100"
               >
                 <FaDownload className="text-xs" />
                 <span>CV</span>
@@ -239,7 +239,7 @@ const Nav = () => {
               <a
                 href={activeCv.file_url}
                 download
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition bg-white border border-black rounded-full hover:bg-gray-100"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition text-gray-800 border border-gray-300 rounded-full hover:bg-gray-100"
               >
                 <FaDownload className="text-xs" />
                 <span>CV</span>
@@ -280,10 +280,10 @@ const StickyNavLink = ({ path, logo }) => {
         href={path}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-white hover:text-gray-300"
+        className="text-gray-800 hover:text-gray-500"
       >
         <motion.span
-          className="relative z-10 flex items-center justify-center transition-transform bg-gray-700 rounded-full w-7 h-7 hover:scale-110"
+          className="relative z-10 flex items-center justify-center transition-transform bg-gray-200 rounded-full w-7 h-7 hover:scale-110"
           style={{ x: textX, y: textY }}
         >
           {logo}

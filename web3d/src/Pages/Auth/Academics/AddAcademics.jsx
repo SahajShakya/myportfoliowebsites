@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+/* eslint-disable react/prop-types */
+import { useState } from "react";
 import { Formik, Form, FieldArray } from "formik";
 import InputField from "../../../Components/Input/InputField";
 import MyEditor from "../../../Components/MyEditor/MyEditor";
@@ -21,7 +22,7 @@ const validationSchema = Yup.object({
   urlofCompany: Yup.string().required("URL of Company is required"),
 });
 
-const AddAcademics = ({ editData, handleEditSuccess }) => {
+const AddAcademics = ({ editData }) => {
   const [editorValue, setEditorValue] = useState(editData?.description || "");
   const { enqueueSnackbar } = useSnackbar();
   const createMutation = useCreateAcademic();
@@ -29,12 +30,32 @@ const AddAcademics = ({ editData, handleEditSuccess }) => {
 
   const buildInitialContentItems = () => {
     if (editData?.contents && Array.isArray(editData.contents) && editData.contents.length > 0) {
-      return editData.contents.map((item) => ({
-        content_text: item.content_text || "",
-        image_url: item.image_url ? [{ icon: item.image_url }] : [],
-        image_description: item.image_description || "",
-        display_order: item.display_order || 0,
-      }));
+      return editData.contents.map((item) => {
+        let images = [];
+        let imageTitles = [];
+        if (item.image_url) {
+          try {
+            const parsed = JSON.parse(item.image_url);
+            if (Array.isArray(parsed)) {
+              images = parsed.map((img) => ({
+                icon: typeof img === "string" ? img : img.url || "",
+                document_id: item.document_id || null,
+              }));
+              imageTitles = parsed.map((img) => (typeof img === "string" ? "" : img.title || ""));
+            }
+          } catch {
+            images = [{ icon: item.image_url, document_id: item.document_id || null }];
+            imageTitles = [item.image_description || ""];
+          }
+        }
+        return {
+          heading: item.heading || "",
+          content_text: item.content_text || "",
+          image_url: images,
+          image_titles: imageTitles,
+          display_order: item.display_order || 0,
+        };
+      });
     }
     return [];
   };
@@ -45,7 +66,8 @@ const AddAcademics = ({ editData, handleEditSuccess }) => {
     college_name: editData?.college_name || "",
     icons:
       editData?.icons?.map((icon) => ({
-        icon: typeof icon === "string" ? icon : icon.icon_url || icon,
+        icon: typeof icon === "string" ? icon : icon.icon_url || "",
+        document_id: typeof icon === "object" ? (icon.document_id || null) : null,
       })) || [],
     description: editData?.description || "",
     startDate: editData?.start_date || "",
@@ -53,70 +75,118 @@ const AddAcademics = ({ editData, handleEditSuccess }) => {
     contentItems: buildInitialContentItems(),
     focusedField: "",
     urlofCompany: editData?.url_of_company || "",
-    github_link: editData?.github_link || "",
+    backgroundImage: (editData?.background_document_id || editData?.background_image_url)
+      ? [{ icon: editData.background_image_url || editData.background_image || "", document_id: editData.background_document_id || null }]
+      : [],
   };
 
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
-      let uploadedIconUrls = [];
+      let uploadedIcons = [];
       if (values.icons && values.icons.length > 0) {
         const hasNewFiles = values.icons.some((item) => item.file);
         if (hasNewFiles) {
-          uploadedIconUrls = await uploadFiles(values.icons, "academics");
+          try {
+            uploadedIcons = await uploadFiles(values.icons, "academics");
+          } catch (uploadErr) {
+            console.error("Icon upload failed:", uploadErr);
+            enqueueSnackbar(`Icon upload failed: ${uploadErr.message}`, { variant: "error" });
+            setSubmitting(false);
+            return;
+          }
         } else {
-          uploadedIconUrls = values.icons.map((item) =>
-            typeof item === "string" ? item : item.icon
+          uploadedIcons = values.icons.map((item) =>
+            typeof item === "string" ? { url: item, document_id: null } : { url: item.icon, document_id: item.document_id || null }
           );
         }
       }
-      if (uploadedIconUrls.length === 0 && editData) {
-        uploadedIconUrls = editData.icons || [];
+      if (uploadedIcons.length === 0 && editData) {
+        uploadedIcons = (editData.icons || []).map((icon) => ({
+          url: typeof icon === "string" ? icon : icon.icon_url || "",
+          document_id: typeof icon === "object" ? icon.document_id : null,
+        }));
       }
 
-      const contentFileItems = [];
-      const newContentFiles = [];
+      let backgroundImageUrl = editData?.background_image_url || editData?.background_image || null;
+      let backgroundDocumentId = editData?.background_document_id || null;
+      if (values.backgroundImage && values.backgroundImage.length > 0) {
+        const hasNewBg = values.backgroundImage.some((item) => item.file);
+        if (hasNewBg) {
+          try {
+            const bgResult = await uploadFiles(values.backgroundImage, "academics");
+            backgroundImageUrl = bgResult[0]?.url || bgResult[0]?.path || null;
+            backgroundDocumentId = bgResult[0]?.document_id || null;
+            if (!backgroundDocumentId) {
+              console.error("Background image uploaded but no document_id returned:", bgResult);
+              enqueueSnackbar("Background image uploaded but failed to create document record. Please try again.", { variant: "warning" });
+            }
+          } catch (uploadErr) {
+            console.error("Background image upload failed:", uploadErr);
+            enqueueSnackbar(`Background image upload failed: ${uploadErr.message}`, { variant: "error" });
+            setSubmitting(false);
+            return;
+          }
+        } else {
+          backgroundImageUrl = values.backgroundImage[0]?.icon || values.backgroundImage[0] || null;
+          backgroundDocumentId = values.backgroundImage[0]?.document_id || null;
+        }
+      }
+
+      const contentItems = [];
+      const contentDocumentIds = [];
       for (let i = 0; i < values.contentItems.length; i++) {
         const item = values.contentItems[i];
-        const hasNewImage = item.image_url && item.image_url.some((f) => f.file);
-        if (hasNewImage) {
-          newContentFiles.push({ index: i, files: item.image_url });
-        } else {
-          const existingUrl = item.image_url?.[0]?.icon || "";
-          contentFileItems.push({ index: i, url: existingUrl });
-        }
-      }
-
-      const uploadedContentUrls = {};
-      if (newContentFiles.length > 0) {
-        for (const entry of newContentFiles) {
-          const result = await uploadFiles(entry.files, "academics");
-          if (result.length > 0) {
-            uploadedContentUrls[entry.index] = result[0].url || result[0].path || result[0];
+        let imagesJson = "[]";
+        let docIds = [];
+        if (item.image_url && item.image_url.length > 0) {
+          const hasNew = item.image_url.some((f) => f.file);
+          if (hasNew) {
+            try {
+              const result = await uploadFiles(item.image_url, "academics");
+              const images = result.map((r, idx) => ({
+                url: r.url || r.path || r,
+                title: (item.image_titles || [])[idx] || "",
+              }));
+              imagesJson = JSON.stringify(images);
+              docIds = result.map((r) => r.document_id || null);
+            } catch (uploadErr) {
+              console.error(`Content section ${i + 1} image upload failed:`, uploadErr);
+              enqueueSnackbar(`Content section ${i + 1} image upload failed: ${uploadErr.message}`, { variant: "error" });
+              setSubmitting(false);
+              return;
+            }
+          } else {
+            const images = item.image_url.map((img, idx) => ({
+              url: typeof img === "string" ? img : img.icon || "",
+              title: (item.image_titles || [])[idx] || "",
+              document_id: img.document_id || null,
+            }));
+            imagesJson = JSON.stringify(images);
+            docIds = item.image_url.map((img) => img.document_id || null);
           }
         }
+        contentItems.push({
+          heading: item.heading || "",
+          content_text: item.content_text || "",
+          image_url: imagesJson,
+          display_order: i,
+        });
+        contentDocumentIds.push(docIds);
       }
-      for (const entry of contentFileItems) {
-        uploadedContentUrls[entry.index] = entry.url;
-      }
-
-      const contentItems = values.contentItems.map((item, idx) => ({
-        content_text: item.content_text,
-        image_url: uploadedContentUrls[idx] || "",
-        image_description: item.image_description || "",
-        display_order: idx,
-      }));
 
       const academicData = {
         title: values.title,
         university_name: values.university_name,
         college_name: values.college_name,
-        icons: uploadedIconUrls,
+        icons: uploadedIcons,
         description: editorValue,
-        startDate: values.startDate,
-        endDate: values.endDate,
+        startDate: values.startDate || null,
+        endDate: values.endDate || null,
         contentItems: contentItems,
+        contentDocumentIds: contentDocumentIds,
         urlofCompany: values.urlofCompany,
-        github_link: values.github_link,
+        backgroundImage: backgroundImageUrl,
+        backgroundDocumentId: backgroundDocumentId,
       };
 
       const onSuccess = () => {
@@ -130,7 +200,8 @@ const AddAcademics = ({ editData, handleEditSuccess }) => {
 
       const onError = (error) => {
         console.error("Error submitting academic:", error);
-        enqueueSnackbar("Failed to submit academic. Please try again.", { variant: "error" });
+        const msg = error?.response?.data?.error || error?.message || "Failed to submit academic. Please try again.";
+        enqueueSnackbar(msg, { variant: "error" });
         setSubmitting(false);
       };
 
@@ -141,7 +212,7 @@ const AddAcademics = ({ editData, handleEditSuccess }) => {
       }
     } catch (error) {
       console.error("Error submitting academic:", error);
-      enqueueSnackbar("Failed to submit academic. Please try again.", { variant: "error" });
+      enqueueSnackbar(`Submit failed: ${error.message}`, { variant: "error" });
       setSubmitting(false);
     }
   };
@@ -221,19 +292,6 @@ const AddAcademics = ({ editData, handleEditSuccess }) => {
             />
 
             <InputField
-              name="github_link"
-              type="url"
-              label="GitHub Link"
-              value={values.github_link}
-              onChange={(e) => setFieldValue("github_link", e.target.value)}
-              onBlur={handleBlur}
-              error={errors.github_link}
-              touched={touched.github_link}
-              focusedField={values.focusedField}
-              setFocusedField={(name) => setFieldValue("focusedField", name)}
-            />
-
-            <InputField
               name="startDate"
               type="date"
               label="Start Date"
@@ -260,7 +318,7 @@ const AddAcademics = ({ editData, handleEditSuccess }) => {
             />
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <label className="block mb-1 text-sm font-medium text-gray-700">Description</label>
               <MyEditor
                 value={editorValue}
                 onChange={(content) => {
@@ -271,11 +329,22 @@ const AddAcademics = ({ editData, handleEditSuccess }) => {
                 error={errors.description}
               />
               {touched.description && errors.description && (
-                <p className="text-red-500 text-sm mt-1">{errors.description}</p>
+                <p className="mt-1 text-sm text-red-500">{errors.description}</p>
               )}
             </div>
 
-            <div className="border-t pt-4">
+            <div>
+              <label className="block mb-1 text-sm font-medium text-gray-700">Background Image (for timeline card)</label>
+              <Upload
+                name="backgroundImage"
+                value={values.backgroundImage || []}
+                setFieldValue={setFieldValue}
+                onFileRemove={handleFileRemove}
+                maxFiles={1}
+              />
+            </div>
+
+            <div className="pt-4 border-t">
               <div className="flex items-center justify-between mb-3">
                 <label className="block text-sm font-semibold text-gray-700">Content Sections</label>
               </div>
@@ -284,54 +353,88 @@ const AddAcademics = ({ editData, handleEditSuccess }) => {
                 {({ push, remove }) => (
                   <div className="space-y-4">
                     {values.contentItems.map((item, index) => (
-                      <div key={index} className="border rounded-lg p-4 bg-gray-50 relative">
+                      <div key={index} className="relative p-4 border rounded-lg bg-gray-50">
                         <button
                           type="button"
                           onClick={() => remove(index)}
-                          className="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1"
+                          className="absolute p-1 text-red-500 top-2 right-2 hover:text-red-700"
                         >
                           <FaTrash size={14} />
                         </button>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                          <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">Image</label>
-                            <Upload
-                              name={`contentItems.${index}.image_url`}
-                              value={item.image_url || []}
-                              setFieldValue={setFieldValue}
-                              onFileRemove={handleFileRemove}
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">Image Description</label>
-                            <input
-                              type="text"
-                              value={item.image_description}
-                              onChange={(e) => setFieldValue(`contentItems.${index}.image_description`, e.target.value)}
-                              placeholder="Short description for the image"
-                              className="w-full border rounded-lg px-3 py-2 text-sm"
-                            />
-                          </div>
+                        <div className="mb-3">
+                          <label className="block mb-1 text-xs font-medium text-gray-600">Heading</label>
+                          <input
+                            type="text"
+                            value={item.heading}
+                            onChange={(e) => setFieldValue(`contentItems.${index}.heading`, e.target.value)}
+                            placeholder="Section heading"
+                            className="w-full px-3 py-2 text-sm border rounded-lg"
+                          />
                         </div>
 
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">Content</label>
+                        <div className="mb-3">
+                          <label className="block mb-1 text-xs font-medium text-gray-600">Description</label>
                           <textarea
                             value={item.content_text}
                             onChange={(e) => setFieldValue(`contentItems.${index}.content_text`, e.target.value)}
                             placeholder="Write your content here..."
                             rows={3}
-                            className="w-full border rounded-lg px-3 py-2 text-sm"
+                            className="w-full px-3 py-2 text-sm border rounded-lg"
                           />
+                        </div>
+
+                        <div className="mb-3">
+                          <label className="block mb-1 text-xs font-medium text-gray-600">Images / Videos (max 10)</label>
+                          <Upload
+                            name={`contentItems.${index}.image_url`}
+                            value={item.image_url || []}
+                            setFieldValue={setFieldValue}
+                            onFileRemove={handleFileRemove}
+                            maxFiles={10}
+                          />
+                        </div>
+
+                        <div className="mt-2">
+                          <label className="block mb-1 text-xs font-semibold text-gray-700">Image Titles (optional)</label>
+                          {item.image_url && item.image_url.length > 0 ? (
+                            <div className="space-y-2">
+                              {item.image_url.map((img, imgIdx) => (
+                                <div key={imgIdx} className="flex items-center gap-2 px-3 py-2 bg-white border rounded-lg">
+                                  <img
+                                    src={img.icon || ""}
+                                    alt=""
+                                    className="flex-shrink-0 object-cover w-10 h-10 border rounded"
+                                  />
+                                  <div className="flex-1 min-w-0">
+                                    <input
+                                      type="text"
+                                      value={(item.image_titles || [])[imgIdx] || ""}
+                                      onChange={(e) => {
+                                        const newTitles = [...(item.image_titles || [])];
+                                        newTitles[imgIdx] = e.target.value;
+                                        setFieldValue(`contentItems.${index}.image_titles`, newTitles);
+                                      }}
+                                      placeholder={`Title for image ${imgIdx + 1} (optional)`}
+                                      className="w-full px-2 py-1 text-sm border rounded"
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="px-3 py-3 text-xs italic text-center text-gray-400 bg-white border border-dashed rounded-lg">
+                              Upload images above, then add optional titles for each one here
+                            </p>
+                          )}
                         </div>
                       </div>
                     ))}
 
                     <button
                       type="button"
-                      onClick={() => push({ content_text: "", image_url: [], image_description: "", display_order: values.contentItems.length })}
-                      className="flex items-center gap-2 text-blue-500 hover:text-blue-700 text-sm font-medium border border-dashed border-blue-300 rounded-lg px-4 py-2 w-full justify-center hover:bg-blue-50 transition-colors"
+                      onClick={() => push({ heading: "", content_text: "", image_url: [], image_titles: [], display_order: values.contentItems.length })}
+                      className="flex items-center justify-center w-full gap-2 px-4 py-2 text-sm font-medium text-blue-500 transition-colors border border-blue-300 border-dashed rounded-lg hover:text-blue-700 hover:bg-blue-50"
                     >
                       <FaPlus /> Add Content Section
                     </button>
@@ -342,7 +445,7 @@ const AddAcademics = ({ editData, handleEditSuccess }) => {
 
             <motion.button
               type="submit"
-              className="w-full p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all"
+              className="w-full p-3 text-white transition-all bg-blue-500 rounded-lg hover:bg-blue-600"
             >
               Submit
             </motion.button>

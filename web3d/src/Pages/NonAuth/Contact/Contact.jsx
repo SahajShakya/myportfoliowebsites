@@ -9,6 +9,7 @@ import InputField from "../../../Components/Input/InputField";
 import { motion, AnimatePresence } from "framer-motion";
 import { Me } from "../../../Components/Model/Me";
 import { useContactData } from "../../../Hooks/data/useContactData";
+import { useSectionBgQuery } from "../../../Hooks/options/useSectionBgQuery";
 import { styles } from "../../../styles";
 import {
   FaLaptopCode,
@@ -38,6 +39,7 @@ const validationSchema = Yup.object({
 const Contact = () => {
   const { sendMessage } = useContactData();
   const { enqueueSnackbar } = useSnackbar();
+  const { data: bgImage } = useSectionBgQuery("contact_bg_image");
   const [isRotating, setIsRotating] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [focusedField, setFocusedField] = useState("");
@@ -69,8 +71,15 @@ const Contact = () => {
   });
 
   return (
-    <section className="relative w-full min-h-screen">
-      <div className={`${styles.paddingX} pt-20 pb-10`}>
+    <section
+      className="relative w-full min-h-screen"
+      style={{
+        background: bgImage
+          ? `url(${bgImage}) center/cover no-repeat fixed`
+          : "#0a0a1a",
+      }}
+    >
+      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-10">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}

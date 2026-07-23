@@ -32,56 +32,29 @@ function handleJourneyRoutes($method, $segments, $db) {
 
     if ($method === 'POST') {
         $authData = $auth->authenticate();
-        $userId = $authData['user_id'];
 
-        $iconDocs = [];
-        $contentDocs = [];
         $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
         if (strpos($contentType, 'multipart/form-data') !== false) {
             $data = $_POST;
-            if (!empty($_FILES['files'])) {
-                $uploaded = $uploader->handleUpload($_FILES, 'journey');
-                $iconDocs = is_array($uploaded) ? $uploaded : [];
-                $data['icons'] = $iconDocs;
-            } else {
-                $data['icons'] = json_decode($data['icons'] ?? '[]', true);
-            }
-            if (!empty($_FILES['content_files'])) {
-                $contentUploaded = $uploader->handleUpload($_FILES, 'journey');
-                $contentDocs = is_array($contentUploaded) ? $contentUploaded : [];
-            }
-            if (isset($data['contentItems'])) {
-                $data['contentItems'] = json_decode($data['contentItems'], true);
-            }
+            $data['icons'] = json_decode($data['icons'] ?? '[]', true);
+            $data['contentItems'] = json_decode($data['contentItems'] ?? '[]', true);
+            $data['contentDocumentIds'] = json_decode($data['contentDocumentIds'] ?? '[]', true);
+            $data['backgroundDocumentId'] = $data['backgroundDocumentId'] ?? null;
         } else {
             $data = json_decode(file_get_contents('php://input'), true);
             $data['icons'] = $data['icons'] ?? [];
             $data['contentItems'] = $data['contentItems'] ?? [];
+            $data['contentDocumentIds'] = $data['contentDocumentIds'] ?? [];
+            $data['backgroundDocumentId'] = $data['backgroundDocumentId'] ?? null;
         }
 
-        $docIds = [];
-        foreach ($iconDocs as $fileInfo) {
-            $docId = $documentModel->create(
-                $userId, $fileInfo['file_name'], $fileInfo['original_name'],
-                $fileInfo['relative_path'], $fileInfo['absolute_path'],
-                'journey_icon', $fileInfo['mime_type'], $fileInfo['file_size']
-            );
-            $docIds[] = $docId;
+        try {
+            $newId = $model->create($data);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(["error" => "Failed to create journey: " . $e->getMessage()]);
+            return;
         }
-        $data['document_ids'] = $docIds;
-
-        $contentDocIds = [];
-        foreach ($contentDocs as $fileInfo) {
-            $docId = $documentModel->create(
-                $userId, $fileInfo['file_name'], $fileInfo['original_name'],
-                $fileInfo['relative_path'], $fileInfo['absolute_path'],
-                'journey_content', $fileInfo['mime_type'], $fileInfo['file_size']
-            );
-            $contentDocIds[] = $docId;
-        }
-        $data['content_document_ids'] = $contentDocIds;
-
-        $newId = $model->create($data);
         retrainChatbot($db, 'journey');
         echo json_encode(["message" => "Journey created", "id" => $newId]);
         return;
@@ -89,56 +62,29 @@ function handleJourneyRoutes($method, $segments, $db) {
 
     if ($method === 'PUT' && $id) {
         $authData = $auth->authenticate();
-        $userId = $authData['user_id'];
 
-        $iconDocs = [];
-        $contentDocs = [];
         $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
         if (strpos($contentType, 'multipart/form-data') !== false) {
             $data = $_POST;
-            if (!empty($_FILES['files'])) {
-                $uploaded = $uploader->handleUpload($_FILES, 'journey');
-                $iconDocs = is_array($uploaded) ? $uploaded : [];
-                $data['icons'] = $iconDocs;
-            } else {
-                $data['icons'] = json_decode($data['icons'] ?? '[]', true);
-            }
-            if (!empty($_FILES['content_files'])) {
-                $contentUploaded = $uploader->handleUpload($_FILES, 'journey');
-                $contentDocs = is_array($contentUploaded) ? $contentUploaded : [];
-            }
-            if (isset($data['contentItems'])) {
-                $data['contentItems'] = json_decode($data['contentItems'], true);
-            }
+            $data['icons'] = json_decode($data['icons'] ?? '[]', true);
+            $data['contentItems'] = json_decode($data['contentItems'] ?? '[]', true);
+            $data['contentDocumentIds'] = json_decode($data['contentDocumentIds'] ?? '[]', true);
+            $data['backgroundDocumentId'] = $data['backgroundDocumentId'] ?? null;
         } else {
             $data = json_decode(file_get_contents('php://input'), true);
             $data['icons'] = $data['icons'] ?? [];
             $data['contentItems'] = $data['contentItems'] ?? [];
+            $data['contentDocumentIds'] = $data['contentDocumentIds'] ?? [];
+            $data['backgroundDocumentId'] = $data['backgroundDocumentId'] ?? null;
         }
 
-        $docIds = [];
-        foreach ($iconDocs as $fileInfo) {
-            $docId = $documentModel->create(
-                $userId, $fileInfo['file_name'], $fileInfo['original_name'],
-                $fileInfo['relative_path'], $fileInfo['absolute_path'],
-                'journey_icon', $fileInfo['mime_type'], $fileInfo['file_size']
-            );
-            $docIds[] = $docId;
+        try {
+            $model->update($id, $data);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(["error" => "Failed to update journey: " . $e->getMessage()]);
+            return;
         }
-        $data['document_ids'] = $docIds;
-
-        $contentDocIds = [];
-        foreach ($contentDocs as $fileInfo) {
-            $docId = $documentModel->create(
-                $userId, $fileInfo['file_name'], $fileInfo['original_name'],
-                $fileInfo['relative_path'], $fileInfo['absolute_path'],
-                'journey_content', $fileInfo['mime_type'], $fileInfo['file_size']
-            );
-            $contentDocIds[] = $docId;
-        }
-        $data['content_document_ids'] = $contentDocIds;
-
-        $model->update($id, $data);
         retrainChatbot($db, 'journey');
         echo json_encode(["message" => "Journey updated"]);
         return;

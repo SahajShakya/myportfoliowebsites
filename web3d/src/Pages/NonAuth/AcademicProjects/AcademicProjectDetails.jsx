@@ -72,13 +72,25 @@ const AcademicProjectDetails = () => {
 
       <div className="mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {details.map((item) => {
-          const icons = Array.isArray(item.icons) ? item.icons : [];
+          let images = [];
+          if (item.image_url) {
+            try {
+              const parsed = JSON.parse(item.image_url);
+              if (Array.isArray(parsed)) {
+                images = parsed;
+              } else {
+                images = [{ url: item.image_url }];
+              }
+            } catch {
+              images = [{ url: item.image_url }];
+            }
+          }
           return (
             <DetailCard
               key={item.id}
               index={item.id}
-              name={item.contents}
-              image={icons[0]}
+              name={item.heading || item.contents || ""}
+              image={images[0]?.url || images[0] || ""}
             />
           );
         })}

@@ -76,14 +76,32 @@ class UploadMiddleware {
             if ($this->isImage($fileType)) {
                 $compressed = $this->compressImage($fileTmp, $savedPath, $fileType);
                 if ($compressed) {
-                    $fileSize = filesize($savedPath);
+                    // compressImage may change the extension (.jpeg→.jpg, .png→.png, etc.)
+                    // Find the actual saved file since $savedPath may have a different extension
+                    $expectedExts = ['jpg', 'png', 'webp'];
+                    $found = false;
+                    foreach ($expectedExts as $ext) {
+                        $candidate = preg_replace('/\.[^.]+$/', '.' . $ext, $savedPath);
+                        if (file_exists($candidate)) {
+                            $savedPath = $candidate;
+                            $found = true;
+                            break;
+                        }
+                    }
+                    if (!$found && !file_exists($savedPath)) {
+                        // Fallback: compression failed silently, do raw move
+                        move_uploaded_file($fileTmp, $savedPath);
+                    }
+                    if (file_exists($savedPath)) {
+                        $fileSize = filesize($savedPath);
+                    }
                 } else {
                     move_uploaded_file($fileTmp, $savedPath);
                 }
             } elseif ($this->isVideo($fileType)) {
                 move_uploaded_file($fileTmp, $savedPath);
                 $compressed = $this->compressVideo($savedPath);
-                if ($compressed) {
+                if ($compressed && file_exists($savedPath)) {
                     $fileSize = filesize($savedPath);
                 }
             } else {

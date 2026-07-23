@@ -24,24 +24,9 @@ export const AuthProvider = ({ children }) => {
         );
         if (data.user) {
           setUser(data.user);
-          setLoading(false);
-          return;
         }
       } catch {
-        // Access token may have expired — try refresh
-        try {
-          const refreshRes = await publicAgent.post(
-            routesName.AuthRoute({}).refresh
-          );
-          if (refreshRes.status === 200) {
-            const { data: retryData } = await privateAgent.get(
-              routesName.AuthRoute({}).me
-            );
-            if (retryData.user) {
-              setUser(retryData.user);
-            }
-          }
-        } catch {}
+        setUser(null);
       }
       setLoading(false);
     };

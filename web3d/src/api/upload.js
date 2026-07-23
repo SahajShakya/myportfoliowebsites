@@ -2,26 +2,52 @@ import { privateAgent } from "./authRequest";
 import { routesName } from "../constants/routesName";
 
 export const uploadFiles = async (files, basePath = "") => {
-  try {
-    const formData = new FormData();
-    formData.append("basePath", basePath);
+  const formData = new FormData();
+  formData.append("basePath", basePath);
 
-    for (const fileObj of files) {
-      const file = fileObj.file;
-      if (!file || !file.name) {
-        console.error("Invalid file detected. Skipping.", fileObj);
-        continue;
-      }
-      formData.append("files[]", file);
+  let hasFiles = false;
+  for (const fileObj of files) {
+    const file = fileObj.file;
+    if (!file || !file.name) {
+      console.error("Invalid file detected. Skipping.", fileObj);
+      continue;
     }
-
-    const response = await privateAgent.post(routesName.UploadRoute().upload, formData);
-    const data = response.data;
-    return data.files || [];
-  } catch (error) {
-    console.error("Error uploading files:", error.message);
-    return [];
+    formData.append("files[]", file);
+    hasFiles = true;
   }
+
+  if (!hasFiles) {
+    throw new Error("No valid files to upload");
+  }
+
+  const response = await privateAgent.post(routesName.UploadRoute().upload, formData);
+  const data = response.data;
+
+  if (data.error) {
+    throw new Error(data.error);
+  }
+
+  const uploaded = (data.files || []).map(f => ({
+    url: f.url,
+    path: f.path,
+    file_name: f.file_name,
+    original_name: f.original_name,
+    mime_type: f.mime_type,
+    file_size: f.file_size,
+    absolute_path: f.absolute_path,
+    document_id: f.document_id || null,
+  }));
+
+  if (uploaded.length === 0) {
+    throw new Error("Upload returned no files");
+  }
+
+  const missingDocId = uploaded.find(f => !f.document_id);
+  if (missingDocId) {
+    console.warn("Upload succeeded but document_id is missing for:", missingDocId);
+  }
+
+  return uploaded;
 };
 
 export const uploadFilesToSupabase = uploadFiles;

@@ -26,6 +26,21 @@ function handleSettingsRoutes($method, $segments, $db) {
     }
 
     if ($method === 'GET' && $action) {
+        $bgKeys = ['about_bg_image', 'academics_bg_image', 'achievements_bg_image', 'journey_bg_image', 'projects_bg_image', 'academic_projects_bg_image', 'academic_works_bg_image', 'testimonials_bg_image', 'contact_bg_image'];
+
+        if (in_array($action, $bgKeys)) {
+            $stmt = $db->prepare(
+                "SELECT d.relative_path AS setting_value FROM site_settings ss
+                 LEFT JOIN documents d ON ss.bg_image_id = d.id
+                 WHERE ss.setting_key = ?"
+            );
+            $stmt->execute([$action]);
+            $row = $stmt->fetch();
+
+            echo json_encode(["data" => ["key" => $action, "value" => $row ? $row['setting_value'] : null]]);
+            return;
+        }
+
         $stmt = $db->prepare("SELECT setting_value FROM site_settings WHERE setting_key = ?");
         $stmt->execute([$action]);
         $row = $stmt->fetch();

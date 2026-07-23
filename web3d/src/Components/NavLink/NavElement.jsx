@@ -33,7 +33,7 @@ const NavElement = ({ token, path, pathName, logo }) => {
   };
 
   return (
-    <nav className="p-8 relative z-50">
+    <nav className="relative z-50">
       <ul className="flex gap-12">
         {!token ? (
           path ? (
@@ -61,7 +61,7 @@ const NavElement = ({ token, path, pathName, logo }) => {
               setDropdownVisible={setDropdownVisible}
               handleOpenModal={handleOpenModal}
             >
-              <FiUser size={24} className="cursor-pointer text-gray-600" />
+              <FiUser size={24} className="cursor-pointer text-gray-800" />
             </FlyoutLink>
           </>
         )}

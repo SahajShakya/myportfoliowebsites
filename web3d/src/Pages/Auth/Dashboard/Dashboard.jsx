@@ -24,6 +24,7 @@ import mypic from "../../../assets/mypic.png";
 import { useCvsQuery } from "../../../Hooks/options/useCvsQuery";
 import { useUploadProfileImage, useUpdateProfile, useUpdateMaterialsUrl } from "../../../Hooks/mutations/useAuthMutations";
 import { useUploadCv, useDeleteCv, useUpdateCv } from "../../../Hooks/mutations/useCvsMutations";
+import SectionBgImageEditor from "../../../Components/SectionBgImageEditor";
 
 const Dashboard = () => {
   const { user: authUser } = useAuthContext();
@@ -191,8 +192,24 @@ const Dashboard = () => {
       {/* Materials URL */}
       <MaterialsUrlEditor profile={profile} setProfile={setProfile} addData={addData} updateMaterialsUrlMutation={updateMaterialsUrlMutation} />
 
-      {/* About Background Image */}
-      <AboutBgImageEditor />
+      {/* Section Background Images */}
+      <div className="p-6 bg-white shadow-md rounded-xl">
+        <div className="flex items-center gap-2 mb-4">
+          <FaImage className="text-purple-500" />
+          <h2 className="text-xl font-semibold">Section Backgrounds</h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <SectionBgImageEditor sectionKey="about_bg_image" title="About" />
+          <SectionBgImageEditor sectionKey="academics_bg_image" title="Academics" />
+          <SectionBgImageEditor sectionKey="achievements_bg_image" title="Achievements" />
+          <SectionBgImageEditor sectionKey="journey_bg_image" title="Journey" />
+          <SectionBgImageEditor sectionKey="projects_bg_image" title="Projects" />
+          <SectionBgImageEditor sectionKey="academic_projects_bg_image" title="Academic Projects" />
+          <SectionBgImageEditor sectionKey="academic_works_bg_image" title="Academic Works" />
+          <SectionBgImageEditor sectionKey="testimonials_bg_image" title="Testimonials" />
+          <SectionBgImageEditor sectionKey="contact_bg_image" title="Contact" />
+        </div>
+      </div>
 
       {/* Quick Links */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -403,67 +420,6 @@ const MaterialsUrlEditor = ({ profile, setProfile, addData, updateMaterialsUrlMu
           </div>
         )}
       </div>
-    </div>
-  );
-};
-
-const AboutBgImageEditor = () => {
-  const [bgImage, setBgImage] = useState(null);
-  const [uploading, setUploading] = useState(false);
-
-  useEffect(() => {
-    const fetchBg = async () => {
-      try {
-        const response = await privateAgent.get(routesName.SettingsRoute().aboutBgImage);
-        const data = response.data;
-        if (data.data?.value) setBgImage(data.data.value);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchBg();
-  }, []);
-
-  const handleUpload = async (files) => {
-    const file = files[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const response = await privateAgent.post(routesName.AuthRoute({}).profileImage, formData);
-      const data = response.data;
-      setBgImage(data.url);
-      enqueueSnackbar("Background image updated!", { variant: "success" });
-    } catch (err) {
-      enqueueSnackbar(err.message, { variant: "error" });
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  return (
-    <div className="p-6 bg-white shadow-md rounded-xl">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="flex items-center gap-2 text-xl font-semibold">
-          <FaImage className="text-purple-500" /> About Section Background
-        </h2>
-      </div>
-      {bgImage && (
-        <img
-          src={bgImage}
-          alt="About background preview"
-          className="object-cover w-full h-40 mb-3 border rounded-lg"
-        />
-      )}
-      <DraggableUpload
-        onFilesChange={handleUpload}
-        maxFiles={1}
-        label="Upload Background Image"
-        disabled={uploading}
-        accept={{ "image/*": [".jpg", ".jpeg", ".png", ".webp"] }}
-      />
-      {uploading && <span className="block mt-1 text-xs text-gray-500">Uploading...</span>}
     </div>
   );
 };

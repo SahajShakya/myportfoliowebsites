@@ -75,11 +75,8 @@ function handleProjectsRoutes($method, $segments, $db) {
             $detailFiles = [];
         }
 
-        $projectId = $model->create($data);
-
-        if (!empty($data['details']) && is_array($data['details'])) {
-            foreach ($data['details'] as $idx => $detail) {
-                $detailDocId = null;
+        if (!empty($data['details']) && is_array($data['details']) && !empty($detailFiles)) {
+            foreach ($data['details'] as $idx => &$detail) {
                 if (isset($detailFiles[$idx])) {
                     $fi = $detailFiles[$idx];
                     $detailDocId = $documentModel->create(
@@ -90,9 +87,11 @@ function handleProjectsRoutes($method, $segments, $db) {
                     $detail['image_url'] = $fi['relative_path'];
                     $detail['document_id'] = $detailDocId;
                 }
-                $model->createDetail($projectId, $detail);
             }
+            unset($detail);
         }
+
+        $projectId = $model->create($data);
 
         echo json_encode(["message" => "Project created", "id" => $projectId]);
         retrainChatbot($db, 'projects');
@@ -137,7 +136,7 @@ function handleProjectsRoutes($method, $segments, $db) {
         }
 
         if (!empty($data['details']) && is_array($data['details'])) {
-            foreach ($data['details'] as $idx => $detail) {
+            foreach ($data['details'] as $idx => &$detail) {
                 if (isset($detailFiles[$idx])) {
                     $fi = $detailFiles[$idx];
                     $detailDocId = $documentModel->create(
@@ -149,6 +148,7 @@ function handleProjectsRoutes($method, $segments, $db) {
                     $detail['document_id'] = $detailDocId;
                 }
             }
+            unset($detail);
         }
 
         $model->update($id, $data);

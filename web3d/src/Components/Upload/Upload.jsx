@@ -11,6 +11,7 @@ const Upload = ({
   maxFiles = 1,
 }) => {
   const existingFiles = (value || [])
+    .filter((item) => !item.file)
     .map((item) => {
       if (item.icon) return item.icon;
       if (item.url) return item.url;
@@ -27,11 +28,15 @@ const Upload = ({
     setFieldValue(name, formikFiles);
   };
 
-  const handleRemoveExisting = (url, idx) => {
+  const handleRemoveExisting = (url) => {
     if (onFileRemove) {
       onFileRemove(url);
     }
-    const updated = (value || []).filter((_, i) => i !== idx);
+    const updated = (value || []).filter((item) => {
+      if (item.file) return true;
+      const itemUrl = item.icon || item.url;
+      return itemUrl !== url;
+    });
     setFieldValue(name, updated);
   };
 

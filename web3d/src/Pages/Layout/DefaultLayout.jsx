@@ -4,9 +4,9 @@ import Nav from "../../Components/NavBar/Nav";
 
 const DefaultLayout = () => {
   return (
-    <div className="relative bg-gray-200">
+    <div className="relative">
       <Nav />
-      <div className="pt-[80px]">
+      <div className="pt-10">
         <Outlet />
       </div>
     </div>

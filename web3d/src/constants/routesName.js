@@ -13,6 +13,8 @@ export const routesName = {
       user: (userId) => `${BASE}/auth/user/${userId}`,
       profile: `${BASE}/auth/profile`,
       profileImage: `${BASE}/auth/profile-image`,
+      aboutBgImage: `${BASE}/auth/about-bg-image`,
+      sectionBgImage: (key) => `${BASE}/auth/section-bg-image/${key}`,
       materialsUrl: `${BASE}/auth/materials-url`,
       changePassword: `${BASE}/auth/password`,
       roles: `${BASE}/auth/roles`,
@@ -114,6 +116,7 @@ export const routesName = {
   SettingsRoute() {
     return {
       aboutBgImage: `${BASE}/settings/about_bg_image`,
+      sectionBgImage: (key) => `${BASE}/settings/${key}`,
       cvActive: `${BASE}/settings/cv-active`,
       materialsUrl: `${BASE}/settings/materials_url`,
     };

@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../helpers/uuid.php';
+
 class KnowledgeChunk {
     private $conn;
 
@@ -7,11 +9,12 @@ class KnowledgeChunk {
     }
 
     public function insert($sourceTable, $sourceId, $chunkText, $metadata = []) {
+        $id = generateUUID();
         $stmt = $this->conn->prepare(
-            "INSERT INTO knowledge_chunks (source_table, source_id, chunk_text, metadata) VALUES (?, ?, ?, ?)"
+            "INSERT INTO knowledge_chunks (id, source_table, source_id, chunk_text, metadata) VALUES (?, ?, ?, ?, ?)"
         );
-        $stmt->execute([$sourceTable, $sourceId, $chunkText, json_encode($metadata)]);
-        return $this->conn->lastInsertId();
+        $stmt->execute([$id, $sourceTable, $sourceId, $chunkText, json_encode($metadata)]);
+        return $id;
     }
 
     public function search($query, $limit = 5) {
@@ -67,22 +70,26 @@ class KnowledgeChunk {
         if (empty($keywords)) return [];
 
         $conditions = [];
+        $scoreParts = [];
         $params = [];
         foreach ($keywords as $word) {
             $conditions[] = "chunk_text LIKE ?";
             $params[] = "%{$word}%";
+            // Count occurrences of each keyword for relevance scoring
+            $scoreParts[] = "(LENGTH(chunk_text) - LENGTH(REPLACE(LOWER(chunk_text), LOWER(?), '')))";
+            $params[] = $word;
         }
 
-        $where = implode(' AND ', $conditions);
+        $where = implode(' OR ', $conditions);
+        $scoreExpr = implode(' + ', $scoreParts);
         $stmt = $this->conn->prepare(
             "SELECT id, source_table, source_id, chunk_text, metadata,
-                    (LENGTH(chunk_text) - LENGTH(REPLACE(LOWER(chunk_text), LOWER(?), ''))) AS match_score
+                    ({$scoreExpr}) AS match_score
              FROM knowledge_chunks
              WHERE {$where}
              ORDER BY match_score DESC
              LIMIT ?"
         );
-        array_unshift($params, $query);
         $params[] = $limit;
         $stmt->execute($params);
         return $stmt->fetchAll();

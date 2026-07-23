@@ -32,56 +32,31 @@ function handleAcademicsRoutes($method, $segments, $db) {
 
     if ($method === 'POST') {
         $authData = $auth->authenticate();
-        $userId = $authData['user_id'];
 
-        $iconDocs = [];
-        $contentDocs = [];
         $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
         if (strpos($contentType, 'multipart/form-data') !== false) {
             $data = $_POST;
-            if (!empty($_FILES['files'])) {
-                $uploaded = $uploader->handleUpload($_FILES, 'academics');
-                $iconDocs = is_array($uploaded) ? $uploaded : [];
-                $data['icons'] = $iconDocs;
-            } else {
-                $data['icons'] = json_decode($data['icons'] ?? '[]', true);
-            }
-            if (!empty($_FILES['content_files'])) {
-                $contentUploaded = $uploader->handleUpload($_FILES, 'academics');
-                $contentDocs = is_array($contentUploaded) ? $contentUploaded : [];
-            }
-            if (isset($data['contentItems'])) {
-                $data['contentItems'] = json_decode($data['contentItems'], true);
-            }
+            $data['icons'] = json_decode($data['icons'] ?? '[]', true);
+            $data['contentItems'] = json_decode($data['contentItems'] ?? '[]', true);
+            $data['contentDocumentIds'] = json_decode($data['contentDocumentIds'] ?? '[]', true);
+            $data['backgroundDocumentId'] = $data['backgroundDocumentId'] ?? null;
         } else {
             $data = json_decode(file_get_contents('php://input'), true);
             $data['icons'] = $data['icons'] ?? [];
             $data['contentItems'] = $data['contentItems'] ?? [];
+            $data['contentDocumentIds'] = $data['contentDocumentIds'] ?? [];
+            $data['backgroundDocumentId'] = $data['backgroundDocumentId'] ?? null;
         }
 
-        $docIds = [];
-        foreach ($iconDocs as $fileInfo) {
-            $docId = $documentModel->create(
-                $userId, $fileInfo['file_name'], $fileInfo['original_name'],
-                $fileInfo['relative_path'], $fileInfo['absolute_path'],
-                'academic_icon', $fileInfo['mime_type'], $fileInfo['file_size']
-            );
-            $docIds[] = $docId;
-        }
-        $data['document_ids'] = $docIds;
+        $data['icon_document_id'] = $data['icon_document_id'] ?? ($data['icons'][0]['document_id'] ?? null);
 
-        $contentDocIds = [];
-        foreach ($contentDocs as $fileInfo) {
-            $docId = $documentModel->create(
-                $userId, $fileInfo['file_name'], $fileInfo['original_name'],
-                $fileInfo['relative_path'], $fileInfo['absolute_path'],
-                'academic_content', $fileInfo['mime_type'], $fileInfo['file_size']
-            );
-            $contentDocIds[] = $docId;
+        try {
+            $acadId = $model->create($data);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(["error" => "Failed to create academic: " . $e->getMessage()]);
+            return;
         }
-        $data['content_document_ids'] = $contentDocIds;
-
-        $acadId = $model->create($data);
         retrainChatbot($db, 'academics');
         echo json_encode(["message" => "Academic created", "id" => $acadId]);
         return;
@@ -89,56 +64,31 @@ function handleAcademicsRoutes($method, $segments, $db) {
 
     if ($method === 'PUT' && $id) {
         $authData = $auth->authenticate();
-        $userId = $authData['user_id'];
 
-        $iconDocs = [];
-        $contentDocs = [];
         $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
         if (strpos($contentType, 'multipart/form-data') !== false) {
             $data = $_POST;
-            if (!empty($_FILES['files'])) {
-                $uploaded = $uploader->handleUpload($_FILES, 'academics');
-                $iconDocs = is_array($uploaded) ? $uploaded : [];
-                $data['icons'] = $iconDocs;
-            } else {
-                $data['icons'] = json_decode($data['icons'] ?? '[]', true);
-            }
-            if (!empty($_FILES['content_files'])) {
-                $contentUploaded = $uploader->handleUpload($_FILES, 'academics');
-                $contentDocs = is_array($contentUploaded) ? $contentUploaded : [];
-            }
-            if (isset($data['contentItems'])) {
-                $data['contentItems'] = json_decode($data['contentItems'], true);
-            }
+            $data['icons'] = json_decode($data['icons'] ?? '[]', true);
+            $data['contentItems'] = json_decode($data['contentItems'] ?? '[]', true);
+            $data['contentDocumentIds'] = json_decode($data['contentDocumentIds'] ?? '[]', true);
+            $data['backgroundDocumentId'] = $data['backgroundDocumentId'] ?? null;
         } else {
             $data = json_decode(file_get_contents('php://input'), true);
             $data['icons'] = $data['icons'] ?? [];
             $data['contentItems'] = $data['contentItems'] ?? [];
+            $data['contentDocumentIds'] = $data['contentDocumentIds'] ?? [];
+            $data['backgroundDocumentId'] = $data['backgroundDocumentId'] ?? null;
         }
 
-        $docIds = [];
-        foreach ($iconDocs as $fileInfo) {
-            $docId = $documentModel->create(
-                $userId, $fileInfo['file_name'], $fileInfo['original_name'],
-                $fileInfo['relative_path'], $fileInfo['absolute_path'],
-                'academic_icon', $fileInfo['mime_type'], $fileInfo['file_size']
-            );
-            $docIds[] = $docId;
-        }
-        $data['document_ids'] = $docIds;
+        $data['icon_document_id'] = $data['icon_document_id'] ?? ($data['icons'][0]['document_id'] ?? null);
 
-        $contentDocIds = [];
-        foreach ($contentDocs as $fileInfo) {
-            $docId = $documentModel->create(
-                $userId, $fileInfo['file_name'], $fileInfo['original_name'],
-                $fileInfo['relative_path'], $fileInfo['absolute_path'],
-                'academic_content', $fileInfo['mime_type'], $fileInfo['file_size']
-            );
-            $contentDocIds[] = $docId;
+        try {
+            $model->update($id, $data);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(["error" => "Failed to update academic: " . $e->getMessage()]);
+            return;
         }
-        $data['content_document_ids'] = $contentDocIds;
-
-        $model->update($id, $data);
         retrainChatbot($db, 'academics');
         echo json_encode(["message" => "Academic updated"]);
         return;
@@ -147,43 +97,59 @@ function handleAcademicsRoutes($method, $segments, $db) {
     if ($method === 'DELETE' && $id) {
         $auth->authenticate();
 
-        $result = $model->delete($id);
+        $db->beginTransaction();
 
-        if (!empty($result['icons'])) {
-            foreach ($result['icons'] as $icon) {
-                $docId = $icon['document_id'] ?? null;
-                if ($docId) {
-                    $doc = $documentModel->findById($docId);
-                    if ($doc) {
-                        $uploader->deleteFileByAbsolute($doc['absolute_path']);
-                        $documentModel->delete($docId);
-                    }
-                } else {
-                    $iconUrl = $icon['icon_url'] ?? null;
-                    if ($iconUrl) {
-                        $parsed = parse_url($iconUrl);
-                        $path = $parsed['path'] ?? $iconUrl;
-                        $uploader->deleteFile($path);
+        try {
+            $result = $model->deleteWithinTransaction($id);
+
+            if (!empty($result['icons'])) {
+                foreach ($result['icons'] as $icon) {
+                    $docId = $icon['document_id'] ?? null;
+                    if ($docId) {
+                        $doc = $documentModel->findById($docId);
+                        if ($doc) {
+                            $uploader->deleteFileByAbsolute($doc['absolute_path']);
+                            $documentModel->delete($docId);
+                        }
                     }
                 }
             }
-        }
-        if (!empty($result['contents'])) {
-            foreach ($result['contents'] as $item) {
-                $docId = $item['document_id'] ?? null;
-                if ($docId) {
-                    $doc = $documentModel->findById($docId);
-                    if ($doc) {
-                        $uploader->deleteFileByAbsolute($doc['absolute_path']);
-                        $documentModel->delete($docId);
+
+            $bgDocId = $result['background_document_id'] ?? null;
+            if ($bgDocId) {
+                $doc = $documentModel->findById($bgDocId);
+                if ($doc) {
+                    $uploader->deleteFileByAbsolute($doc['absolute_path']);
+                    $documentModel->delete($bgDocId);
+                }
+            }
+
+            if (!empty($result['contents'])) {
+                foreach ($result['contents'] as $item) {
+                    $docId = $item['document_id'] ?? null;
+                    if ($docId) {
+                        $doc = $documentModel->findById($docId);
+                        if ($doc) {
+                            $uploader->deleteFileByAbsolute($doc['absolute_path']);
+                            $documentModel->delete($docId);
+                        }
                     }
                 }
             }
-        }
 
-        retrainChatbot($db, 'academics');
-        echo json_encode(["message" => "Academic deleted"]);
-        return;
+            $db->commit();
+
+            retrainChatbot($db, 'academics');
+            echo json_encode(["message" => "Academic deleted"]);
+            return;
+
+        } catch (Exception $e) {
+            $db->rollBack();
+            error_log("Academic delete transaction failed for id $id: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(["error" => "Failed to delete academic: " . $e->getMessage()]);
+            return;
+        }
     }
 
     http_response_code(405);

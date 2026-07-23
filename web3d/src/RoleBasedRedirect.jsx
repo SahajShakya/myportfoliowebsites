@@ -3,8 +3,12 @@ import { Navigate } from "react-router-dom";
 import { useAuthContext } from "./context/AuthContext";
 
 const RoleBasedRedirect = ({ role, routeName }) => {
-  const { user } = useAuthContext();
+  const { user, loading } = useAuthContext();
   const storedRole = user?.role;
+
+  if (loading) {
+    return null;
+  }
 
   if (!storedRole) {
     return <Navigate to="/vitra" />;

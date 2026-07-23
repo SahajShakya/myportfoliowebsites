@@ -33,14 +33,31 @@ const AddProjects = ({ editData, handleEditSuccess }) => {
 
   const buildInitialDetails = () => {
     if (editData?.details && Array.isArray(editData.details) && editData.details.length > 0) {
-      return editData.details.map((item) => ({
-        content_text: item.contents || "",
-        image_url: item.image_url ? [{ icon: item.image_url }] : [],
-        image_description: item.image_description || "",
-        display_order: item.display_order || 0,
-      }));
+      return editData.details.map((item) => {
+        let images = [];
+        let imageTitles = [];
+        if (item.image_url) {
+          try {
+            const parsed = JSON.parse(item.image_url);
+            if (Array.isArray(parsed)) {
+              images = parsed.map((img) => ({ icon: typeof img === "string" ? img : img.url || "" }));
+              imageTitles = parsed.map((img) => (typeof img === "string" ? "" : img.title || ""));
+            }
+          } catch {
+            images = [{ icon: item.image_url }];
+            imageTitles = [item.image_description || ""];
+          }
+        }
+        return {
+          heading: item.heading || "",
+          content_text: item.contents || "",
+          image_url: images,
+          image_titles: imageTitles,
+          display_order: item.display_order || 0,
+        };
+      });
     }
-    return [{ content_text: "", image_url: [], image_description: "", display_order: 0 }];
+    return [{ heading: "", content_text: "", image_url: [], image_titles: [], display_order: 0 }];
   };
 
   const initialValues = {
@@ -73,20 +90,33 @@ const AddProjects = ({ editData, handleEditSuccess }) => {
       const detailItems = [];
       for (let i = 0; i < values.details.length; i++) {
         const item = values.details[i];
-        let imgUrls = "";
+        let imagesJson = "[]";
+        let docIds = [];
         if (item.image_url && item.image_url.length > 0) {
           const hasNew = item.image_url.some((f) => f.file);
           if (hasNew) {
             const result = await uploadFiles(item.image_url, "projects");
-            if (result.length > 0) imgUrls = result[0].url || result[0].path || result[0];
+            const images = result.map((r, idx) => ({
+              url: r.url || r.path || r,
+              title: (item.image_titles || [])[idx] || "",
+            }));
+            imagesJson = JSON.stringify(images);
+            docIds = result.map((r) => r.document_id || null);
           } else {
-            imgUrls = item.image_url[0]?.icon || "";
+            const images = item.image_url.map((img, idx) => ({
+              url: typeof img === "string" ? img : img.icon || "",
+              title: (item.image_titles || [])[idx] || "",
+            }));
+            imagesJson = JSON.stringify(images);
+            docIds = item.image_url.map((img) => img.document_id || null);
           }
         }
         detailItems.push({
           contents: item.content_text,
-          image_url: imgUrls,
-          image_description: item.image_description || "",
+          heading: item.heading || "",
+          image_url: imagesJson,
+          document_ids: docIds.filter(Boolean),
+          document_id: docIds[0] || null,
           display_order: i,
         });
       }
@@ -250,29 +280,19 @@ const AddProjects = ({ editData, handleEditSuccess }) => {
                           <FaTrash size={14} />
                         </button>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                          <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">Image / Video</label>
-                            <Upload
-                              name={`details.${index}.image_url`}
-                              value={item.image_url || []}
-                              setFieldValue={setFieldValue}
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">Media Description</label>
-                            <input
-                              type="text"
-                              value={item.image_description}
-                              onChange={(e) => setFieldValue(`details.${index}.image_description`, e.target.value)}
-                              placeholder="Short description for the image"
-                              className="w-full border rounded-lg px-3 py-2 text-sm"
-                            />
-                          </div>
+                        <div className="mb-3">
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Heading</label>
+                          <input
+                            type="text"
+                            value={item.heading}
+                            onChange={(e) => setFieldValue(`details.${index}.heading`, e.target.value)}
+                            placeholder="Section heading"
+                            className="w-full border rounded-lg px-3 py-2 text-sm"
+                          />
                         </div>
 
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">Content</label>
+                        <div className="mb-3">
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
                           <textarea
                             value={item.content_text}
                             onChange={(e) => setFieldValue(`details.${index}.content_text`, e.target.value)}
@@ -281,12 +301,56 @@ const AddProjects = ({ editData, handleEditSuccess }) => {
                             className="w-full border rounded-lg px-3 py-2 text-sm"
                           />
                         </div>
+
+                        <div className="mb-3">
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Images / Videos (max 10)</label>
+                          <Upload
+                            name={`details.${index}.image_url`}
+                            value={item.image_url || []}
+                            setFieldValue={setFieldValue}
+                            maxFiles={10}
+                          />
+                        </div>
+
+                        <div className="mt-2">
+                          <label className="block text-xs font-semibold text-gray-700 mb-1">Image Titles (optional)</label>
+                          {item.image_url && item.image_url.length > 0 ? (
+                            <div className="space-y-2">
+                              {item.image_url.map((img, imgIdx) => (
+                                <div key={imgIdx} className="flex items-center gap-2 bg-white border rounded-lg px-3 py-2">
+                                  <img
+                                    src={img.icon || ""}
+                                    alt=""
+                                    className="w-10 h-10 rounded object-cover border flex-shrink-0"
+                                  />
+                                  <div className="flex-1 min-w-0">
+                                    <input
+                                      type="text"
+                                      value={(item.image_titles || [])[imgIdx] || ""}
+                                      onChange={(e) => {
+                                        const newTitles = [...(item.image_titles || [])];
+                                        newTitles[imgIdx] = e.target.value;
+                                        setFieldValue(`details.${index}.image_titles`, newTitles);
+                                      }}
+                                      placeholder={`Title for image ${imgIdx + 1} (optional)`}
+                                      className="w-full border rounded px-2 py-1 text-sm"
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-xs text-gray-400 italic bg-white border border-dashed rounded-lg px-3 py-3 text-center">
+                              Upload images above, then add optional titles for each one here
+                            </p>
+                          )}
+                        </div>
                       </div>
                     ))}
 
                     <button
                       type="button"
-                      onClick={() => push({ content_text: "", image_url: [], image_description: "", display_order: values.details.length })}
+                      onClick={() => push({ heading: "", content_text: "", image_url: [], image_titles: [], display_order: values.details.length })}
                       className="flex items-center gap-2 text-blue-500 hover:text-blue-700 text-sm font-medium border border-dashed border-blue-300 rounded-lg px-4 py-2 w-full justify-center hover:bg-blue-50 transition-colors"
                     >
                       <FaPlus /> Add Content Section

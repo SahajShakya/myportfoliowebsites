@@ -19,7 +19,7 @@ const FlyoutLink = ({
       onMouseLeave={() => setOpen(false)}
       className="relative"
     >
-      <a href={href} className="relative text-white">
+      <a href={href} className="relative text-gray-800">
         {children}
         <span
           style={{
@@ -35,7 +35,7 @@ const FlyoutLink = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="absolute right-0 top-full mt-1 bg-white text-black shadow-lg rounded-md py-2 px-4 z-50"
+            className="absolute left-1/2 -translate-x-1/2 top-full mt-1 bg-transparent text-gray-800 rounded-md py-2 px-4 z-50"
           >
             <div className="absolute -top-3 left-0 right-0 h-4 bg-transparent" />
             <FlyoutContent

@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
+/* eslint-disable react/prop-types */
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
 import { FiChevronDown, FiMenu, FiChevronUp, FiX } from "react-icons/fi";
-import { AnimatePresence, motion } from "framer-motion";
+import {  motion } from "framer-motion";
 
 const Navbar = ({ tabs, token }) => {
   const [isMobile, setIsMobile] = useState(false);
@@ -74,13 +75,13 @@ const Navbar = ({ tabs, token }) => {
   return (
     <div className="relative">
       {/* Show Hamburger Icon on Mobile */}
-      <div className="flex items-center justify-between w-full">
+      <div className="flex items-center justify-between w-full ">
         <div className="flex-1"></div>
         {/* Hamburger or X icon */}
         {isMobile && (
           <button
             onClick={toggleMenu}
-            className="p-2 text-gray-600 lg:hidden"
+            className="p-2 text-gray-800 lg:hidden"
             aria-label="Toggle Menu"
           >
             {menuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
@@ -133,6 +134,7 @@ const Navbar = ({ tabs, token }) => {
 // Simple Navbar for Mobile View
 const SimpleNavbar = ({
   tabs,
+  // eslint-disable-next-line no-unused-vars
   token,
   openDropdown,
   handleDropdownToggle,
@@ -154,7 +156,7 @@ const SimpleNavbar = ({
     </div>
 
     {/* Nav Items */}
-    <ul className="flex-1 overflow-y-auto py-2">
+    <ul className="flex-1 py-2 overflow-y-auto">
       {tabs.map((tab, index) => {
         const isActive = tab.linkTo
           ? currentPath === tab.linkTo
@@ -197,7 +199,7 @@ const SimpleNavbar = ({
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     transition={{ duration: 0.2 }}
-                    className="bg-gray-50 border-t border-b border-gray-100"
+                    className="border-t border-b border-gray-100 bg-gray-50"
                   >
                     {tab.dropdownOptions?.map((option, optIdx) => (
                       <li key={optIdx}>
@@ -226,6 +228,7 @@ const SimpleNavbar = ({
 );
 
 // SlideTabs component (unchanged)
+// eslint-disable-next-line no-unused-vars
 const SlideTabs = ({ tabs, isMobile, token, currentPath }) => {
   const [selected, setSelected] = useState(null);
   const [hovered, setHovered] = useState(null); // Track hovered tab
@@ -236,7 +239,7 @@ const SlideTabs = ({ tabs, isMobile, token, currentPath }) => {
 
   return (
     <ul
-      className={`relative mx-auto flex w-full max-w-5xl justify-around rounded-full border border-black bg-white py-2.5 px-1 ${
+      className={`relative mx-auto flex w-full max-w-7xl justify-around rounded-full py-1.5 px-1 ${
         isMobile ? "hidden" : ""
       }`}
     >
@@ -283,10 +286,10 @@ const Tab = ({
     <li
       onMouseEnter={handleMouseEnter}
       onClick={() => handleSetSelected(tab)}
-      className={`relative z-10 block cursor-pointer px-2 py-1.5 text-[11px] sm:px-2.5 sm:text-xs md:px-3 md:py-2 lg:px-4 lg:py-2 lg:text-xs ${
+      className={`relative z-10 block cursor-pointer px-2 py-1 text-[12px] sm:px-2.5 sm:text-[12px] md:px-3 lg:px-4 lg:text-[12px] border border-gray-300 ${
         hovered === tab || selected === tab
-          ? "text-red-500 bg-gray-200 rounded-full"
-          : "text-black"
+          ? "text-red-500 bg-gray-100 rounded-full"
+          : "text-gray-700 rounded-full"
       }`}
     >
       {linkTo ? (
@@ -308,20 +311,20 @@ const Tab = ({
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.15 }}
-          className="bg-white rounded-md shadow-lg"
+          className="bg-transparent rounded-md"
         >
-          {/* Tab Name Line (Background black) */}
-          <div className="px-3 py-1.5 text-sm font-semibold text-white bg-black">
+          {/* Tab Name Line */}
+          <div className="px-3 py-1.5 text-sm font-semibold text-gray-800 border border-gray-300 rounded-full mt-1">
             {children}
           </div>
 
-          {/* Dropdown Items Line (Background gray) */}
-          <ul>
+          {/* Dropdown Items */}
+          <ul className="mt-1">
             {dropdownOptions.map((option, index) => (
               <li key={index}>
                 <Link
                   to={option.to}
-                  className="block px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-300"
+                  className="block px-3 py-1.5 text-xs text-gray-600 hover:text-gray-900 border border-gray-300 rounded-full mt-1"
                 >
                   {option.label}
                 </Link>
@@ -334,7 +337,7 @@ const Tab = ({
       {/* Chevron icon */}
       {hasDropdown && (
         <FiChevronDown
-          className="inline-block ml-2 text-sm text-gray-600"
+          className="inline-block ml-2 text-sm text-gray-400"
           size={14}
         />
       )}

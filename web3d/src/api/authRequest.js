@@ -1,5 +1,4 @@
 import axios from "axios";
-import Cookies from "js-cookie";
 
 const HOST_URL = "";
 const ROOT_ROUTE = "/api";
@@ -12,18 +11,22 @@ const privateAgent = axios.create({
 
 const publicAgent = axios.create({
   baseURL,
+  withCredentials: true,
 });
 
-privateAgent.interceptors.request.use(
-  (config) => {
-    const accessToken = Cookies.get("token");
-    if (accessToken && config.headers) {
-      config.headers["Authorization"] = `Bearer ${accessToken}`;
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error) => {
+  failedQueue.forEach((promise) => {
+    if (error) {
+      promise.reject(error);
+    } else {
+      promise.resolve();
     }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+  });
+  failedQueue = [];
+};
 
 privateAgent.interceptors.response.use(
   (response) => response,
@@ -36,34 +39,27 @@ privateAgent.interceptors.response.use(
       !originalRequest.url?.includes("/auth/refresh") &&
       !originalRequest.url?.includes("/auth/login")
     ) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(() => privateAgent(originalRequest));
+      }
+
       originalRequest._retry = true;
-
-      const refreshToken = Cookies.get("refreshToken");
-
-      if (!refreshToken) return Promise.reject(error);
+      isRefreshing = true;
 
       try {
-        const response = await axios.post(
-          `${baseURL}/auth/refresh`,
-          { refreshToken },
-          { withCredentials: true }
-        );
+        const response = await privateAgent.post("/auth/refresh");
 
         if (response.status === 200) {
-          const token = response.data.token || response.data.accessToken;
-          const newRefreshToken =
-            response.data.refreshToken || response.data.token;
-
-          if (token) Cookies.set("token", token, { sameSite: "Strict" });
-          if (newRefreshToken)
-            Cookies.set("refreshToken", newRefreshToken, { sameSite: "Strict" });
-
+          processQueue(null);
           return privateAgent(originalRequest);
         }
       } catch (refreshError) {
-        Cookies.remove("token");
-        Cookies.remove("refreshToken");
+        processQueue(refreshError);
         return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
       }
     }
 

@@ -70,7 +70,7 @@ const ViewJourney = () => {
                       {journey.icons.map((icon, idx) => (
                         <img
                           key={idx}
-                          src={typeof icon === "string" ? icon : icon.icon_url || icon}
+                          src={typeof icon === "string" ? icon : icon.icon_url || ""}
                           alt={`Icon ${idx}`}
                           className="w-8 h-8 object-cover rounded"
                         />
@@ -82,19 +82,21 @@ const ViewJourney = () => {
                 </td>
                 <td className="px-4 py-3">{journey.office_name}</td>
                 <td className="px-4 py-3">{journey.designation}</td>
-                <td className="px-4 py-3 text-center">
-                  <button
-                    onClick={() => handleEdit(journey.id)}
-                    className="bg-blue-500 text-white px-3 py-1.5 rounded-md mr-2 hover:bg-blue-600 transition-colors text-sm"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(journey.id)}
-                    className="bg-red-500 text-white px-3 py-1.5 rounded-md hover:bg-red-600 transition-colors text-sm"
-                  >
-                    Delete
-                  </button>
+                <td className="px-4 py-3 text-center whitespace-nowrap">
+                  <div className="flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => handleEdit(journey.id)}
+                      className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors text-sm font-medium"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(journey.id)}
+                      className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors text-sm font-medium"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -112,7 +114,7 @@ const ViewJourney = () => {
                     {journey.icons.map((icon, idx) => (
                       <img
                         key={idx}
-                        src={typeof icon === "string" ? icon : icon.icon_url || icon}
+                        src={typeof icon === "string" ? icon : icon.icon_url || ""}
                         alt={`Icon ${idx}`}
                         className="w-10 h-10 object-cover rounded"
                       />

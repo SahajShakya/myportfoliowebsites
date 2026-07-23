@@ -78,13 +78,25 @@ const AchievementDetails = () => {
 
       <div className="mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {achievementDetails.map((achievement) => {
-          const icons = Array.isArray(achievement.icons) ? achievement.icons : [];
+          let images = [];
+          if (achievement.image_url) {
+            try {
+              const parsed = JSON.parse(achievement.image_url);
+              if (Array.isArray(parsed)) {
+                images = parsed;
+              } else {
+                images = [{ url: achievement.image_url }];
+              }
+            } catch {
+              images = [{ url: achievement.image_url }];
+            }
+          }
           return (
             <AchievementCard
               key={achievement.id}
               index={achievement.id}
-              title={achievement.contents}
-              image={icons[0]}
+              title={achievement.heading || achievement.contents || ""}
+              image={images[0]?.url || images[0] || ""}
             />
           );
         })}

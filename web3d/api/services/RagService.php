@@ -26,6 +26,13 @@ class RagService {
         'nepal', 'kathmandu', 'tribhuvan',
         'hello', 'hi', 'hey', 'thanks', 'thank you', 'who are you',
         'what can you', 'help', 'introduce',
+        'graduate', 'graduated', 'graduation', 'studied', 'studying',
+        'diploma', 'certificate', 'completed', 'enrolled', 'course',
+        'program', 'batch', 'year', 'when', 'where',
+        'intern', 'internship', 'company', 'office', 'team',
+        'role', 'position', 'responsibilities', 'project',
+        'technology', 'tech stack', 'framework', 'language',
+        'award', 'prize', 'winner', 'certified',
     ];
 
     private $OFF_TOPIC_PATTERNS = [
@@ -208,6 +215,15 @@ class RagService {
             return [
                 'is_relevant' => false,
                 'reason' => 'too_short_no_context',
+            ];
+        }
+
+        // If it looks like a question (starts with question words), allow it through
+        // even without keyword matches — let the search + LLM determine relevance
+        if (preg_match('/^(who|what|when|where|how|which|tell|describe|list|name|do|does|did|is|are|was|were|can|could|would|should)\b/', $lower)) {
+            return [
+                'is_relevant' => true,
+                'reason' => 'question_pattern',
             ];
         }
 

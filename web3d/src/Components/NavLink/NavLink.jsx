@@ -70,7 +70,7 @@ const NavLink = ({ path, name, isActive, location, logo }) => {
             {logo ? (
               <img src={logo} alt="Logo" className="h-6 w-6 object-contain" />
             ) : (
-              <div className="py-1 px-3 text-sm flex justify-around rounded-full border border-black bg-white">
+                <div className="py-1 px-3 text-sm flex justify-around rounded-full border border-gray-300 text-gray-800">
                 {name}
               </div>
             )}

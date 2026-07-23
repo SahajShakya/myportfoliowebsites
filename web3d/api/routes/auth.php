@@ -220,6 +220,7 @@ function handleAuthRoutes($method, $segments, $db) {
         }
 
         unset($user['password_hash']);
+        $user['role'] = $user['role_name'] ?? null;
         echo json_encode(["user" => $user]);
         return;
     }
@@ -240,6 +241,7 @@ function handleAuthRoutes($method, $segments, $db) {
         }
 
         unset($user['password_hash']);
+        $user['role'] = $user['role_name'] ?? null;
         echo json_encode(["user" => $user]);
         return;
     }
@@ -277,6 +279,7 @@ function handleAuthRoutes($method, $segments, $db) {
 
         $user = $userModel->findById($payload['user_id']);
         unset($user['password_hash']);
+        $user['role'] = $user['role_name'] ?? null;
 
         echo json_encode(["message" => "Profile updated", "user" => $user]);
         return;
@@ -304,6 +307,7 @@ function handleAuthRoutes($method, $segments, $db) {
 
         $user = $userModel->findById($payload['user_id']);
         unset($user['password_hash']);
+        $user['role'] = $user['role_name'] ?? null;
 
         echo json_encode(["message" => "Materials URL updated", "user" => $user]);
         return;
@@ -386,12 +390,99 @@ function handleAuthRoutes($method, $segments, $db) {
             return;
         }
 
+        require_once __DIR__ . '/../models/Document.php';
+        $docModel = new Document($db);
         $fileInfo = $result[0];
+
+        $oldStmt = $db->prepare("SELECT bg_image_id FROM site_settings WHERE setting_key = 'about_bg_image'");
+        $oldStmt->execute();
+        $oldRow = $oldStmt->fetch();
+        if ($oldRow && !empty($oldRow['bg_image_id'])) {
+            $oldDoc = $docModel->findById($oldRow['bg_image_id']);
+            if ($oldDoc) {
+                $uploader->deleteFileByAbsolute($oldDoc['absolute_path']);
+                $docModel->delete($oldRow['bg_image_id']);
+            }
+        }
+
+        $docId = $docModel->create(
+            $payload['user_id'],
+            $fileInfo['file_name'] ?? '',
+            $fileInfo['original_name'] ?? '',
+            $fileInfo['relative_path'] ?? '',
+            $fileInfo['absolute_path'] ?? '',
+            'site_image',
+            $fileInfo['mime_type'] ?? '',
+            $fileInfo['file_size'] ?? 0
+        );
+
+        $stmt = $db->prepare("INSERT INTO site_settings (setting_key, bg_image_id) VALUES ('about_bg_image', ?) ON DUPLICATE KEY UPDATE bg_image_id = ?");
+        $stmt->execute([$docId, $docId]);
+
         $url = $fileInfo['relative_path'];
+        echo json_encode(["message" => "Background image updated", "url" => $url]);
+        return;
+    }
 
-        $stmt = $db->prepare("INSERT INTO site_settings (setting_key, setting_value) VALUES ('about_bg_image', ?) ON DUPLICATE KEY UPDATE setting_value = ?");
-        $stmt->execute([$url, $url]);
+    if ($method === 'POST' && $action === 'section-bg-image') {
+        $payload = $auth->authenticate();
+        if (!$payload) {
+            http_response_code(401);
+            echo json_encode(["error" => "Unauthorized"]);
+            return;
+        }
 
+        $sectionKey = $segments[2] ?? '';
+        $allowedKeys = ['academics_bg_image', 'achievements_bg_image', 'journey_bg_image', 'projects_bg_image', 'academic_projects_bg_image', 'academic_works_bg_image', 'testimonials_bg_image', 'contact_bg_image'];
+        if (!in_array($sectionKey, $allowedKeys)) {
+            http_response_code(400);
+            echo json_encode(["error" => "Invalid section key"]);
+            return;
+        }
+
+        $result = $uploader->handleUpload($_FILES, 'site_images');
+        if (isset($result['error'])) {
+            http_response_code(400);
+            echo json_encode($result);
+            return;
+        }
+
+        if (empty($result)) {
+            http_response_code(400);
+            echo json_encode(["error" => "Upload failed"]);
+            return;
+        }
+
+        require_once __DIR__ . '/../models/Document.php';
+        $docModel = new Document($db);
+        $fileInfo = $result[0];
+
+        $oldStmt = $db->prepare("SELECT bg_image_id FROM site_settings WHERE setting_key = ?");
+        $oldStmt->execute([$sectionKey]);
+        $oldRow = $oldStmt->fetch();
+        if ($oldRow && !empty($oldRow['bg_image_id'])) {
+            $oldDoc = $docModel->findById($oldRow['bg_image_id']);
+            if ($oldDoc) {
+                $uploader->deleteFileByAbsolute($oldDoc['absolute_path']);
+                $docModel->delete($oldRow['bg_image_id']);
+            }
+        }
+
+        $docId = $docModel->create(
+            $payload['user_id'],
+            $fileInfo['file_name'] ?? '',
+            $fileInfo['original_name'] ?? '',
+            $fileInfo['relative_path'] ?? '',
+            $fileInfo['absolute_path'] ?? '',
+            'site_image',
+            $fileInfo['mime_type'] ?? '',
+            $fileInfo['file_size'] ?? 0
+        );
+
+        $stmt = $db->prepare("INSERT INTO site_settings (setting_key, bg_image_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE bg_image_id = ?");
+        $stmt->execute([$sectionKey, $docId, $docId]);
+
+        $url = $fileInfo['relative_path'];
         echo json_encode(["message" => "Background image updated", "url" => $url]);
         return;
     }

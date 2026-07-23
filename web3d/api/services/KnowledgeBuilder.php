@@ -112,23 +112,7 @@ class KnowledgeBuilder {
                 'institution' => $acad['university_name'],
             ]);
 
-            $this->buildAcademicContents($acad['id']);
-        }
-    }
-
-    private function buildAcademicContents($academicId) {
-        $stmt = $this->conn->prepare("SELECT content_text FROM academics_contents WHERE academic_id = ? AND content_text IS NOT NULL");
-        $stmt->execute([$academicId]);
-        $contents = $stmt->fetchAll();
-
-        foreach ($contents as $content) {
-            $text = strip_tags($content['content_text']);
-            if (strlen($text) > 20) {
-                $this->chunkModel->insert('academics_contents', $academicId, $text, [
-                    'type' => 'education_detail',
-                    'academic_id' => $academicId,
-                ]);
-            }
+            $this->buildEntityContents('academic', $acad['id']);
         }
     }
 
@@ -158,21 +142,22 @@ class KnowledgeBuilder {
                 'designation' => $journey['designation'],
             ]);
 
-            $this->buildJourneyContents($journey['id']);
+            $this->buildEntityContents('journey', $journey['id']);
         }
     }
 
-    private function buildJourneyContents($journeyId) {
-        $stmt = $this->conn->prepare("SELECT content_text FROM journey_contents WHERE journey_id = ? AND content_text IS NOT NULL");
-        $stmt->execute([$journeyId]);
+    private function buildEntityContents($entityType, $entityId) {
+        $stmt = $this->conn->prepare("SELECT content_text FROM entity_contents WHERE entity_type = ? AND entity_id = ? AND content_text IS NOT NULL");
+        $stmt->execute([$entityType, $entityId]);
         $contents = $stmt->fetchAll();
 
         foreach ($contents as $content) {
             $text = strip_tags($content['content_text']);
             if (strlen($text) > 20) {
-                $this->chunkModel->insert('journey_contents', $journeyId, $text, [
-                    'type' => 'work_detail',
-                    'journey_id' => $journeyId,
+                $this->chunkModel->insert('entity_contents', $entityId, $text, [
+                    'type' => $entityType . '_detail',
+                    'entity_type' => $entityType,
+                    'entity_id' => $entityId,
                 ]);
             }
         }
@@ -181,7 +166,7 @@ class KnowledgeBuilder {
     private function buildProjects() {
         $stmt = $this->conn->query("
             SELECT p.id, p.name, p.description, p.contents, p.source_code_link
-            FROM projects p
+            FROM projects p WHERE p.academic_id IS NULL
         ");
         $projects = $stmt->fetchAll();
 
@@ -197,7 +182,7 @@ class KnowledgeBuilder {
                 $text .= "Source code: {$project['source_code_link']} ";
             }
 
-            $tags = $this->getTags('project_tags', 'project_id', $project['id']);
+            $tags = $this->getEntityTags('project', $project['id']);
             if (!empty($tags)) {
                 $text .= "Technologies: " . implode(', ', $tags) . ". ";
             }
@@ -208,23 +193,7 @@ class KnowledgeBuilder {
                 'tags' => $tags,
             ]);
 
-            $this->buildProjectDetails($project['id']);
-        }
-    }
-
-    private function buildProjectDetails($projectId) {
-        $stmt = $this->conn->prepare("SELECT contents FROM project_details WHERE project_id = ? AND contents IS NOT NULL");
-        $stmt->execute([$projectId]);
-        $details = $stmt->fetchAll();
-
-        foreach ($details as $detail) {
-            $text = strip_tags($detail['contents']);
-            if (strlen($text) > 20) {
-                $this->chunkModel->insert('project_details', $projectId, $text, [
-                    'type' => 'project_detail',
-                    'project_id' => $projectId,
-                ]);
-            }
+            $this->buildEntityDetails('project', $project['id']);
         }
     }
 
@@ -244,7 +213,7 @@ class KnowledgeBuilder {
                 $text .= strip_tags($achievement['contents']) . " ";
             }
 
-            $tags = $this->getTags('achievement_tags', 'achievement_id', $achievement['id']);
+            $tags = $this->getEntityTags('achievement', $achievement['id']);
             if (!empty($tags)) {
                 $text .= "Tags: " . implode(', ', $tags) . ". ";
             }
@@ -255,21 +224,22 @@ class KnowledgeBuilder {
                 'tags' => $tags,
             ]);
 
-            $this->buildAchievementDetails($achievement['id']);
+            $this->buildEntityDetails('achievement', $achievement['id']);
         }
     }
 
-    private function buildAchievementDetails($achievementId) {
-        $stmt = $this->conn->prepare("SELECT contents FROM achievement_details WHERE achievement_id = ? AND contents IS NOT NULL");
-        $stmt->execute([$achievementId]);
+    private function buildEntityDetails($entityType, $entityId) {
+        $stmt = $this->conn->prepare("SELECT contents FROM entity_details WHERE entity_type = ? AND entity_id = ? AND contents IS NOT NULL");
+        $stmt->execute([$entityType, $entityId]);
         $details = $stmt->fetchAll();
 
         foreach ($details as $detail) {
             $text = strip_tags($detail['contents']);
             if (strlen($text) > 20) {
-                $this->chunkModel->insert('achievement_details', $achievementId, $text, [
-                    'type' => 'achievement_detail',
-                    'achievement_id' => $achievementId,
+                $this->chunkModel->insert('entity_details', $entityId, $text, [
+                    'type' => $entityType . '_detail',
+                    'entity_type' => $entityType,
+                    'entity_id' => $entityId,
                 ]);
             }
         }
@@ -301,7 +271,7 @@ class KnowledgeBuilder {
     private function buildAcademicProjects() {
         $stmt = $this->conn->query("
             SELECT ap.id, ap.name, ap.description, ap.contents, ap.source_code_link
-            FROM academic_projects ap
+            FROM projects ap WHERE ap.academic_id IS NOT NULL
         ");
         $projects = $stmt->fetchAll();
 
@@ -314,7 +284,7 @@ class KnowledgeBuilder {
                 $text .= strip_tags($project['contents']) . " ";
             }
 
-            $tags = $this->getTags('academic_project_tags', 'academic_project_id', $project['id']);
+            $tags = $this->getEntityTags('project', $project['id']);
             if (!empty($tags)) {
                 $text .= "Technologies: " . implode(', ', $tags) . ". ";
             }
@@ -337,7 +307,7 @@ class KnowledgeBuilder {
                 $text .= strip_tags($album['description']) . " ";
             }
 
-            $tags = $this->getTags('photography_tags', 'photography_id', $album['id']);
+            $tags = $this->getEntityTags('photography', $album['id']);
             if (!empty($tags)) {
                 $text .= "Tags: " . implode(', ', $tags) . ". ";
             }
@@ -350,9 +320,9 @@ class KnowledgeBuilder {
         }
     }
 
-    private function getTags($table, $foreignKey, $id) {
-        $stmt = $this->conn->prepare("SELECT tag FROM {$table} WHERE {$foreignKey} = ?");
-        $stmt->execute([$id]);
+    private function getEntityTags($entityType, $entityId) {
+        $stmt = $this->conn->prepare("SELECT tag FROM entity_tags WHERE entity_type = ? AND entity_id = ?");
+        $stmt->execute([$entityType, $entityId]);
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 }

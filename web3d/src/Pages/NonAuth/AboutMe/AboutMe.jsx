@@ -1,3 +1,5 @@
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
 import { useAboutBgQuery } from "../../../Hooks/options/useSettingsQuery";
 import { motion } from "framer-motion";
@@ -18,6 +20,7 @@ const AboutMe = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [text, setText] = useState("");
   const [delta, setDelta] = useState(100 - Math.random());
+  // eslint-disable-next-line no-unused-vars
   const [index, setIndex] = useState(1);
   const { data: bgData } = useAboutBgQuery();
   const toRotate = [
@@ -91,19 +94,19 @@ const AboutMe = () => {
     <div className="about-me">
       <section
         id="intro"
-        className="relative w-full h-screen mx-auto mb-0 bg-cover bg-center bg-no-repeat"
-        style={bgData?.data?.value ? { backgroundImage: `url(${bgData.data.value})` } : {}}
+        className="relative w-full h-screen mx-auto mb-0 overflow-hidden pt-[80px]"
+        style={{
+          background: bgData?.value
+            ? `url(${bgData.value}) center/cover no-repeat fixed`
+            : "linear-gradient(to bottom right, #f3f4f6, #e5e7eb)",
+        }}
       >
-        {!bgData?.data?.value && (
-          <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/70" />
         <div
           className={`absolute inset-0 top-[120px] max-w-7xl mx-auto ${styles.paddingX} flex flex-row items-start gap-5 z-10`}
         >
-          <div className="flex flex-col justify-center items-center mt-5">
+          <div className="flex flex-col items-center justify-center mt-5">
             <div className="w-5 h-5 rounded-full bg-[#915EFF]" />
-            <div className="w-1 sm:h-80 h-40 violet-gradient" />
+            <div className="w-1 h-40 sm:h-80 violet-gradient" />
           </div>
 
           <div style={{ textShadow: '0 2px 8px rgba(0,0,0,0.7)' }}>
@@ -120,7 +123,7 @@ const AboutMe = () => {
                   <h1 className="text-white">
                     {`I am a`}{" "}
                     <span
-                      className="txt-rotate text-white"
+                      className="text-white txt-rotate"
                     >
                       <span className="wrap">{text}</span>
                     </span>
@@ -128,9 +131,9 @@ const AboutMe = () => {
                 </div>
               )}
             </TrackVisibility>
-            <p className={`${styles.heroSubBlackText} mt-2 text-black bg-white/80 inline-block px-4 py-2 rounded-lg`}>
+            <p className={`${styles.heroSubBlackText} mt-2 text-white`}>
               Bachelors in Electronics and Communication Engineering{" "}
-              <br className="sm:block hidden" />
+              <br className="hidden sm:block" />
               Masters in Computer Engineering
             </p>
           </div>
