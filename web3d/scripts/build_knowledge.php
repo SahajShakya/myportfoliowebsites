@@ -1,7 +1,7 @@
 <?php
 $useProduction = in_array('production', $argv) || in_array('prod', $argv);
 
-require_once __DIR__ . '/../api/config/database.php';
+require_once __DIR__ . '/../public/api/config/database.php';
 
 class KnowledgeDatabase extends Database {
     private $useProd;
@@ -38,7 +38,7 @@ $db = (new KnowledgeDatabase($useProduction))->getConnection();
 
 echo "Using " . ($useProduction ? "PRODUCTION" : "LOCAL") . " database\n";
 
-require_once __DIR__ . '/../api/services/KnowledgeBuilder.php';
+require_once __DIR__ . '/../public/api/services/KnowledgeBuilder.php';
 $builder = new KnowledgeBuilder($db);
 $count = $builder->buildAll();
 

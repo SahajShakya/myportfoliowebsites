@@ -6,7 +6,7 @@ const DefaultLayout = () => {
   return (
     <div className="relative">
       <Nav />
-      <div className="pt-10">
+      <div className="pt-px">
         <Outlet />
       </div>
     </div>

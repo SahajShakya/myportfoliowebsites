@@ -19,21 +19,27 @@ import {
   FaSave,
   FaTimes,
   FaLink,
+  FaBrain,
+  FaSpinner,
 } from "react-icons/fa";
-import mypic from "../../../assets/mypic.png";
 import { useCvsQuery } from "../../../Hooks/options/useCvsQuery";
+import { useProfileImageQuery } from "../../../Hooks/options/useSettingsQuery";
 import { useUploadProfileImage, useUpdateProfile, useUpdateMaterialsUrl } from "../../../Hooks/mutations/useAuthMutations";
 import { useUploadCv, useDeleteCv, useUpdateCv } from "../../../Hooks/mutations/useCvsMutations";
 import SectionBgImageEditor from "../../../Components/SectionBgImageEditor";
+import { deleteFile } from "../../../api/upload";
 
 const Dashboard = () => {
   const { user: authUser } = useAuthContext();
   const { user, addData } = useUser();
   const [profile, setProfile] = useState({});
   const [editingField, setEditingField] = useState(null);
+  const [training, setTraining] = useState(false);
 
   const { data: cvsData, refetch: refetchCvs } = useCvsQuery();
   const cvs = cvsData || [];
+
+  const { data: profileImageData } = useProfileImageQuery();
 
   const uploadProfileImageMutation = useUploadProfileImage();
   const updateProfileMutation = useUpdateProfile();
@@ -70,12 +76,58 @@ const Dashboard = () => {
       onSuccess: (response) => {
         const data = response.data;
         setProfile((prev) => ({ ...prev, profile_image: data.url }));
-        enqueueSnackbar("Profile image updated!", { variant: "success" });
+        updateProfileMutation.mutate({
+          name: profile.name || "",
+          email: profile.email || "",
+          phone: profile.phone || null,
+          bio: profile.bio || null,
+          tagline: profile.tagline || null,
+          profile_image: data.url,
+        }, {
+          onSuccess: (res) => {
+            const updatedUser = res.data.user;
+            setProfile((prev) => ({ ...prev, ...updatedUser }));
+            addData({ ...user, ...updatedUser });
+            enqueueSnackbar("Profile image updated!", { variant: "success" });
+          },
+          onError: (err) => {
+            enqueueSnackbar("Image uploaded but failed to save: " + err.message, { variant: "warning" });
+          },
+        });
       },
       onError: (err) => {
         enqueueSnackbar(err.message, { variant: "error" });
       },
     });
+  };
+
+  const handleImageRemove = async () => {
+    const currentImage = profileImageData?.value || profile.profile_image;
+    if (!currentImage) return;
+    try {
+      await deleteFile(currentImage);
+      setProfile((prev) => ({ ...prev, profile_image: null }));
+      updateProfileMutation.mutate({
+        name: profile.name || "",
+        email: profile.email || "",
+        phone: profile.phone || null,
+        bio: profile.bio || null,
+        tagline: profile.tagline || null,
+        profile_image: null,
+      }, {
+        onSuccess: (res) => {
+          const updatedUser = res.data.user;
+          setProfile((prev) => ({ ...prev, ...updatedUser }));
+          addData({ ...user, ...updatedUser });
+          enqueueSnackbar("Profile image removed!", { variant: "success" });
+        },
+        onError: (err) => {
+          enqueueSnackbar("Failed to remove profile image: " + err.message, { variant: "error" });
+        },
+      });
+    } catch (err) {
+      enqueueSnackbar("Failed to remove profile image: " + err.message, { variant: "error" });
+    }
   };
 
   const handleCvUpload = async (files) => {
@@ -84,7 +136,7 @@ const Dashboard = () => {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("title", file.name.replace(/\.[^.]+$/, ""));
-    formData.append("is_active", cvs.length === 0 ? "true" : "false");
+    formData.append("is_active", "true");
     uploadCvMutation.mutate(formData, {
       onSuccess: () => {
         refetchCvs();
@@ -100,6 +152,7 @@ const Dashboard = () => {
     if (!confirm("Delete this CV?")) return;
     deleteCvMutation.mutate(id, {
       onSuccess: () => {
+        refetchCvs();
         enqueueSnackbar("CV deleted!", { variant: "success" });
       },
       onError: (err) => {
@@ -120,6 +173,18 @@ const Dashboard = () => {
     });
   };
 
+  const handleTrainKnowledgeBase = async () => {
+    setTraining(true);
+    try {
+      const response = await privateAgent.post(routesName.KnowledgeRoute().rebuild);
+      enqueueSnackbar(`Knowledge base trained on ${response.data.chunks} chunks!`, { variant: "success" });
+    } catch (err) {
+      enqueueSnackbar("Failed to train knowledge base: " + (err.response?.data?.error || err.message), { variant: "error" });
+    } finally {
+      setTraining(false);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <h1 className="mt-10 text-3xl font-bold">Admin Dashboard</h1>
@@ -127,13 +192,6 @@ const Dashboard = () => {
       {/* Profile Card */}
       <div className="p-6 bg-white shadow-md rounded-xl">
         <div className="flex items-center gap-6 mb-6">
-          <div className="relative group">
-            <img
-              src={profile.profile_image || mypic}
-              alt="Profile"
-              className="object-cover w-24 h-24 border-2 border-gray-200 rounded-full"
-            />
-          </div>
           <div className="flex-1">
             <h2 className="text-xl font-semibold">{profile.name}</h2>
             <p className="text-gray-500">{profile.email}</p>
@@ -143,9 +201,12 @@ const Dashboard = () => {
             <div className="mt-2">
               <DraggableUpload
                 onFilesChange={handleImageUpload}
+                existingFiles={(profileImageData?.value || profile.profile_image) ? [profileImageData?.value || profile.profile_image] : []}
+                onRemoveExisting={handleImageRemove}
                 maxFiles={1}
                 label="Profile Image"
                 disabled={uploadProfileImageMutation.isPending}
+                shape="circle"
               />
               {uploadProfileImageMutation.isPending && <span className="text-xs text-gray-500">Uploading...</span>}
             </div>
@@ -170,15 +231,45 @@ const Dashboard = () => {
           </h2>
         </div>
 
+        {cvs.length > 0 && (
+          <div className="mb-4 space-y-2">
+            {cvs.map((cv) => (
+              <div key={cv.id} className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
+                <FaFilePdf className="flex-shrink-0 text-lg text-red-500" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{cv.title}</p>
+                  <a
+                    href={cv.relative_path}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block text-xs text-blue-500 truncate hover:underline"
+                  >
+                    {cv.relative_path?.split('/').pop()}
+                  </a>
+                </div>
+                <div className="flex items-center flex-shrink-0 gap-1">
+                  <button
+                    onClick={() => handleCvSetActive(cv.id)}
+                    className="px-2 py-1 text-xs text-blue-500 rounded hover:text-blue-700 hover:bg-blue-50"
+                  >
+                    {cv.relative_path?.split('/').pop()}
+                  </button>
+                  <button
+                    onClick={() => handleCvDelete(cv.id)}
+                    className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded"
+                  >
+                    <FaTimes size={12} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         <DraggableUpload
           onFilesChange={handleCvUpload}
-          existingFiles={cvs.map((cv) => cv.file_url)}
-          onRemoveExisting={async (url, idx) => {
-            const cv = cvs[idx];
-            if (cv) await handleCvDelete(cv.id);
-          }}
           maxFiles={1}
-          label="Upload CV"
+          label="Upload new CV"
           disabled={uploadCvMutation.isPending}
           accept={{
             "application/pdf": [".pdf"],
@@ -198,14 +289,12 @@ const Dashboard = () => {
           <FaImage className="text-purple-500" />
           <h2 className="text-xl font-semibold">Section Backgrounds</h2>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <SectionBgImageEditor sectionKey="about_bg_image" title="About" />
           <SectionBgImageEditor sectionKey="academics_bg_image" title="Academics" />
           <SectionBgImageEditor sectionKey="achievements_bg_image" title="Achievements" />
           <SectionBgImageEditor sectionKey="journey_bg_image" title="Journey" />
           <SectionBgImageEditor sectionKey="projects_bg_image" title="Projects" />
-          <SectionBgImageEditor sectionKey="academic_projects_bg_image" title="Academic Projects" />
-          <SectionBgImageEditor sectionKey="academic_works_bg_image" title="Academic Works" />
           <SectionBgImageEditor sectionKey="testimonials_bg_image" title="Testimonials" />
           <SectionBgImageEditor sectionKey="contact_bg_image" title="Contact" />
         </div>
@@ -243,6 +332,25 @@ const Dashboard = () => {
             <div className="text-xs text-gray-400">Update credentials</div>
           </div>
         </Link>
+      </div>
+
+      {/* Chat Agent Training */}
+      <div className="p-6 bg-white shadow-md rounded-xl">
+        <div className="flex items-center gap-2 mb-2">
+          <FaBrain className="text-indigo-500" />
+          <h2 className="text-xl font-semibold">Chat Agent</h2>
+        </div>
+        <p className="mb-4 text-sm text-gray-500">
+          Retrain the AI chat agent on the latest projects, academics, journey, and achievements data.
+        </p>
+        <button
+          onClick={handleTrainKnowledgeBase}
+          disabled={training}
+          className="inline-flex items-center gap-2 px-4 py-2 text-white transition bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {training ? <FaSpinner className="animate-spin" /> : <FaBrain />}
+          {training ? "Training..." : "Train Knowledge Base"}
+        </button>
       </div>
     </div>
   );

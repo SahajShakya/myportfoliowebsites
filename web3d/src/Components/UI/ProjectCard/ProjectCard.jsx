@@ -10,12 +10,13 @@ const ProjectCard = ({
   name,
   description,
   tags,
-  image,
   source_code_link,
   icons,
   route,
+  links,
 }) => {
-  const imageUrl = typeof icons === "string" ? icons : icons?.url || "";
+  const imageUrl = typeof icons === "string" ? icons : (icons?.[0]?.icon_url || icons?.url || "");
+  const primaryLink = links?.length > 0 ? links[0].url : source_code_link;
 
   return (
     <motion.div variants={fadeIn("up", "spring", index * 0.5, 0.75)} className="w-full">
@@ -38,7 +39,7 @@ const ProjectCard = ({
               <div
                 onClick={(e) => {
                   e.stopPropagation();
-                  window.open(source_code_link, "_blank");
+                  window.open(primaryLink, "_blank");
                 }}
                 className="black-gradient w-10 h-10 rounded-full flex justify-center items-center cursor-pointer"
               >

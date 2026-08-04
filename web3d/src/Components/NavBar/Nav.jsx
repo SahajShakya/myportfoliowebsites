@@ -146,7 +146,6 @@ const Nav = () => {
       hasDropdown: false,
       linkTo: "https://scholar.google.com/citations?user=TyG1JqoAAAAJ&hl=en",
     },
-    ...(!isAdmin ? [{ name: "Academic Works", hasDropdown: false, linkTo: "/academic-projects" }] : []),
     { name: "Photography", hasDropdown: false, linkTo: "/photography" },
     { name: "About Me", hasDropdown: false, linkTo: "/me" },
     { name: "Contact", hasDropdown: false, linkTo: "/contact" },
@@ -154,7 +153,7 @@ const Nav = () => {
 
   return (
     <motion.div
-      className="absolute top-0 left-0 right-0 z-40 flex items-center justify-between px-3 sm:px-4 md:px-6 lg:px-8 pb-1 pt-2 bg-white/80 backdrop-blur-md"
+      className="sticky top-0 left-0 right-0 z-40 flex items-center justify-between px-3 sm:px-4 md:px-6 lg:px-8 pb-0 pt-2 mb-px bg-white/80 backdrop-blur-md"
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
@@ -185,6 +184,25 @@ const Nav = () => {
             <div className="hidden items-center md:flex text-[10px] sm:text-[11px] md:text-xs">
               <FaPhoneAlt className="mr-1 text-green-400" />
               <h3 className="text-green-400">{profile.phone}</h3>
+            </div>
+          )}
+          {socialLinksData?.length > 0 && (
+            <div className="flex items-center gap-1.5 mt-1.5">
+              {socialLinksData.map((link) => {
+                const Icon = ICON_MAP[link.icon_name] || FaGlobe;
+                return (
+                  <a
+                    key={link.id}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={link.platform}
+                    className="flex items-center justify-center text-gray-700 transition bg-gray-200 rounded-full w-6 h-6 hover:scale-110 hover:text-gray-950"
+                  >
+                    <Icon size={11} />
+                  </a>
+                );
+              })}
             </div>
           )}
         </div>

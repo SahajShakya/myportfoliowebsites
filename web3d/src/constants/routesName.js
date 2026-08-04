@@ -9,12 +9,14 @@ export const routesName = {
       logout: `${BASE}/auth/logout`,
       register: `${BASE}/auth/register`,
       me: `${BASE}/auth/me`,
+      status: `${BASE}/auth/status`,
       refresh: `${BASE}/auth/refresh`,
       user: (userId) => `${BASE}/auth/user/${userId}`,
       profile: `${BASE}/auth/profile`,
       profileImage: `${BASE}/auth/profile-image`,
       aboutBgImage: `${BASE}/auth/about-bg-image`,
       sectionBgImage: (key) => `${BASE}/auth/section-bg-image/${key}`,
+      deleteSectionBgImage: (key) => `${BASE}/auth/section-bg-image/${key}`,
       materialsUrl: `${BASE}/auth/materials-url`,
       changePassword: `${BASE}/auth/password`,
       roles: `${BASE}/auth/roles`,
@@ -102,23 +104,14 @@ export const routesName = {
     };
   },
 
-  AcademicProjectsRoute({ id } = {}) {
-    return {
-      list: `${BASE}/academic_projects`,
-      get: id ? `${BASE}/academic_projects/${id}` : undefined,
-      details: id ? `${BASE}/academic_projects/${id}/details` : undefined,
-      create: `${BASE}/academic_projects`,
-      update: id ? `${BASE}/academic_projects/${id}` : undefined,
-      delete: id ? `${BASE}/academic_projects/${id}` : undefined,
-    };
-  },
-
   SettingsRoute() {
     return {
       aboutBgImage: `${BASE}/settings/about_bg_image`,
       sectionBgImage: (key) => `${BASE}/settings/${key}`,
       cvActive: `${BASE}/settings/cv-active`,
       materialsUrl: `${BASE}/settings/materials_url`,
+      profileImage: `${BASE}/settings/profile_image`,
+      activeCv: `${BASE}/settings/active_cv`,
     };
   },
 
@@ -131,7 +124,14 @@ export const routesName = {
   ChatRoute({ sessionId } = {}) {
     return {
       message: `${BASE}/chat/message`,
+      poll: (sid, after) => `${BASE}/chat/poll?session_id=${sid}&after=${after}`,
       history: sessionId ? `${BASE}/chat/history/${sessionId}` : undefined,
+    };
+  },
+
+  KnowledgeRoute() {
+    return {
+      rebuild: `${BASE}/knowledge/rebuild`,
     };
   },
 

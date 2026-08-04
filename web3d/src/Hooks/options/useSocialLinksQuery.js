@@ -19,6 +19,5 @@ export const useSocialLinksQuery = (userId) => {
     refetchOnMount: false,
     refetchOnReconnect: false,
     retry: false,
-    enabled: !!userId,
   });
 };

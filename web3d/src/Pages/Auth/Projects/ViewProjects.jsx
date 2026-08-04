@@ -62,18 +62,17 @@ const ViewProjects = () => {
               <tr key={project.id} className="border-b hover:bg-gray-50">
                 <td className="px-4 py-3">{project.name}</td>
                 <td className="px-4 py-3 text-center">
-                  {project.icons ? (
-                    <img
-                      src={typeof project.icons === "string" ? project.icons : project.icons}
-                      alt={project.name}
-                      className="w-8 h-8 object-cover rounded mx-auto"
-                    />
-                  ) : project.document_id && project.details?.[0]?.image_url ? (
-                    <img
-                      src={project.details[0].image_url}
-                      alt={project.name}
-                      className="w-8 h-8 object-cover rounded mx-auto"
-                    />
+                  {project.icons && project.icons.length > 0 ? (
+                    <div className="flex justify-center gap-1 flex-wrap">
+                      {project.icons.map((icon, idx) => (
+                        <img
+                          key={idx}
+                          src={typeof icon === "string" ? icon : icon.icon_url || ""}
+                          alt={`Icon ${idx}`}
+                          className="w-8 h-8 object-cover rounded"
+                        />
+                      ))}
+                    </div>
                   ) : (
                     <span className="text-gray-400 text-sm">-</span>
                   )}
@@ -106,12 +105,17 @@ const ViewProjects = () => {
           <div key={project.id} className="bg-white border rounded-lg p-4 shadow-sm">
             <div className="space-y-2 mb-4">
               <div className="flex items-center gap-3">
-                {project.icons && (
-                  <img
-                    src={typeof project.icons === "string" ? project.icons : project.icons}
-                    alt={project.name}
-                    className="w-10 h-10 object-cover rounded flex-shrink-0"
-                  />
+                {project.icons && project.icons.length > 0 && (
+                  <div className="flex gap-1 flex-shrink-0">
+                    {project.icons.map((icon, idx) => (
+                      <img
+                        key={idx}
+                        src={typeof icon === "string" ? icon : icon.icon_url || ""}
+                        alt={`Icon ${idx}`}
+                        className="w-10 h-10 object-cover rounded"
+                      />
+                    ))}
+                  </div>
                 )}
                 <div>
                   <span className="text-sm font-semibold text-gray-600">Project Name:</span>

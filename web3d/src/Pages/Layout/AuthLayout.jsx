@@ -15,7 +15,6 @@ import {
   FaUserCircle,
   FaKey,
   FaShareAlt,
-  FaBook,
   FaQuoteLeft,
   FaCamera,
 } from "react-icons/fa";
@@ -28,7 +27,6 @@ const AuthLayout = () => {
     journey: false,
     achievements: false,
     projects: false,
-    "academic-projects": false,
     testimonials: false,
     photography: false,
     settings: false,
@@ -67,7 +65,6 @@ const AuthLayout = () => {
     { name: "journey", label: "Journey", icon: /** @type {React.ComponentType<{className?: string}>} */ (FaCogs) },
     { name: "projects", label: "Projects", icon: /** @type {React.ComponentType<{className?: string}>} */ (FaProjectDiagram) },
     { name: "achievements", label: "Achievements", icon: /** @type {React.ComponentType<{className?: string}>} */ (FaAward) },
-    { name: "academic-projects", label: "Academic Projects", icon: /** @type {React.ComponentType<{className?: string}>} */ (FaBook) },
     { name: "testimonials", label: "Testimonials", icon: /** @type {React.ComponentType<{className?: string}>} */ (FaQuoteLeft) },
     { name: "photography", label: "Photography", icon: /** @type {React.ComponentType<{className?: string}>} */ (FaCamera) },
   ];
@@ -82,7 +79,7 @@ const AuthLayout = () => {
   const generateDropdownItems = (section) => (
     <ul className="mt-2 ml-4 space-y-2">
       <li>
-        <Link to={section === "academics" || section === "academic-projects" ? `/auth/${section}/` : section === "testimonials" || section === "photography" ? `/auth/${section}/create` : `/auth/${section}/create`} className="block">
+        <Link to={section === "academics" ? `/auth/${section}/` : `/auth/${section}/create`} className="block">
           Create
         </Link>
       </li>
@@ -90,15 +87,15 @@ const AuthLayout = () => {
   );
 
   return (
-    <>
+    <div className="flex flex-col h-screen overflow-hidden">
       <Nav />
-      <div className="flex h-screen pt-[100px]">
+      <div className="flex flex-1 min-h-0">
         <div
-          className={`transition-all duration-300 flex-shrink-0 ${
+          className={`transition-all duration-300 flex-shrink-0 overflow-y-auto ${
             isCollapsed
               ? "w-20 bg-black text-white"
               : "w-64 bg-white text-black"
-          } pt-6 p-4 overflow-y-auto`}
+          } pt-6 p-4`}
         >
           <div className="flex items-center justify-between mb-6">
             <button onClick={toggleSidebar} className="text-black">
@@ -133,7 +130,7 @@ const AuthLayout = () => {
               >
                 <div className="flex items-center justify-between">
                   <Link
-                    to={name === "academics" || name === "journey" || name === "projects" || name === "achievements" || name === "academic-projects" || name === "photography" ? `/auth/${name}/` : name === "testimonials" ? `/auth/${name}` : `/auth/${name}/view`}
+                    to={name === "academics" || name === "journey" || name === "projects" || name === "achievements" || name === "photography" ? `/auth/${name}/` : name === "testimonials" ? `/auth/${name}` : `/auth/${name}/view`}
                     className={`block ${isCollapsed ? "text-center" : ""}`}
                   >
                     {isCollapsed ? (
@@ -204,7 +201,7 @@ const AuthLayout = () => {
           <Outlet />
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

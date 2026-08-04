@@ -52,13 +52,17 @@ export const uploadFiles = async (files, basePath = "") => {
 
 export const uploadFilesToSupabase = uploadFiles;
 
-export const deleteFile = async (fileUrl) => {
+export const deleteFile = async (fileUrl, documentId = null) => {
   try {
     const url =
       typeof fileUrl === "string"
         ? fileUrl
         : fileUrl.publicUrl || fileUrl.url || fileUrl;
-    await privateAgent.delete(routesName.UploadRoute().upload, { data: { path: url } });
+    const payload = { path: url };
+    if (documentId) {
+      payload.document_id = documentId;
+    }
+    await privateAgent.delete(routesName.UploadRoute().upload, { data: payload });
     return { success: true };
   } catch (error) {
     console.error("Error deleting file:", error.message);
@@ -70,8 +74,12 @@ export const deleteFilesFromSupabase = async (fileUrls) => {
   try {
     const urls = Array.isArray(fileUrls) ? fileUrls : [fileUrls];
     for (const fileObj of urls) {
-      if (typeof fileObj === "object" && fileObj.publicUrl) {
-        await deleteFile(fileObj.publicUrl);
+      if (typeof fileObj === "object" && fileObj !== null) {
+        const url = fileObj.publicUrl || fileObj.url || fileObj.icon || "";
+        const docId = fileObj.document_id || null;
+        if (url) {
+          await deleteFile(url, docId);
+        }
       } else if (typeof fileObj === "string") {
         await deleteFile(fileObj);
       }

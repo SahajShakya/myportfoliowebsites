@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useDropzone } from "react-dropzone";
 import { FaFilePdf, FaTimes, FaImage, FaVideo } from "react-icons/fa";
@@ -7,6 +8,7 @@ export default function DraggableUpload({
   existingFiles = [],
   onRemoveExisting,
   maxFiles = 10,
+  value,
   label,
   required = false,
   disabled = false,
@@ -17,10 +19,13 @@ export default function DraggableUpload({
   },
   shape = "card",
 }) {
-  const [newFiles, setNewFiles] = useState([]);
+  const [internalNewFiles, setInternalNewFiles] = useState([]);
+  const isControlled = value !== undefined;
+  const newFiles = isControlled ? value : internalNewFiles;
   const [previews, setPreviews] = useState({});
   const [error, setError] = useState("");
-  const pasteRef = useRef(null);
+  const containerRef = useRef(null);
+  const isActiveRef = useRef(false);
 
   useEffect(() => {
     const urls = {};
@@ -51,19 +56,19 @@ export default function DraggableUpload({
       setError("");
       const incoming = Array.from(fileList).map((f) =>
         Object.assign(f, {
-          id: Math.random().toString(36).slice(2),
+          id: f.id || Math.random().toString(36).slice(2),
         }),
       );
       const combined = [...newFiles, ...incoming].slice(0, maxFiles);
-      setNewFiles(combined);
+      if (!isControlled) setInternalNewFiles(combined);
       onFilesChange(combined);
     },
-    [newFiles, maxFiles, onFilesChange],
+    [newFiles, maxFiles, onFilesChange, isControlled],
   );
 
   const removeNew = (id) => {
     const updated = newFiles.filter((f) => f.id !== id);
-    setNewFiles(updated);
+    if (!isControlled) setInternalNewFiles(updated);
     onFilesChange(updated);
   };
 
@@ -82,6 +87,7 @@ export default function DraggableUpload({
   useEffect(() => {
     if (disabled) return;
     const handler = (e) => {
+      if (!isActiveRef.current) return;
       if (newFiles.length + existingFiles.length >= maxFiles) return;
       const items = e.clipboardData?.items;
       if (!items) return;
@@ -103,11 +109,12 @@ export default function DraggableUpload({
       }
       if (mediaFiles.length > 0) {
         e.preventDefault();
+        e.stopPropagation();
         addFiles(mediaFiles);
       }
     };
-    document.addEventListener("paste", handler);
-    return () => document.removeEventListener("paste", handler);
+    document.addEventListener("paste", handler, true);
+    return () => document.removeEventListener("paste", handler, true);
   }, [newFiles.length, existingFiles.length, maxFiles, addFiles, disabled]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -146,8 +153,13 @@ export default function DraggableUpload({
       )}
 
       <div
-        ref={pasteRef}
-        tabIndex={0}
+        ref={containerRef}
+        onFocus={() => { isActiveRef.current = true; }}
+        onBlur={(e) => { if (!containerRef.current?.contains(e.relatedTarget)) isActiveRef.current = false; }}
+        tabIndex={-1}
+        className="outline-none"
+      >
+      <div
         {...getRootProps()}
         className={`border-2 border-dashed p-3 transition text-center outline-none ${
           shape === "circle"
@@ -182,6 +194,7 @@ export default function DraggableUpload({
             </p>
           )}
         </div>
+      </div>
       </div>
 
       {error && <p className="text-xs text-red-400">{error}</p>}
@@ -242,12 +255,12 @@ function PreviewCard({ url, name, isImage, isVideo, onRemove, badge, shape = "ca
         <div className={`${size} relative border border-gray-200 overflow-hidden`}>
           <video
             src={url}
-            className="w-full h-full object-cover"
+            className="object-cover w-full h-full"
             muted
             preload="metadata"
           />
           <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-            <FaVideo className="text-white text-xl drop-shadow-lg" />
+            <FaVideo className="text-xl text-white drop-shadow-lg" />
           </div>
         </div>
       ) : isImage && url ? (
@@ -258,7 +271,7 @@ function PreviewCard({ url, name, isImage, isVideo, onRemove, badge, shape = "ca
         />
       ) : (
         <div className={`${size} border border-gray-200 bg-gray-50 flex flex-col items-center justify-center gap-1 p-2`}>
-          <FaFilePdf className="text-red-400 text-2xl" />
+          <FaFilePdf className="text-2xl text-red-400" />
           <span className="text-[9px] text-gray-500 text-center leading-tight break-all line-clamp-2">
             {name}
           </span>
@@ -277,7 +290,7 @@ function PreviewCard({ url, name, isImage, isVideo, onRemove, badge, shape = "ca
           e.stopPropagation();
           onRemove();
         }}
-        className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full text-[10px] leading-none flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+        className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full text-[10px] leading-none flex items-center justify-center transition"
       >
         <FaTimes size={8} />
       </button>

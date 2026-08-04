@@ -1,5 +1,6 @@
 import { Canvas } from "@react-three/fiber";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useProgress } from "@react-three/drei";
 import LoadingScreen from "../../../Components/UI/Loading/LoadingScreen";
 // import Office from "../../../Components/Model/Office";
 // import Office2 from "../../../Components/Model/Office2";
@@ -10,9 +11,35 @@ import Drone from "../../../Components/Model/DroneL";
 import Robot from "../../../Components/Model/Robot";
 import HomeInfo from "./HomeInfo";
 
+const LOAD_MESSAGES = [
+  "Loading Drone...",
+  "Loading Robot...",
+  "Loading Environment...",
+  "Preparing 3D Scene...",
+];
+
 const Home = () => {
   const [isRotating, setIsRotating] = useState(false);
   const [currentStage, setCurrentStage] = useState(1);
+  const [loadMessage, setLoadMessage] = useState(0);
+  const [minElapsed, setMinElapsed] = useState(false);
+  const { progress, active } = useProgress();
+  const ready = !active && progress >= 100;
+
+  useEffect(() => {
+    const timer = setTimeout(() => setMinElapsed(true), 700);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (ready) return;
+    const id = setInterval(() => {
+      setLoadMessage((m) => (m + 1) % LOAD_MESSAGES.length);
+    }, 900);
+    return () => clearInterval(id);
+  }, [ready]);
+
+  const showLoader = !ready || !minElapsed;
 
   const adjustOfficeForScreenSize = () => {
     let screenScale, screenPosition;
@@ -85,6 +112,31 @@ const Home = () => {
       <div className="absolute top-28 left-0 right-0 z-10 flex items-center justify-center h-[150px]">
         {currentStage && <HomeInfo currentStage={currentStage} />}
       </div>
+
+      {/* Loading overlay shown while the 3D assets load */}
+      <div
+        className={`absolute inset-0 z-[5] flex flex-col items-center justify-center transition-opacity duration-500 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 ${
+          showLoader ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+      >
+        <div className="relative mb-6">
+          <div className="w-28 h-28 border-4 border-slate-600 border-t-sky-400 rounded-full animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-16 h-16 border-4 border-slate-600 border-b-indigo-400 rounded-full animate-spin" />
+          </div>
+        </div>
+        <p className="mb-4 text-sm font-medium tracking-wide text-slate-300">
+          {LOAD_MESSAGES[loadMessage]}
+        </p>
+        <div className="w-64 h-2 overflow-hidden bg-slate-700 rounded-full">
+          <div
+            className="h-full bg-gradient-to-r from-sky-400 to-indigo-500 rounded-full transition-all duration-200"
+            style={{ width: `${Math.min(progress, 100)}%` }}
+          />
+        </div>
+        <p className="mt-2 text-xs text-slate-400">{Math.round(progress)}%</p>
+      </div>
+
       <Canvas
         className={`w-full h-screen bg-transparent ${
           isRotating ? "cursor-grabbing" : "cursor-grab"

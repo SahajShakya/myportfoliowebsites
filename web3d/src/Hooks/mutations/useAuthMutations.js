@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { privateAgent } from "../../api/authRequest";
 import { routesName } from "../../constants/routesName";
 
@@ -15,8 +15,10 @@ export const useUpdatePassword = () => {
 };
 
 export const useUploadProfileImage = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload) => privateAgent.post(routesName.AuthRoute({}).profileImage, payload),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["profileImage"] }),
   });
 };
 

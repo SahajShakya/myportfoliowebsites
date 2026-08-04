@@ -46,21 +46,28 @@ const SectionBgImageEditor = ({ sectionKey, title }) => {
     }
   };
 
+  const handleRemoveExisting = async () => {
+    try {
+      await privateAgent.delete(
+        routesName.AuthRoute().deleteSectionBgImage(sectionKey)
+      );
+      setBgImage(null);
+      enqueueSnackbar(`${title} background removed`, { variant: "success" });
+    } catch (err) {
+      enqueueSnackbar(err.message, { variant: "error" });
+    }
+  };
+
   return (
     <div className="p-4 bg-white shadow-md rounded-xl">
       <div className="flex items-center gap-2 mb-3">
         <FaImage className="text-purple-500" />
         <h3 className="text-sm font-semibold">{title} Background</h3>
       </div>
-      {bgImage && (
-        <img
-          src={bgImage}
-          alt={`${title} background preview`}
-          className="object-cover w-full mb-2 border rounded-lg h-28"
-        />
-      )}
       <DraggableUpload
         onFilesChange={handleUpload}
+        existingFiles={bgImage ? [bgImage] : []}
+        onRemoveExisting={handleRemoveExisting}
         maxFiles={1}
         label="Upload Background"
         disabled={uploading}

@@ -71,14 +71,18 @@ const Contact = () => {
   });
 
   return (
-    <section
-      className="relative w-full min-h-screen"
-      style={{
-        background: bgImage
-          ? `url(${bgImage}) center/cover no-repeat fixed`
-          : "#0a0a1a",
-      }}
-    >
+    <section className="relative w-full min-h-screen">
+      <div
+        className="absolute inset-0 -z-10"
+        style={{
+          backgroundImage: bgImage ? `url(${bgImage})` : "none",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          backgroundColor: "#0a0a1a",
+        }}
+      />
+      {bgImage && <div className="absolute inset-0 bg-black/30 -z-[5]" />}
       <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-10">
         <motion.div
           initial={{ opacity: 0, y: -20 }}

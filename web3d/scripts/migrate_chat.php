@@ -1,7 +1,7 @@
 <?php
 $useProduction = in_array('production', $argv) || in_array('prod', $argv);
 
-require_once __DIR__ . '/../api/config/database.php';
+require_once __DIR__ . '/../public/api/config/database.php';
 
 class MigrateDatabase extends Database {
     private $useProd;

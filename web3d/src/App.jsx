@@ -29,10 +29,6 @@ import ViewAchievements from "./Pages/Auth/Achievements/ViewAchievements";
 import Achievements from "./Pages/NonAuth/Acheivements/Acheivements";
 import ProjectDetails from "./Pages/NonAuth/Projects/ProjectDetails";
 import AchievementDetails from "./Pages/NonAuth/Acheivements/AchievementDetails";
-import AcademicProjects from "./Pages/NonAuth/AcademicProjects/AcademicProjects";
-import AcademicProjectDetails from "./Pages/NonAuth/AcademicProjects/AcademicProjectDetails";
-import AddAcademicProjects from "./Pages/Auth/AcademicProjects/AddAcademicProjects";
-import ViewAcademicProjects from "./Pages/Auth/AcademicProjects/ViewAcademicProjects";
 import AboutMe from "./Pages/NonAuth/AboutMe/AboutMe";
 import Testimonials from "./Pages/Auth/Testimonials/Testimonials";
 import Photography from "./Pages/Auth/Photography/Photography";
@@ -72,8 +68,6 @@ const AppRoutes = () => {
         <Route path="/projects/:id" element={<ProjectDetails />} />
         <Route path="/achievements" element={<Achievements />} />
         <Route path="/achievements/:id" element={<AchievementDetails />} />
-        <Route path="/academic-projects" element={<AcademicProjects />} />
-        <Route path="/academic-projects/:id" element={<AcademicProjectDetails />} />
         <Route path="/photography" element={<PhotographyPublic />} />
         <Route path="/calendar" element={<Calendar />} />
       </Route>
@@ -104,9 +98,6 @@ const AppRoutes = () => {
         <Route path="/auth/achievements/" element={<PrivateRoute roleProps="admin" element={<ViewAchievements />} />} />
         <Route path="/auth/achievements/create" element={<PrivateRoute roleProps="admin" element={<AddAchievements />} />} />
         <Route path="/auth/achievements/view" element={<PrivateRoute roleProps="admin" element={<ViewAchievements />} />} />
-        <Route path="/auth/academic-projects/" element={<PrivateRoute roleProps="admin" element={<ViewAcademicProjects />} />} />
-        <Route path="/auth/academic-projects/create" element={<PrivateRoute roleProps="admin" element={<AddAcademicProjects />} />} />
-        <Route path="/auth/academic-projects/view" element={<PrivateRoute roleProps="admin" element={<ViewAcademicProjects />} />} />
         <Route path="/auth/testimonials" element={<PrivateRoute roleProps="admin" element={<Testimonials />} />} />
         <Route path="/auth/testimonials/create" element={<PrivateRoute roleProps="admin" element={<Testimonials />} />} />
         <Route path="/auth/testinomial/create" element={<PrivateRoute roleProps="admin" element={<Testimonials />} />} />

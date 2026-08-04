@@ -7,6 +7,7 @@ import { useSnackbar } from "notistack";
 import { FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 import { useTestimonialsQuery } from "../../../Hooks/options/useTestimonialsQuery";
 import { useCreateTestimonial, useUpdateTestimonial, useDeleteTestimonial } from "../../../Hooks/mutations/useTestimonialsMutations";
+import { uploadFiles } from "../../../api/upload";
 
 const Testimonials = () => {
   const { data: testimonials = [], isLoading } = useTestimonialsQuery();
@@ -15,6 +16,7 @@ const Testimonials = () => {
   const deleteMutation = useDeleteTestimonial();
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [editingImageId, setEditingImageId] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const { enqueueSnackbar } = useSnackbar();
@@ -27,53 +29,67 @@ const Testimonials = () => {
       designation: "",
       company: "",
     },
-    onSubmit: (values, { resetForm }) => {
-      const formData = new FormData();
-      formData.append("testimonial", values.testimonial);
-      formData.append("name", values.name);
-      formData.append("designation", values.designation);
-      formData.append("company", values.company);
-      if (imageFile) {
-        formData.append("image", imageFile);
-      }
+    onSubmit: async (values, { resetForm }) => {
+      try {
+        let imageId = null;
+        if (imageFile) {
+          const [uploaded] = await uploadFiles([{ file: imageFile }], "testimonials");
+          imageId = uploaded.document_id || null;
+        } else if (editingId) {
+          imageId = editingImageId || null;
+        }
 
-      const onSuccess = () => {
-        resetForm();
-        setShowModal(false);
-        setEditingId(null);
-        setImageFile(null);
-        setImagePreview(null);
-      };
+        const payload = {
+          testimonial: values.testimonial,
+          name: values.name,
+          designation: values.designation,
+          company: values.company,
+          image_id: imageId,
+        };
 
-      if (editingId) {
-        updateMutation.mutate(
-          { id: editingId, payload: formData },
-          {
+        const onSuccess = () => {
+          resetForm();
+          setShowModal(false);
+          setEditingId(null);
+          setEditingImageId(null);
+          setImageFile(null);
+          setImagePreview(null);
+        };
+
+        if (editingId) {
+          updateMutation.mutate(
+            { id: editingId, payload },
+            {
+              onSuccess: () => {
+                enqueueSnackbar("Testimonial updated!", { variant: "success" });
+                onSuccess();
+              },
+              onError: () => {
+                enqueueSnackbar("Error saving testimonial", { variant: "error" });
+              },
+            }
+          );
+        } else {
+          createMutation.mutate(payload, {
             onSuccess: () => {
-              enqueueSnackbar("Testimonial updated!", { variant: "success" });
+              enqueueSnackbar("Testimonial added!", { variant: "success" });
               onSuccess();
             },
             onError: () => {
               enqueueSnackbar("Error saving testimonial", { variant: "error" });
             },
-          }
-        );
-      } else {
-        createMutation.mutate(formData, {
-          onSuccess: () => {
-            enqueueSnackbar("Testimonial added!", { variant: "success" });
-            onSuccess();
-          },
-          onError: () => {
-            enqueueSnackbar("Error saving testimonial", { variant: "error" });
-          },
-        });
+          });
+        }
+      } catch (error) {
+        console.error("Error uploading testimonial image:", error);
+        enqueueSnackbar("Error uploading image. Please try again.", { variant: "error" });
       }
     },
   });
 
   const handleEdit = (t) => {
     setEditingId(t.id);
+    setEditingImageId(t.image_id || null);
     formik.setValues({
       testimonial: t.testimonial,
       name: t.name,
@@ -110,10 +126,12 @@ const Testimonials = () => {
   const handleRemoveImage = () => {
     setImagePreview(null);
     setImageFile(null);
+    setEditingImageId(null);
   };
 
   const openAddModal = () => {
     setEditingId(null);
+    setEditingImageId(null);
     formik.resetForm();
     setImageFile(null);
     setImagePreview(null);
@@ -198,6 +216,7 @@ const Testimonials = () => {
           onClose={() => {
             setShowModal(false);
             setEditingId(null);
+            setEditingImageId(null);
             formik.resetForm();
             setImageFile(null);
             setImagePreview(null);
@@ -277,6 +296,7 @@ const Testimonials = () => {
                 onClick={() => {
                   setShowModal(false);
                   setEditingId(null);
+                  setEditingImageId(null);
                   formik.resetForm();
                   setImageFile(null);
                   setImagePreview(null);

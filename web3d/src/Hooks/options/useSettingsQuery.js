@@ -59,3 +59,43 @@ export const useMaterialsUrlQuery = () => {
     retry: false,
   });
 };
+
+const fetchProfileImage = async () => {
+  const response = await privateAgent.get(
+    routesName.SettingsRoute().profileImage
+  );
+  return response.data.data || null;
+};
+
+export const useProfileImageQuery = () => {
+  return useQuery({
+    queryKey: ["profileImage"],
+    queryFn: fetchProfileImage,
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: false,
+  });
+};
+
+const fetchActiveCv = async () => {
+  const response = await privateAgent.get(
+    routesName.SettingsRoute().activeCv
+  );
+  return response.data.data || null;
+};
+
+export const useActiveCvQuery = () => {
+  return useQuery({
+    queryKey: ["activeCv"],
+    queryFn: fetchActiveCv,
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: false,
+  });
+};

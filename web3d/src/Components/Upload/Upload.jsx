@@ -9,6 +9,8 @@ const Upload = ({
   touched,
   onFileRemove,
   maxFiles = 1,
+  deferDelete = false,
+  onFileRemoved,
 }) => {
   const existingFiles = (value || [])
     .filter((item) => !item.file)
@@ -19,19 +21,37 @@ const Upload = ({
     })
     .filter(Boolean);
 
+  const controlledNewFiles = (value || [])
+    .filter((item) => item.file)
+    .map((item) => item.file);
+
   const handleChange = (newDraggableFiles) => {
+    const existingItems = (value || []).filter((item) => !item.file);
     const formikFiles = newDraggableFiles.map((f) => ({
       file: f,
       icon: URL.createObjectURL(f),
       type: "file",
     }));
-    setFieldValue(name, formikFiles);
+    setFieldValue(name, [...existingItems, ...formikFiles]);
   };
 
   const handleRemoveExisting = (url) => {
-    if (onFileRemove) {
-      onFileRemove(url);
+    const removedItem = (value || []).find((item) => {
+      if (item.file) return false;
+      const itemUrl = item.icon || item.url;
+      return itemUrl === url;
+    });
+
+    if (deferDelete) {
+      if (onFileRemoved && removedItem) {
+        onFileRemoved(removedItem);
+      }
+    } else {
+      if (onFileRemove) {
+        onFileRemove(removedItem || url);
+      }
     }
+
     const updated = (value || []).filter((item) => {
       if (item.file) return true;
       const itemUrl = item.icon || item.url;
@@ -44,6 +64,7 @@ const Upload = ({
     <div className="space-y-2">
       <DraggableUpload
         onFilesChange={handleChange}
+        value={controlledNewFiles}
         existingFiles={existingFiles}
         onRemoveExisting={handleRemoveExisting}
         maxFiles={maxFiles}

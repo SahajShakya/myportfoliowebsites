@@ -12,8 +12,18 @@ import Academics from "../Academics/Academics";
 import Achievements from "../Acheivements/Acheivements";
 import Projects from "../Projects/Projects";
 import Contact from "../Contact/Contact";
-import AcademicWorks from "../AcademicWork/AcademicWorks";
 import Feedbacks from "../Testinomial/Feedbacks";
+import SectionNav from "../../../Components/SectionNav/SectionNav";
+
+const SECTIONS = [
+  { id: "intro", label: "Intro" },
+  { id: "education", label: "Education" },
+  { id: "Achievement", label: "Achievement" },
+  { id: "journey", label: "Journey" },
+  { id: "project", label: "Project" },
+  { id: "testimonials", label: "Testimonial" },
+  { id: "contact", label: "Contact" },
+];
 
 const AboutMe = () => {
   const [loopNum, setLoopNum] = useState(0);
@@ -92,15 +102,26 @@ const AboutMe = () => {
 
   return (
     <div className="about-me">
+      <SectionNav sections={SECTIONS} />
       <section
         id="intro"
         className="relative w-full h-screen mx-auto mb-0 overflow-hidden pt-[80px]"
-        style={{
-          background: bgData?.value
-            ? `url(${bgData.value}) center/cover no-repeat fixed`
-            : "linear-gradient(to bottom right, #f3f4f6, #e5e7eb)",
-        }}
       >
+        <div
+          className="absolute inset-0 -z-10"
+          style={
+            bgData?.value
+              ? {
+                  backgroundImage: `url(${bgData.value})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                  backgroundRepeat: "no-repeat",
+                }
+              : {
+                  background: "linear-gradient(to bottom right, #f3f4f6, #e5e7eb)",
+                }
+          }
+        />
         <div
           className={`absolute inset-0 top-[120px] max-w-7xl mx-auto ${styles.paddingX} flex flex-row items-start gap-5 z-10`}
         >
@@ -140,33 +161,39 @@ const AboutMe = () => {
         </div>
       </section>
       <ScrollReveal index={0}>
-        <section id="academics">
-          <Academics id="academics" />
+        <section id="education" className="scroll-mt-20">
+          <Academics />
         </section>
       </ScrollReveal>
 
       <ScrollReveal index={1}>
-        <AcademicWorks id="academic-works" />
+        <section id="Achievement" className="scroll-mt-20">
+          <Achievements />
+        </section>
       </ScrollReveal>
 
       <ScrollReveal index={2}>
-        <Achievements id="achievements" />
+        <section id="journey" className="scroll-mt-20">
+          <Journey />
+        </section>
       </ScrollReveal>
 
       <ScrollReveal index={3}>
-        <Journey id="journey" />
+        <section id="project" className="scroll-mt-20">
+          <Projects />
+        </section>
       </ScrollReveal>
 
       <ScrollReveal index={4}>
-        <Projects id="projects" />
+        <section id="testimonials" className="scroll-mt-20">
+          <Feedbacks />
+        </section>
       </ScrollReveal>
 
       <ScrollReveal index={5}>
-        <Feedbacks id="feedbacks" />
-      </ScrollReveal>
-
-      <ScrollReveal index={6}>
-        <Contact id="contact" />
+        <section id="contact" className="scroll-mt-20">
+          <Contact />
+        </section>
       </ScrollReveal>
     </div>
   );

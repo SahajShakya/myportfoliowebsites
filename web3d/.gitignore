@@ -30,6 +30,16 @@ dist-ssr
 # Upload directory
 uploads/*
 !uploads/.gitkeep
+public/uploads/*
+!public/uploads/.gitkeep
 
 # PHP config (if needed)
 api/config/local.php
+public/api/config/local.php
+
+# Backend environment (loaded by public/api/config/database.php)
+public/api/.env
+public/api/.env.local
+
+# Chat worker artifacts (generated locally, deployed to Cloudflare, not GitHub)
+chat-worker/knowledge.json

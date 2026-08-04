@@ -199,21 +199,19 @@ const Academics = () => {
     (a, b) => new Date(a.start_date) - new Date(b.start_date)
   );
 
-  const timelineHeight =
-    academics.length > 0
-      ? academics.length * (CARD_HEIGHT + CARD_GAP) - CARD_GAP
-      : 0;
-
   return (
-    <div
-      className="w-full min-h-screen"
-      style={{
-        background: bgImage
-          ? `url(${bgImage}) center/cover no-repeat fixed`
-          : "#0a0a1a",
-      }}
-    >
-      {bgImage && <div className="fixed inset-0 bg-black/30 -z-0" />}
+    <div className="relative w-full min-h-screen">
+      <div
+        className="absolute inset-0 -z-10"
+        style={{
+          backgroundImage: bgImage ? `url(${bgImage})` : "none",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          backgroundColor: "#0a0a1a",
+        }}
+      />
+      {bgImage && <div className="absolute inset-0 bg-black/30 -z-[5]" />}
       <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <motion.div variants={textVariant()}>
           <p className="text-white/60 text-sm font-medium tracking-wider uppercase text-center mb-1">
@@ -224,10 +222,7 @@ const Academics = () => {
           </h2>
         </motion.div>
 
-        <div
-          className="relative mt-12 sm:mt-16"
-          style={{ height: timelineHeight }}
-        >
+        <div className="relative mt-12 sm:mt-16">
           <CurvedTimelineLine count={academics.length} />
 
         <div className="relative z-10">

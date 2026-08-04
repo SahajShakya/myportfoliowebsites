@@ -20,10 +20,12 @@ export const AuthProvider = ({ children }) => {
     const checkAuth = async () => {
       try {
         const { data } = await privateAgent.get(
-          routesName.AuthRoute({}).me
+          routesName.AuthRoute({}).status
         );
-        if (data.user) {
+        if (data.authenticated && data.user) {
           setUser(data.user);
+        } else {
+          setUser(null);
         }
       } catch {
         setUser(null);

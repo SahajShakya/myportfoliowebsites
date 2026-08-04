@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 
-const API_BASE = "/api";
+const API_BASE = import.meta.env.VITE_CHAT_API_URL || "/api";
 
 export function useChat() {
   const [messages, setMessages] = useState([]);
@@ -27,16 +27,13 @@ export function useChat() {
       setLoading(true);
 
       try {
-        const body = {
-          message: content.trim(),
-          session_id: sessionId,
-        };
-
         const res = await fetch(`${API_BASE}/chat/message`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(body),
+          body: JSON.stringify({
+            message: content.trim(),
+            session_id: sessionId,
+          }),
         });
 
         const data = await res.json();
@@ -52,12 +49,11 @@ export function useChat() {
         const assistantMessage = {
           id: Date.now() + 1,
           role: "assistant",
-          content: data.response,
+          content: data.response || "",
           sources: data.sources || [],
           relevance: data.relevance || "unknown",
           timestamp: new Date().toISOString(),
         };
-
         setMessages((prev) => [...prev, assistantMessage]);
       } catch {
         const errorMessage = {
@@ -79,7 +75,6 @@ export function useChat() {
     if (sessionId) {
       fetch(`${API_BASE}/chat/history/${sessionId}`, {
         method: "DELETE",
-        credentials: "include",
       }).catch(() => {});
     }
     setMessages([]);

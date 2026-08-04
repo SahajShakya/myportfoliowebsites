@@ -1,39 +1,52 @@
 <?php
-$uri = urldecode(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
+/**
+ * PHP Router for Development Server
+ * Tells PHP's built-in server how to route requests
+ * Usage: php -S localhost:8000 .htrouter.php
+ *
+ * Mirrors the production layout:
+ *   /api/*       -> public/api/index.php
+ *   /uploads/*   -> public/uploads/*
+ *   static files -> public/ then dist/
+ *   everything else -> dist/index.html (or index.html in dev)
+ */
 
-if ($uri === '/') {
-    $uri = '/index.html';
-}
+$requestPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-if (strpos($uri, '/api/') === 0) {
-    require __DIR__ . '/api/index.php';
+// Route /api/* requests to public/api/index.php
+if (strpos($requestPath, '/api/') === 0 || $requestPath === '/api') {
+    $_GET['request'] = substr($requestPath, 5);
+    require __DIR__ . '/public/api/index.php';
     return true;
 }
 
-if (strpos($uri, '/uploads/') === 0) {
-    $filePath = __DIR__ . $uri;
-    if (file_exists($filePath) && is_file($filePath)) {
-        $mimeTypes = [
-            'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png',
-            'gif' => 'image/gif', 'webp' => 'image/webp', 'svg' => 'image/svg+xml',
-            'pdf' => 'application/pdf', 'mp4' => 'video/mp4', 'webm' => 'video/webm',
-        ];
-        $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
-        $mime = $mimeTypes[$ext] ?? 'application/octet-stream';
-        header('Content-Type: ' . $mime);
-        header('Access-Control-Allow-Origin: *');
-        readfile($filePath);
-        return true;
-    }
-    http_response_code(404);
-    echo json_encode(["error" => "File not found"]);
+// Serve static files from public/ (uploads, mypic.png, etc.)
+$publicFile = __DIR__ . '/public' . $requestPath;
+if (is_file($publicFile)) {
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mimeType = finfo_file($finfo, $publicFile) ?: 'application/octet-stream';
+    header('Content-Type: ' . $mimeType);
+    header('Content-Length: ' . filesize($publicFile));
+    readfile($publicFile);
     return true;
 }
 
-$filePath = __DIR__ . $uri;
-if (file_exists($filePath) && is_file($filePath)) {
-    return false;
+// Serve built frontend assets from dist/
+$distFile = __DIR__ . '/dist' . $requestPath;
+if (is_file($distFile)) {
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mimeType = finfo_file($finfo, $distFile) ?: 'application/octet-stream';
+    header('Content-Type: ' . $mimeType);
+    header('Content-Length: ' . filesize($distFile));
+    readfile($distFile);
+    return true;
 }
 
-http_response_code(404);
-echo json_encode(["error" => "Not found"]);
+// SPA fallback: production build if present, otherwise dev index.html
+if (is_file(__DIR__ . '/dist/index.html')) {
+    include __DIR__ . '/dist/index.html';
+    return true;
+}
+
+include __DIR__ . '/index.html';
+return true;

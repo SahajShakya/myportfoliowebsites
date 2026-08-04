@@ -165,17 +165,33 @@ const SimpleNavbar = ({
         return (
           <li key={index} className="relative">
             {tab.linkTo ? (
-              <Link
-                to={tab.linkTo}
-                onClick={handleLinkClick}
-                className={`flex items-center px-5 py-3 text-sm transition-colors ${
-                  isActive
-                    ? "text-blue-600 bg-blue-50 font-medium border-l-3 border-blue-600"
-                    : "text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                {tab.name}
-              </Link>
+              typeof tab.linkTo === "string" && tab.linkTo.startsWith("http") ? (
+                <a
+                  href={tab.linkTo}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={handleLinkClick}
+                  className={`flex items-center px-5 py-3 text-sm transition-colors ${
+                    isActive
+                      ? "text-blue-600 bg-blue-50 font-medium border-l-3 border-blue-600"
+                      : "text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  {tab.name}
+                </a>
+              ) : (
+                <Link
+                  to={tab.linkTo}
+                  onClick={handleLinkClick}
+                  className={`flex items-center px-5 py-3 text-sm transition-colors ${
+                    isActive
+                      ? "text-blue-600 bg-blue-50 font-medium border-l-3 border-blue-600"
+                      : "text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  {tab.name}
+                </Link>
+              )
             ) : (
               <>
                 <button
@@ -293,9 +309,20 @@ const Tab = ({
       }`}
     >
       {linkTo ? (
-        <Link to={linkTo} className="block">
-          {children}
-        </Link>
+        typeof linkTo === "string" && linkTo.startsWith("http") ? (
+          <a
+            href={linkTo}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block"
+          >
+            {children}
+          </a>
+        ) : (
+          <Link to={linkTo} className="block">
+            {children}
+          </Link>
+        )
       ) : (
         <span>{children}</span>
       )}

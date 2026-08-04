@@ -57,6 +57,7 @@ const ViewJourney = () => {
               <th className="px-4 py-3 text-center font-semibold">Icon</th>
               <th className="px-4 py-3 text-left font-semibold">Office</th>
               <th className="px-4 py-3 text-left font-semibold">Designation</th>
+              <th className="px-4 py-3 text-center font-semibold">Promotions</th>
               <th className="px-4 py-3 text-center font-semibold">Action</th>
             </tr>
           </thead>
@@ -82,6 +83,11 @@ const ViewJourney = () => {
                 </td>
                 <td className="px-4 py-3">{journey.office_name}</td>
                 <td className="px-4 py-3">{journey.designation}</td>
+                <td className="px-4 py-3 text-center">
+                  {journey.promotions && journey.promotions.length > 0
+                    ? `${journey.promotions.length} promotion${journey.promotions.length > 1 ? 's' : ''}`
+                    : '-'}
+                </td>
                 <td className="px-4 py-3 text-center whitespace-nowrap">
                   <div className="flex items-center justify-center gap-2">
                     <button
@@ -133,6 +139,14 @@ const ViewJourney = () => {
               <div>
                 <span className="text-sm font-semibold text-gray-600">Designation:</span>
                 <p className="text-base">{journey.designation}</p>
+              </div>
+              <div>
+                <span className="text-sm font-semibold text-gray-600">Promotions:</span>
+                <p className="text-base">
+                  {journey.promotions && journey.promotions.length > 0
+                    ? `${journey.promotions.length} promotion${journey.promotions.length > 1 ? 's' : ''}`
+                    : '-'}
+                </p>
               </div>
             </div>
             <div className="flex gap-2">
